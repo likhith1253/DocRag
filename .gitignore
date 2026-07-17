@@ -9,3 +9,8 @@ logs/
 eval_output.txt
 knowledge_graph.json
 metadata_store.json
+embedding_cache.db
+metadata_storage/
+snapshot_storage/
+papers/
+

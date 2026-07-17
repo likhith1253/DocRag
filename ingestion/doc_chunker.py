@@ -179,10 +179,18 @@ def chunk_document(
             if not chunk_content:
                 continue
 
-            # Estimate page for sub-section chunks based on line proportion
-            # (heuristic: page_start for all sub-chunks; page_end from section)
-            chunk_page_start = page_start
-            chunk_page_end = page_end
+            # Use exact page range using the line_pages map
+            chunk_line_start = rc["relative_line_start"]
+            chunk_line_end = chunk_line_start + len(chunk_content.splitlines()) - 1
+            line_pages = section.get("line_pages", [])
+            
+            if line_pages and chunk_line_start < len(line_pages):
+                chunk_page_start = line_pages[chunk_line_start]
+                end_idx = min(chunk_line_end, len(line_pages) - 1)
+                chunk_page_end = line_pages[end_idx]
+            else:
+                chunk_page_start = page_start
+                chunk_page_end = page_end
 
             content_hash = hashlib.sha256(
                 (chunk_content + file_path + collection_id).encode("utf-8")

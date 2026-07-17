@@ -1,0 +1,602 @@
+[
+  {
+    "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.21785783767700195,
+    "chunk_time_sec": 0.011039972305297852,
+    "num_chunks": 31,
+    "embedding_time_sec": 1.926600694656372,
+    "total_ingest_time_sec": 2.155498504638672,
+    "status": "Success"
+  },
+  {
+    "file": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.18767428398132324,
+    "chunk_time_sec": 0.009762763977050781,
+    "num_chunks": 60,
+    "embedding_time_sec": 2.3686838150024414,
+    "total_ingest_time_sec": 2.5661208629608154,
+    "status": "Success"
+  },
+  {
+    "file": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.1759040355682373,
+    "chunk_time_sec": 0.016028881072998047,
+    "num_chunks": 36,
+    "embedding_time_sec": 2.251939535140991,
+    "total_ingest_time_sec": 2.4438724517822266,
+    "status": "Success"
+  },
+  {
+    "file": "Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.2671933174133301,
+    "chunk_time_sec": 0.017763853073120117,
+    "num_chunks": 30,
+    "embedding_time_sec": 2.092986583709717,
+    "total_ingest_time_sec": 2.377943754196167,
+    "status": "Success"
+  },
+  {
+    "file": "Generalization_in_portfoliobased_algorithm_selecti.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.33423757553100586,
+    "chunk_time_sec": 0.018045663833618164,
+    "num_chunks": 51,
+    "embedding_time_sec": 2.800874710083008,
+    "total_ingest_time_sec": 3.153157949447632,
+    "status": "Success"
+  },
+  {
+    "file": "I_like_fish_especially_dolphins_Addressing_Contrad.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.3318819999694824,
+    "chunk_time_sec": 0.013252735137939453,
+    "num_chunks": 41,
+    "embedding_time_sec": 2.304403305053711,
+    "total_ingest_time_sec": 2.649538040161133,
+    "status": "Success"
+  },
+  {
+    "file": "Modelling_Human_Routines_Conceptualising_Social_Pr.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.24994444847106934,
+    "chunk_time_sec": 0.0242311954498291,
+    "num_chunks": 30,
+    "embedding_time_sec": 1.8075525760650635,
+    "total_ingest_time_sec": 2.081728219985962,
+    "status": "Success"
+  },
+  {
+    "file": "Overview_of_FPGA_deep_learning_acceleration_based_.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.11890983581542969,
+    "chunk_time_sec": 0.00902867317199707,
+    "num_chunks": 13,
+    "embedding_time_sec": 1.0051004886627197,
+    "total_ingest_time_sec": 1.1330389976501465,
+    "status": "Success"
+  },
+  {
+    "file": "Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.12402677536010742,
+    "chunk_time_sec": 0.0077571868896484375,
+    "num_chunks": 20,
+    "embedding_time_sec": 1.466984510421753,
+    "total_ingest_time_sec": 1.5987684726715088,
+    "status": "Success"
+  },
+  {
+    "file": "Skeletonbased_Approaches_based_on_Machine_Vision_A.pdf",
+    "collection": "AI",
+    "parse_time_sec": 0.26731371879577637,
+    "chunk_time_sec": 0.014513731002807617,
+    "num_chunks": 26,
+    "embedding_time_sec": 1.558945655822754,
+    "total_ingest_time_sec": 1.840773105621338,
+    "status": "Success"
+  },
+  {
+    "file": "AppearanceInvariant_6DoF_Visual_Localization_using.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.26357007026672363,
+    "chunk_time_sec": 0.014058828353881836,
+    "num_chunks": 31,
+    "embedding_time_sec": 2.018157958984375,
+    "total_ingest_time_sec": 2.2957868576049805,
+    "status": "Success"
+  },
+  {
+    "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.2734243869781494,
+    "chunk_time_sec": 0.03898215293884277,
+    "num_chunks": 31,
+    "embedding_time_sec": 4.179810047149658,
+    "total_ingest_time_sec": 4.49221658706665,
+    "status": "Success"
+  },
+  {
+    "file": "Flexible_deep_transfer_learning_by_separate_featur.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.5642774105072021,
+    "chunk_time_sec": 0.04844951629638672,
+    "num_chunks": 36,
+    "embedding_time_sec": 4.462874174118042,
+    "total_ingest_time_sec": 5.075601100921631,
+    "status": "Success"
+  },
+  {
+    "file": "General_Domain_Adaptation_Through_Proportional_Pro.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.5998783111572266,
+    "chunk_time_sec": 0.03214216232299805,
+    "num_chunks": 36,
+    "embedding_time_sec": 3.870525598526001,
+    "total_ingest_time_sec": 4.502546072006226,
+    "status": "Success"
+  },
+  {
+    "file": "Image_to_Bengali_Caption_Generation_Using_Deep_CNN.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.2556149959564209,
+    "chunk_time_sec": 0.03164815902709961,
+    "num_chunks": 23,
+    "embedding_time_sec": 3.266280174255371,
+    "total_ingest_time_sec": 3.5535433292388916,
+    "status": "Success"
+  },
+  {
+    "file": "Leaf_Segmentation_and_Counting_with_Deep_Learning_.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.28745031356811523,
+    "chunk_time_sec": 0.031894683837890625,
+    "num_chunks": 22,
+    "embedding_time_sec": 3.033937692642212,
+    "total_ingest_time_sec": 3.3532826900482178,
+    "status": "Success"
+  },
+  {
+    "file": "PointINet_Point_Cloud_Frame_Interpolation_Network.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.4435138702392578,
+    "chunk_time_sec": 0.031914710998535156,
+    "num_chunks": 38,
+    "embedding_time_sec": 5.029099941253662,
+    "total_ingest_time_sec": 5.504528522491455,
+    "status": "Success"
+  },
+  {
+    "file": "Prediction_of_Chronic_Kidney_Disease_Using_Deep_Ne.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.24184942245483398,
+    "chunk_time_sec": 0.01589655876159668,
+    "num_chunks": 27,
+    "embedding_time_sec": 3.6980092525482178,
+    "total_ingest_time_sec": 3.9557552337646484,
+    "status": "Success"
+  },
+  {
+    "file": "Randomized_RX_for_target_detection.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 0.3488302230834961,
+    "chunk_time_sec": 0.017939090728759766,
+    "num_chunks": 22,
+    "embedding_time_sec": 3.289743185043335,
+    "total_ingest_time_sec": 3.656512498855591,
+    "status": "Success"
+  },
+  {
+    "file": "Underwater_image_filtering_methods_datasets_and_ev.pdf",
+    "collection": "ComputerVision",
+    "parse_time_sec": 1.3668065071105957,
+    "chunk_time_sec": 0.03193545341491699,
+    "num_chunks": 75,
+    "embedding_time_sec": 6.401907444000244,
+    "total_ingest_time_sec": 7.800649404525757,
+    "status": "Success"
+  },
+  {
+    "file": "A_Comparative_Analysis_of_Bias_Amplification_in_Gr.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 0.7514657974243164,
+    "chunk_time_sec": 0.048206329345703125,
+    "num_chunks": 81,
+    "embedding_time_sec": 5.863153457641602,
+    "total_ingest_time_sec": 6.662825584411621,
+    "status": "Success"
+  },
+  {
+    "file": "Enhancing_Genetic_Algorithms_with_Graph_Neural_Net.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 0.39310765266418457,
+    "chunk_time_sec": 0.04612565040588379,
+    "num_chunks": 55,
+    "embedding_time_sec": 4.8160271644592285,
+    "total_ingest_time_sec": 5.255260467529297,
+    "status": "Success"
+  },
+  {
+    "file": "Graph_Neural_Networks_for_RFIDBased_Spatial_Geomet.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 0.8662815093994141,
+    "chunk_time_sec": 0.031592369079589844,
+    "num_chunks": 77,
+    "embedding_time_sec": 9.105199098587036,
+    "total_ingest_time_sec": 10.00307297706604,
+    "status": "Success"
+  },
+  {
+    "file": "Graph_Neural_Network_Encoding_for_Community_Detect.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 0.9549624919891357,
+    "chunk_time_sec": 0.032071590423583984,
+    "num_chunks": 67,
+    "embedding_time_sec": 5.5501697063446045,
+    "total_ingest_time_sec": 6.537203788757324,
+    "status": "Success"
+  },
+  {
+    "file": "Graph_neural_network_for_colliding_particles_with_.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 1.150874376296997,
+    "chunk_time_sec": 0.031923532485961914,
+    "num_chunks": 88,
+    "embedding_time_sec": 9.497880458831787,
+    "total_ingest_time_sec": 10.680678367614746,
+    "status": "Success"
+  },
+  {
+    "file": "Graph_Neural_Network_Training_Systems_A_Performanc.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 1.4616563320159912,
+    "chunk_time_sec": 0.046807289123535156,
+    "num_chunks": 85,
+    "embedding_time_sec": 8.318791151046753,
+    "total_ingest_time_sec": 9.82725477218628,
+    "status": "Success"
+  },
+  {
+    "file": "Heterogeneous_Information_Networkbased_Interest_Co.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 0.9227643013000488,
+    "chunk_time_sec": 0.016925573348999023,
+    "num_chunks": 55,
+    "embedding_time_sec": 4.981711387634277,
+    "total_ingest_time_sec": 5.921401262283325,
+    "status": "Success"
+  },
+  {
+    "file": "Optimizing_Age_of_Information_in_Vehicular_Edge_Co.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 1.310194730758667,
+    "chunk_time_sec": 0.06305480003356934,
+    "num_chunks": 51,
+    "embedding_time_sec": 5.690416097640991,
+    "total_ingest_time_sec": 7.0636656284332275,
+    "status": "Success"
+  },
+  {
+    "file": "Proficient_Graph_Neural_Network_Design_by_Accumula.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 0.7729218006134033,
+    "chunk_time_sec": 0.04804706573486328,
+    "num_chunks": 48,
+    "embedding_time_sec": 7.149340391159058,
+    "total_ingest_time_sec": 7.970309257507324,
+    "status": "Success"
+  },
+  {
+    "file": "Trading_Graph_Neural_Network.pdf",
+    "collection": "GraphML",
+    "parse_time_sec": 0.6032123565673828,
+    "chunk_time_sec": 0.0313115119934082,
+    "num_chunks": 24,
+    "embedding_time_sec": 3.082815170288086,
+    "total_ingest_time_sec": 3.717339038848877,
+    "status": "Success"
+  },
+  {
+    "file": "Demystifying_Instruction_Mixing_for_Finetuning_Lar.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 0.25988078117370605,
+    "chunk_time_sec": 0.016828298568725586,
+    "num_chunks": 26,
+    "embedding_time_sec": 2.1264097690582275,
+    "total_ingest_time_sec": 2.403118848800659,
+    "status": "Success"
+  },
+  {
+    "file": "Evolutionary_Computation_in_the_Era_of_Large_Langu.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 1.096069574356079,
+    "chunk_time_sec": 0.0732259750366211,
+    "num_chunks": 59,
+    "embedding_time_sec": 8.04308557510376,
+    "total_ingest_time_sec": 9.21238112449646,
+    "status": "Success"
+  },
+  {
+    "file": "Exploring_Advanced_Large_Language_Models_with_LLMs.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 0.7088813781738281,
+    "chunk_time_sec": 0.03189444541931152,
+    "num_chunks": 47,
+    "embedding_time_sec": 4.874788522720337,
+    "total_ingest_time_sec": 5.615564346313477,
+    "status": "Success"
+  },
+  {
+    "file": "Jais_and_Jaischat_ArabicCentric_Foundation_and_Ins.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 1.3867130279541016,
+    "chunk_time_sec": 0.09832906723022461,
+    "num_chunks": 123,
+    "embedding_time_sec": 15.04882550239563,
+    "total_ingest_time_sec": 16.533867597579956,
+    "status": "Success"
+  },
+  {
+    "file": "Large_Language_Model_Evaluation_Via_Multi_AI_Agent.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 0.4714019298553467,
+    "chunk_time_sec": 0.03146648406982422,
+    "num_chunks": 32,
+    "embedding_time_sec": 4.409066200256348,
+    "total_ingest_time_sec": 4.9119346141815186,
+    "status": "Success"
+  },
+  {
+    "file": "Learning_From_Failure_Integrating_Negative_Example.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 0.5305213928222656,
+    "chunk_time_sec": 0.03204202651977539,
+    "num_chunks": 43,
+    "embedding_time_sec": 4.739665985107422,
+    "total_ingest_time_sec": 5.302229404449463,
+    "status": "Success"
+  },
+  {
+    "file": "LOLA__An_OpenSource_Massively_Multilingual_Large_L.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 1.1238436698913574,
+    "chunk_time_sec": 0.048070669174194336,
+    "num_chunks": 228,
+    "embedding_time_sec": 10.125123977661133,
+    "total_ingest_time_sec": 11.297038316726685,
+    "status": "Success"
+  },
+  {
+    "file": "PBLLM_Partially_Binarized_Large_Language_Models.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 0.6504862308502197,
+    "chunk_time_sec": 0.03190469741821289,
+    "num_chunks": 98,
+    "embedding_time_sec": 6.898631572723389,
+    "total_ingest_time_sec": 7.581022500991821,
+    "status": "Success"
+  },
+  {
+    "file": "PediatricsGPT_Large_Language_Models_as_Chinese_Med.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 1.001507043838501,
+    "chunk_time_sec": 0.047824859619140625,
+    "num_chunks": 114,
+    "embedding_time_sec": 7.641812562942505,
+    "total_ingest_time_sec": 8.691144466400146,
+    "status": "Success"
+  },
+  {
+    "file": "WizardCoder_Empowering_Code_Large_Language_Models_.pdf",
+    "collection": "LLM",
+    "parse_time_sec": 0.49951601028442383,
+    "chunk_time_sec": 0.04610729217529297,
+    "num_chunks": 47,
+    "embedding_time_sec": 5.93472957611084,
+    "total_ingest_time_sec": 6.480352878570557,
+    "status": "Success"
+  },
+  {
+    "file": "Automated_Literature_Review_Using_NLP_Techniques_a.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 0.3050978183746338,
+    "chunk_time_sec": 0.016188859939575195,
+    "num_chunks": 18,
+    "embedding_time_sec": 2.839360237121582,
+    "total_ingest_time_sec": 3.160646915435791,
+    "status": "Success"
+  },
+  {
+    "file": "A_Collaborative_MultiAgent_Approach_to_RetrievalAu.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 0.5026147365570068,
+    "chunk_time_sec": 0.03106379508972168,
+    "num_chunks": 22,
+    "embedding_time_sec": 3.003553867340088,
+    "total_ingest_time_sec": 3.5372323989868164,
+    "status": "Success"
+  },
+  {
+    "file": "A_Reproducibility_Study_of_Metacognitive_Retrieval.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 0.36115431785583496,
+    "chunk_time_sec": 0.023930072784423828,
+    "num_chunks": 40,
+    "embedding_time_sec": 3.530074119567871,
+    "total_ingest_time_sec": 3.91515851020813,
+    "status": "Success"
+  },
+  {
+    "file": "Context_Awareness_Gate_For_Retrieval_Augmented_Gen.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 0.16449809074401855,
+    "chunk_time_sec": 0.03188347816467285,
+    "num_chunks": 27,
+    "embedding_time_sec": 3.2879433631896973,
+    "total_ingest_time_sec": 3.4843249320983887,
+    "status": "Success"
+  },
+  {
+    "file": "Engineering_the_RAG_Stack_A_Comprehensive_Review_o.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 1.3484036922454834,
+    "chunk_time_sec": 0.06403112411499023,
+    "num_chunks": 116,
+    "embedding_time_sec": 12.082929372787476,
+    "total_ingest_time_sec": 13.49536418914795,
+    "status": "Success"
+  },
+  {
+    "file": "FAIRRAG_Faithful_Adaptive_Iterative_Refinement_for.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 0.7668969631195068,
+    "chunk_time_sec": 0.09570884704589844,
+    "num_chunks": 77,
+    "embedding_time_sec": 9.417011260986328,
+    "total_ingest_time_sec": 10.279617071151733,
+    "status": "Success"
+  },
+  {
+    "file": "GFMRAG_Graph_Foundation_Model_for_Retrieval_Augmen.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 0.8428723812103271,
+    "chunk_time_sec": 0.0801241397857666,
+    "num_chunks": 93,
+    "embedding_time_sec": 11.61592698097229,
+    "total_ingest_time_sec": 12.538923501968384,
+    "status": "Success"
+  },
+  {
+    "file": "Investigating_RetrievalAugmented_Generation_in_Qur.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 0.4766530990600586,
+    "chunk_time_sec": 0.03258562088012695,
+    "num_chunks": 39,
+    "embedding_time_sec": 4.116332054138184,
+    "total_ingest_time_sec": 4.625570774078369,
+    "status": "Success"
+  },
+  {
+    "file": "Overview_of_the_TREC_2025_Retrieval_Augmented_Gene.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 0.27841734886169434,
+    "chunk_time_sec": 0.01575326919555664,
+    "num_chunks": 99,
+    "embedding_time_sec": 6.126050233840942,
+    "total_ingest_time_sec": 6.420220851898193,
+    "status": "Success"
+  },
+  {
+    "file": "Riddle_Me_This_Stealthy_Membership_Inference_for_R.pdf",
+    "collection": "RAG",
+    "parse_time_sec": 1.6773207187652588,
+    "chunk_time_sec": 0.06230878829956055,
+    "num_chunks": 99,
+    "embedding_time_sec": 10.301758050918579,
+    "total_ingest_time_sec": 12.041387557983398,
+    "status": "Success"
+  },
+  {
+    "file": "Accurate_Energetic_Constraints_for_Passive_Grasp_S.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.7552270889282227,
+    "chunk_time_sec": 0.06404662132263184,
+    "num_chunks": 39,
+    "embedding_time_sec": 5.814009428024292,
+    "total_ingest_time_sec": 6.6332831382751465,
+    "status": "Success"
+  },
+  {
+    "file": "Analysis_of_Safe_Ultrawideband_HumanRobot_Communic.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.340228796005249,
+    "chunk_time_sec": 0.02307581901550293,
+    "num_chunks": 12,
+    "embedding_time_sec": 2.12723708152771,
+    "total_ingest_time_sec": 2.490541696548462,
+    "status": "Success"
+  },
+  {
+    "file": "GISBased_Estimation_of_Seasonal_Solar_Energy_Poten.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.29407453536987305,
+    "chunk_time_sec": 0.030148983001708984,
+    "num_chunks": 13,
+    "embedding_time_sec": 1.9694066047668457,
+    "total_ingest_time_sec": 2.2936301231384277,
+    "status": "Success"
+  },
+  {
+    "file": "HighSpeed_Robot_Navigation_using_Predicted_Occupan.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.4897420406341553,
+    "chunk_time_sec": 0.01775670051574707,
+    "num_chunks": 17,
+    "embedding_time_sec": 2.602789878845215,
+    "total_ingest_time_sec": 3.110288619995117,
+    "status": "Success"
+  },
+  {
+    "file": "MAVSec_Securing_the_MAVLink_Protocol_for_Ardupilot.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.49155330657958984,
+    "chunk_time_sec": 0.03188276290893555,
+    "num_chunks": 28,
+    "embedding_time_sec": 3.8065128326416016,
+    "total_ingest_time_sec": 4.329948902130127,
+    "status": "Success"
+  },
+  {
+    "file": "Modeling_Dispositional_and_Initial_learned_Trust_i.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.5606708526611328,
+    "chunk_time_sec": 0.047831058502197266,
+    "num_chunks": 55,
+    "embedding_time_sec": 5.583186626434326,
+    "total_ingest_time_sec": 6.191688537597656,
+    "status": "Success"
+  },
+  {
+    "file": "Modeling_Vibration_Control_and_Trajectory_Tracking.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.8277125358581543,
+    "chunk_time_sec": 0.043846845626831055,
+    "num_chunks": 69,
+    "embedding_time_sec": 8.53039813041687,
+    "total_ingest_time_sec": 9.401957511901855,
+    "status": "Success"
+  },
+  {
+    "file": "OneShot_Object_Localization_Using_Learnt_Visual_Cu.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.3382899761199951,
+    "chunk_time_sec": 0.02094554901123047,
+    "num_chunks": 19,
+    "embedding_time_sec": 3.092604398727417,
+    "total_ingest_time_sec": 3.4518399238586426,
+    "status": "Success"
+  },
+  {
+    "file": "Robotic_Following_of_Flexible_Extended_Objects_Rel.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.8189327716827393,
+    "chunk_time_sec": 0.0633993148803711,
+    "num_chunks": 41,
+    "embedding_time_sec": 6.039286136627197,
+    "total_ingest_time_sec": 6.921618223190308,
+    "status": "Success"
+  },
+  {
+    "file": "Robust_Dense_Mapping_for_LargeScale_Dynamic_Enviro.pdf",
+    "collection": "Robotics",
+    "parse_time_sec": 0.47644591331481934,
+    "chunk_time_sec": 0.03200674057006836,
+    "num_chunks": 20,
+    "embedding_time_sec": 2.983623743057251,
+    "total_ingest_time_sec": 3.4920763969421387,
+    "status": "Success"
+  }
+]

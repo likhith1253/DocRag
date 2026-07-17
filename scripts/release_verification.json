@@ -1,0 +1,10 @@
+{
+  "API Startup": "FAIL",
+  "UI Startup": "PASS",
+  "PDF Parsing": "PASS",
+  "Chunking & Grounding": "PASS",
+  "Vector Dimension Mismatch": "PASS",
+  "Qdrant Indexing & Retrieval": "PASS",
+  "Negative Queries & Hallucination": "PASS",
+  "Concurrency": "PASS"
+}

@@ -28,12 +28,8 @@ try:
 except ImportError:
     pass
 
-if not _FITZ_AVAILABLE:
-    try:
-        from pdfminer.high_level import extract_text as pdfminer_extract_text
-        _PDFMINER_AVAILABLE = True
-    except ImportError:
-        pass
+import importlib.util
+_PDFMINER_AVAILABLE = importlib.util.find_spec("pdfminer") is not None
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +123,7 @@ def _fitz_parse(pdf_path: str) -> Dict[str, Any]:
     all_font_sizes = []
 
     for page_num, page in enumerate(doc, start=1):
-        blocks = page.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE).get("blocks", [])
+        blocks = page.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE, sort=True).get("blocks", [])
         page_blocks = []
         for block in blocks:
             if block.get("type") != 0:  # type 0 = text
@@ -164,6 +160,7 @@ def _fitz_parse(pdf_path: str) -> Dict[str, Any]:
 
 def _pdfminer_parse(pdf_path: str) -> Dict[str, Any]:
     """Fallback parser using pdfminer — no font metadata, page breaks via formfeed."""
+    from pdfminer.high_level import extract_text as pdfminer_extract_text
     full_text = pdfminer_extract_text(pdf_path) or ""
     page_texts = full_text.split("\f")  # pdfminer uses \f as page delimiter
 
@@ -264,18 +261,21 @@ def get_sections_with_pages(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
     current_page_start = 1
     current_page_end = 1
     current_lines: List[str] = []
+    current_line_pages: List[int] = []
 
     def _flush_section():
-        nonlocal current_heading, current_page_start, current_page_end, current_lines
+        nonlocal current_heading, current_page_start, current_page_end, current_lines, current_line_pages
         text = "\n".join(current_lines).strip()
         if text:
             sections.append({
                 "heading": current_heading,
                 "page_start": current_page_start,
                 "page_end": current_page_end,
-                "content": text
+                "content": text,
+                "line_pages": current_line_pages
             })
         current_lines = []
+        current_line_pages = []
 
     for page_data in pages:
         page_num = page_data["page"]
@@ -287,8 +287,10 @@ def get_sections_with_pages(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
                 current_heading = text.strip()
                 current_page_start = page_num
                 current_page_end = page_num
+                # Don't add heading to lines to avoid duplication if it's identical
             else:
                 current_lines.append(text)
+                current_line_pages.append(page_num)
                 current_page_end = page_num
 
     _flush_section()  # flush last section
@@ -296,16 +298,19 @@ def get_sections_with_pages(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
     # If no sections were found at all, return the full text as one section
     if not sections and pages:
         all_lines = []
+        all_line_pages = []
         first_page = pages[0]["page"]
         last_page = pages[-1]["page"]
         for pd in pages:
             for bl in pd["blocks"]:
                 all_lines.append(bl["text"])
+                all_line_pages.append(pd["page"])
         sections.append({
             "heading": "Body",
             "page_start": first_page,
             "page_end": last_page,
-            "content": "\n".join(all_lines)
+            "content": "\n".join(all_lines),
+            "line_pages": all_line_pages
         })
 
     return sections

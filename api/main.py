@@ -67,6 +67,11 @@ def query(payload: QueryPayload):
     # Accept either collection_id or repo_id
     repo_id = payload.collection_id or payload.repo_id
 
+    from storage.registry import RepositoryRegistry
+    from api.dependencies import registry_instance
+    if repo_id and not registry_instance.get_repository(repo_id):
+        raise HTTPException(status_code=404, detail=f"Collection '{repo_id}' not found.")
+
     try:
         ans, latency_breakdown = orchestrator.answer(
             question,
