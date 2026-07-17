@@ -1,0 +1,23 @@
+experiment_id: "embedding_ablation"
+description: "Ablation of embedding models (MiniLM vs E5) (RQ5)"
+seed: 42
+n_runs: 1
+dataset: "eval/benchmark_dataset.json"
+
+systems:
+  - name: "CodeGraphRAG_E5"
+    class: "eval.benchmark.systems.codegraphrag.CodeGraphRAGSystem"
+    config_overrides: {embedding_model: "intfloat/e5-base-v2"}
+
+  - name: "CodeGraphRAG_MiniLM"
+    class: "eval.benchmark.systems.codegraphrag.CodeGraphRAGSystem"
+    config_overrides: {embedding_model: "sentence-transformers/all-MiniLM-L6-v2"}
+
+metrics:
+  retrieval: [recall_at_5, mrr, ndcg_at_5]
+  generation: [token_f1]
+  system: [mean_s]
+
+statistical:
+  significance_test: wilcoxon
+  baseline_for_comparison: "CodeGraphRAG_MiniLM"

@@ -1,0 +1,4110 @@
+{
+  "schema_version": "1.0",
+  "purpose": "benchmark",
+  "description": "CodeGraphRAG benchmark dataset for repository QA evaluation.",
+  "created_at": "2026-07-07T00:00:00Z",
+  "repositories": [
+    {
+      "repo_id": "codegraphrag_main",
+      "name": "CodeGraphRAG",
+      "url": "local",
+      "commit": "unknown",
+      "is_internal": true,
+      "description": "The CodeGraphRAG repository itself \u2014 evaluated on its own source code.",
+      "language": "python"
+    },
+    {
+      "repo_id": "textual",
+      "name": "Textual",
+      "url": "https://github.com/Textualize/textual",
+      "commit": "1d99508b928a771b51e1a527319c6b87dcff9e05",
+      "is_internal": false,
+      "description": "A Rapid Application Development framework for Python."
+    }
+  ],
+  "items": [
+    {
+      "id": "q001",
+      "question": "What chunking strategy is configured in config.yaml?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Directly verifiable from config.yaml line 4",
+      "language": "yaml",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The chunking strategy is ast_semantic_overlap, configured under the chunking section of config.yaml.",
+      "primary_source_file": "config.yaml",
+      "supporting_source_files": [
+        "ingestion/chunker.py"
+      ],
+      "evidence_line_ranges": {
+        "config.yaml": "1-12",
+        "ingestion/chunker.py": "10-28"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "740fb0997019d1c9467c09c120d4557e5c0155c2a2a2c4ac1472fc2fb122ea10",
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "b26bb364fbdb6ff9cb2bfd4a2a657b007bbfbb53686e0a6a0f6f165588895a13"
+      ]
+    },
+    {
+      "id": "q002",
+      "question": "What is the default embedding model used in the vector store?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from storage/vector_store.py line 17 and config.yaml line 7",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The default embedding model is intfloat/e5-base-v2, loaded from config.yaml by VectorStoreManager.",
+      "primary_source_file": "storage/vector_store.py",
+      "supporting_source_files": [
+        "config.yaml"
+      ],
+      "evidence_line_ranges": {
+        "storage/vector_store.py": "12-30",
+        "config.yaml": "1-12"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "b62fe398812805a99ef56147677f40049165280827b8989e029bc69ebf1bcf67",
+        "c18b08dc8115b7c042beaeffa878f42782e6663d012f9e9d448120574c3b82e5"
+      ]
+    },
+    {
+      "id": "q003",
+      "question": "What vector database is used to store chunk embeddings?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from storage/vector_store.py",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "Qdrant is used as the vector database, with an embedded local disk-based deployment configured by qdrant_path in config.yaml.",
+      "primary_source_file": "storage/vector_store.py",
+      "supporting_source_files": [
+        "config.yaml"
+      ],
+      "evidence_line_ranges": {
+        "storage/vector_store.py": "12-35",
+        "config.yaml": "12-14"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "b62fe398812805a99ef56147677f40049165280827b8989e029bc69ebf1bcf67",
+        "d0882e97698bc024b77ac13fd60fa805f3f7287ac6dd44340b403fa1f58edf7e",
+        "c18b08dc8115b7c042beaeffa878f42782e6663d012f9e9d448120574c3b82e5"
+      ]
+    },
+    {
+      "id": "q004",
+      "question": "Which function in the orchestrator writes a log entry after every query?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from agents/orchestrator.py line 213",
+      "language": "python",
+      "reasoning_capability": "Function Lookup",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The _write_log function in agents/orchestrator.py appends a JSON entry to logs/query_logs.jsonl after every query.",
+      "primary_source_file": "agents/orchestrator.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/orchestrator.py": "213-230"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "b3224c752da555fd9771c5cf71f89e5c74536d650e11c3966e1be818acd8e2fb",
+        "ca862688e932da508272a7f102f1c95da31af781f07123bf05bdb33527220840"
+      ]
+    },
+    {
+      "id": "q005",
+      "question": "What algorithm is used for diversity-aware reranking in the retrieval pipeline?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from retrieval/mmr_rerank.py",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "Maximal Marginal Relevance (MMR) is used for diversity-aware reranking, implemented in retrieval/mmr_rerank.py.",
+      "primary_source_file": "retrieval/mmr_rerank.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "retrieval/mmr_rerank.py": "9-25"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "42ee4d115a7e2943aa76aeaed18b440a63d9e76bc6a66e097aaae989c4a8b860"
+      ]
+    },
+    {
+      "id": "q006",
+      "question": "What graph library is used to store the knowledge graph?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from storage/knowledge_graph.py line 8",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "NetworkX is used for the knowledge graph, specifically as a directed graph (nx.DiGraph) in storage/knowledge_graph.py.",
+      "primary_source_file": "storage/knowledge_graph.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "storage/knowledge_graph.py": "1-15"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f26708924cd9040a7fa0b7d383967d545021706c044262a529fd6260d1adf50e",
+        "15833e33b2143ddc86c2e0cda9b62cb77479f16878801ae1d9c7ecb5464480bb",
+        "b2a48e4c84ce636c6999016ce0fe39e6ea8da286d175cb92f0b6a46a32327ce9",
+        "0a6a6f6ebc33d266c149063282f9f360c5193de5138c1e21036125fa7e0713a3"
+      ]
+    },
+    {
+      "id": "q007",
+      "question": "What is the confidence_threshold for routing in config.yaml?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from config.yaml line 22",
+      "language": "yaml",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The confidence_threshold for routing is 0.6, configured under the router section of config.yaml.",
+      "primary_source_file": "config.yaml",
+      "supporting_source_files": [
+        "agents/router.py"
+      ],
+      "evidence_line_ranges": {
+        "config.yaml": "21-24",
+        "agents/router.py": "57-85"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "3daa3a04c12fb54319ceb82bfa34d30ae5514a35936cbf0b84287f38124eca5e",
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85"
+      ]
+    },
+    {
+      "id": "q008",
+      "question": "How many agents are in the multi-agent system?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from agents/orchestrator.py agent_node",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "There are 3 agents: code_agent, data_agent, and reasoning_agent. The router selects among them based on query type.",
+      "primary_source_file": "agents/orchestrator.py",
+      "supporting_source_files": [
+        "agents/router.py"
+      ],
+      "evidence_line_ranges": {
+        "agents/orchestrator.py": "12-25",
+        "agents/router.py": "12-16"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "7a9de7e9e0f75a8af09c18605fab752317d5c1d5ba9d350e157515d6f2387b56",
+        "d1f4e36dbe0ce97e624c484b0f5a21031141725038448dcfceaaaf2a84c21900",
+        "b7dbd816befd904fa62a99979378f93d08a1a4489ce65793e4a51157112a6529"
+      ]
+    },
+    {
+      "id": "q009",
+      "question": "What cross-encoder model is used for final reranking?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from config.yaml and retrieval/cross_encoder_rerank.py",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The model cross-encoder/ms-marco-MiniLM-L-6-v2 is used for cross-encoder reranking, configured by reranker_model in config.yaml.",
+      "primary_source_file": "retrieval/cross_encoder_rerank.py",
+      "supporting_source_files": [
+        "config.yaml"
+      ],
+      "evidence_line_ranges": {
+        "retrieval/cross_encoder_rerank.py": "19-28",
+        "config.yaml": "13-15"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "93c65df5936d30a63081123ee1dd356ab7ee67284d16a4db1c3177f775bfef17"
+      ]
+    },
+    {
+      "id": "q010",
+      "question": "What is the maximum chunk size in tokens as configured?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from config.yaml line 2",
+      "language": "yaml",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The maximum chunk size is 512 tokens, configured by max_chunk_tokens under the chunking section of config.yaml.",
+      "primary_source_file": "config.yaml",
+      "supporting_source_files": [
+        "ingestion/chunker.py"
+      ],
+      "evidence_line_ranges": {
+        "config.yaml": "1-4",
+        "ingestion/chunker.py": "12-28"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "740fb0997019d1c9467c09c120d4557e5c0155c2a2a2c4ac1472fc2fb122ea10",
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85"
+      ]
+    },
+    {
+      "id": "q011",
+      "question": "Which orchestration framework is used to wire the agent pipeline?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from agents/orchestrator.py line 7",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "LangGraph is used to orchestrate the pipeline, defined in agents/orchestrator.py using StateGraph with route, retrieve, and agent nodes.",
+      "primary_source_file": "agents/orchestrator.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/orchestrator.py": "157-169"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "b76018aabaed0909e01e1c9d3cdfb5d9813804bdb157f31d4acd0c9abdb4fed0"
+      ]
+    },
+    {
+      "id": "q012",
+      "question": "How does the router decide to escalate a query to the reasoning agent?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from agents/router.py route() function",
+      "language": "python",
+      "reasoning_capability": "Agent Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The router escalates to reasoning_agent when the normalized confidence score is below the confidence_threshold (0.6). Confidence is computed as the best-matching agent's score divided by the total signal across all agents.",
+      "primary_source_file": "agents/router.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/router.py": "57-86"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "3daa3a04c12fb54319ceb82bfa34d30ae5514a35936cbf0b84287f38124eca5e"
+      ]
+    },
+    {
+      "id": "q013",
+      "question": "What is the overlap_tokens setting for sliding window chunking?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from config.yaml line 3",
+      "language": "yaml",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The overlap is 64 tokens, configured by overlap_tokens under the chunking section of config.yaml.",
+      "primary_source_file": "config.yaml",
+      "supporting_source_files": [
+        "ingestion/chunker.py"
+      ],
+      "evidence_line_ranges": {
+        "config.yaml": "1-4",
+        "ingestion/chunker.py": "12-28"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "740fb0997019d1c9467c09c120d4557e5c0155c2a2a2c4ac1472fc2fb122ea10",
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85"
+      ]
+    },
+    {
+      "id": "q014",
+      "question": "What edge types are used in the knowledge graph schema?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from storage/knowledge_graph.py line 49",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The knowledge graph uses seven edge types: Calls, Imports, Inherits, Uses, Creates, Reads, Writes. These are defined in storage/knowledge_graph.py.",
+      "primary_source_file": "storage/knowledge_graph.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "storage/knowledge_graph.py": "41-52"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "15833e33b2143ddc86c2e0cda9b62cb77479f16878801ae1d9c7ecb5464480bb"
+      ]
+    },
+    {
+      "id": "q015",
+      "question": "What LLM backend is configured in config.yaml?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from config.yaml line 8",
+      "language": "yaml",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The ollama backend is configured via llm_backend: ollama in config.yaml. The abstraction layer in llm/backend.py routes calls to ollama_backend.py.",
+      "primary_source_file": "config.yaml",
+      "supporting_source_files": [
+        "llm/backend.py"
+      ],
+      "evidence_line_ranges": {
+        "config.yaml": "5-9",
+        "llm/backend.py": "17-39"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "05d29c29f0214092e8132637e4f03346a14f864dc136038e64281d6c5157bcc2"
+      ]
+    },
+    {
+      "id": "q016",
+      "question": "What function in ingestion/loader.py is used to load a repository?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from ingestion/loader.py",
+      "language": "python",
+      "reasoning_capability": "Function Lookup",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The load_repository function in ingestion/loader.py is used to load a repository. It yields file_info dicts with file_path, content, repo_name, and branch fields.",
+      "primary_source_file": "ingestion/loader.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ingestion/loader.py": "6-18"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f4d1f95e98ecc0317f32de8b100d34d58170080c5f9ee5df5248760adf795ecb"
+      ]
+    },
+    {
+      "id": "q017",
+      "question": "How many top-K results does the vector search retrieve before reranking?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from config.yaml lines 20-21",
+      "language": "yaml",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The vector search retrieves 30 results (vector_top_k: 30), which are then reranked to 5 (rerank_top_k: 5), as configured in config.yaml under the retrieval section.",
+      "primary_source_file": "config.yaml",
+      "supporting_source_files": [
+        "agents/orchestrator.py"
+      ],
+      "evidence_line_ranges": {
+        "config.yaml": "15-20",
+        "agents/orchestrator.py": "75-97"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "85d990bdef5a20d7a2245374ab1dc313dc519869d054029b5c4d8b1029d81ffe",
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "49c1f2a1ece4cca356b231cd0f6fbd4dd5b1c8a2e4f1566135773e19d38755f6"
+      ]
+    },
+    {
+      "id": "q018",
+      "question": "What node types are defined in the knowledge graph schema?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from storage/knowledge_graph.py build_from_chunks",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The knowledge graph has four node types: Functions, Classes, Files, and Modules. These are added in storage/knowledge_graph.py based on chunk metadata.",
+      "primary_source_file": "storage/knowledge_graph.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "storage/knowledge_graph.py": "10-40"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "15833e33b2143ddc86c2e0cda9b62cb77479f16878801ae1d9c7ecb5464480bb"
+      ]
+    },
+    {
+      "id": "q019",
+      "question": "What chunk metadata fields are stored per chunk?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from PROJECT_SPEC.md section 7 and ingestion/chunker.py",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "Each chunk stores: repository, branch, language, file, class, function, lines, hash, and timestamp as metadata fields.",
+      "primary_source_file": "ingestion/chunker.py",
+      "supporting_source_files": [
+        "storage/metadata_store.py"
+      ],
+      "evidence_line_ranges": {
+        "ingestion/chunker.py": "143-156",
+        "storage/metadata_store.py": "23-28"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "e5212f11b81ebd9232484d5d97cbd9fd318aceb5a1ce2f106100d6bd062ddcad",
+        "bb1245f09df309187fd029e1ea2be1063ea0d5f6eed98b44f262caa0323a48d3"
+      ]
+    },
+    {
+      "id": "q020",
+      "question": "What reasoning model is used by the reasoning agent?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from config.yaml line 13",
+      "language": "yaml",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The reasoning agent uses qwen2.5:3b-instruct, configured by reasoning_agent_model in config.yaml. The agent calls llm.backend.generate() with this model key.",
+      "primary_source_file": "config.yaml",
+      "supporting_source_files": [
+        "agents/reasoning_agent.py"
+      ],
+      "evidence_line_ranges": {
+        "config.yaml": "13-14",
+        "agents/reasoning_agent.py": "17-31"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "6306fb14d5c074ec06ef93047b80d203ac427a9d229e9f1563ae44ac675b9c76"
+      ]
+    },
+    {
+      "id": "q021",
+      "question": "In ingestion/chunker.py, what function parses code based on language?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from chunker.py line 8 and 153",
+      "language": "python",
+      "reasoning_capability": "Function Lookup",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The parse_code function from ingestion.parser is imported and called inside chunk_file to parse the file content into an abstract syntax tree representation based on the detected programming language.",
+      "primary_source_file": "ingestion/chunker.py",
+      "supporting_source_files": [
+        "ingestion/parser.py"
+      ],
+      "evidence_line_ranges": {
+        "ingestion/chunker.py": "143-156"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "e5212f11b81ebd9232484d5d97cbd9fd318aceb5a1ce2f106100d6bd062ddcad"
+      ]
+    },
+    {
+      "id": "q022",
+      "question": "What fallback mechanism is used in chunk_file if no classes or global functions are parsed from a file?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from chunker.py lines 162-172",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "If no classes or global functions are found in the parsed AST, chunk_file falls back to a pure sliding window chunking strategy using the chunk_text_sliding_window function.",
+      "primary_source_file": "ingestion/chunker.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ingestion/chunker.py": "157-173"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "e5212f11b81ebd9232484d5d97cbd9fd318aceb5a1ce2f106100d6bd062ddcad"
+      ]
+    },
+    {
+      "id": "q023",
+      "question": "In ingestion/parser.py, what AST node types represent a function or method definition in Python vs JavaScript/TypeScript?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from parser.py line 120",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "In Python, functions are represented by the function_definition node type. In JavaScript, TypeScript, and TSX, they are represented by function_declaration, method_definition, arrow_function, or generator_function_declaration.",
+      "primary_source_file": "ingestion/parser.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ingestion/parser.py": "120-147"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "43a6b60d823d238bd9700cfae04924930c917198b7ec1fb83caec2d999075584",
+        "9cdf948a78c063a1a52d907f6a05b257e1c512ad960ceb511daecb8a82a7564e",
+        "b46d00eb76adffcaace36ccb01197460b1b067c933d8ac6d35f3e0876ba1e124"
+      ]
+    },
+    {
+      "id": "q024",
+      "question": "How are python imports from import_from_statement nodes parsed to extract their module and names in ingestion/parser.py?",
+      "difficulty": "hard",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from parser.py lines 164-192",
+      "language": "python",
+      "reasoning_capability": "Dependency Tracing",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The parser searches for the child node of type 'import' to split the children. Dotted names or relative imports preceding the 'import' keyword are extracted as the module name. The names of the imported objects are extracted by recursively traversing children following the 'import' keyword, collecting identifiers, dotted names, or aliased names.",
+      "primary_source_file": "ingestion/parser.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ingestion/parser.py": "164-193"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "bd270a7dc59c2345826ddf03745eaf9b949c632ae40c01430762431173302f0d",
+        "43a6b60d823d238bd9700cfae04924930c917198b7ec1fb83caec2d999075584",
+        "f710e8d907d9469b673ec35f9f6e5c4af9ebeffd61891bed339c05786b3b85dc",
+        "502d3b6f2934ac9998fa06d3f2d1205c44eb4f12af968187b0fb9b2f79572ef3",
+        "9cdf948a78c063a1a52d907f6a05b257e1c512ad960ceb511daecb8a82a7564e"
+      ]
+    },
+    {
+      "id": "q025",
+      "question": "In ingestion/loader.py, how is the repository name computed when loading from a ZIP or TAR archive vs a directory?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from loader.py lines 20-24",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The repository name is determined from the basename of the archive file or directory by splitting the extension. For .tar files, the split is performed twice to strip off both .tar and compression extensions (e.g., .gz), resulting in the root name.",
+      "primary_source_file": "ingestion/loader.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ingestion/loader.py": "20-35"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "2abbae6cc0324c13657c0ffdb9aeb514e615e93d961b3bc848648cd81362c1bb",
+        "93b78a90dfa84cce52f12fdb4ab2cdad2f4eb1b096fd372ee81eec2d915fecd7",
+        "f4d1f95e98ecc0317f32de8b100d34d58170080c5f9ee5df5248760adf795ecb"
+      ]
+    },
+    {
+      "id": "q026",
+      "question": "What exceptions are caught during file reading in load_repository to skip unreadable files?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from loader.py lines 59 and 91",
+      "language": "python",
+      "reasoning_capability": "Bug Localization",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "For directory walking, UnicodeDecodeError and PermissionError are caught. For ZIP and TAR archives, UnicodeDecodeError is caught during decoding of byte streams.",
+      "primary_source_file": "ingestion/loader.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ingestion/loader.py": "82-93"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "93b78a90dfa84cce52f12fdb4ab2cdad2f4eb1b096fd372ee81eec2d915fecd7",
+        "5e137baf480b3e9b883d36ebd9d1c0142c828a3d1c77e821e2c79c8882c773d9",
+        "56da7309ce4c7a7952d79d40d7b351927459b6063d23b51b1e019e30a92156ca"
+      ]
+    },
+    {
+      "id": "q027",
+      "question": "How does load_repository handle files or directories with hidden names (names starting with a dot)?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from loader.py lines 38-43 and 75",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "In directory walking, it skips walking any directories starting with . (by filtering dirs[:]) and skips yielding any files starting with . . In ZIP/TAR archives, it filters out any file path where any path component starts with . .",
+      "primary_source_file": "ingestion/loader.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ingestion/loader.py": "75-80"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "93b78a90dfa84cce52f12fdb4ab2cdad2f4eb1b096fd372ee81eec2d915fecd7",
+        "5e137baf480b3e9b883d36ebd9d1c0142c828a3d1c77e821e2c79c8882c773d9"
+      ]
+    },
+    {
+      "id": "q028",
+      "question": "What extension mappings are configured in detect_language for the 'typescript' language?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from language_detect.py lines 24-27",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "Mappings for .ts, .tsx, .mts, and .cts are mapped to 'typescript'.",
+      "primary_source_file": "ingestion/language_detect.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ingestion/language_detect.py": "24-27"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "fba203f399917d7218fd857904a68f1cf0d11428e5af0f5d2f96dda76600b78b"
+      ]
+    },
+    {
+      "id": "q029",
+      "question": "In storage/vector_store.py, what prefix is appended to chunks vs query strings when using an E5 embedding model?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from vector_store.py lines 72 and 100",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "Chunks get the prefix 'passage: ' prepended to their content before encoding, whereas search queries get the prefix 'query: ' prepended before encoding.",
+      "primary_source_file": "storage/vector_store.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "storage/vector_store.py": "96-104"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "7e7f1f0e6bc13e81a834c958b4ad682845f2ae18712a495a1d54a8751207e744",
+        "b36fd1aeed09867e686b356df66006bb24f99fb2479b081390ecb69e0479ccac"
+      ]
+    },
+    {
+      "id": "q030",
+      "question": "How are point IDs generated for Qdrant storage points in storage/vector_store.py?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from vector_store.py line 80",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The point ID is generated by computing a UUID v5 hash using uuid.uuid5 with uuid.NAMESPACE_DNS and the unique chunk_hash extracted from the chunk metadata.",
+      "primary_source_file": "storage/vector_store.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "storage/vector_store.py": "77-85"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "e256e630662653e38df908b95b98633df328e31ead8a009cb0ae105f6dc5e7c0",
+        "7e7f1f0e6bc13e81a834c958b4ad682845f2ae18712a495a1d54a8751207e744"
+      ]
+    },
+    {
+      "id": "q031",
+      "question": "In storage/knowledge_graph.py, what type attribute is assigned to a target node if it doesn't already exist in the graph and the edge relation type is 'Imports' vs 'Inherits'?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from knowledge_graph.py lines 61-68",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "If the target node is missing, it is dynamically created. If the edge type is 'Imports', the target node type is set to 'Module'. If the edge type is 'Inherits', the node type is set to 'Class'. Otherwise, it defaults to 'Function'.",
+      "primary_source_file": "storage/knowledge_graph.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "storage/knowledge_graph.py": "60-70"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "15833e33b2143ddc86c2e0cda9b62cb77479f16878801ae1d9c7ecb5464480bb"
+      ]
+    },
+    {
+      "id": "q032",
+      "question": "What NetworkX serialization format is used to read and write the Knowledge Graph in storage/knowledge_graph.py?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from knowledge_graph.py lines 71-80",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The graph is saved and loaded using the node_link_data and node_link_graph utilities from NetworkX's nx.readwrite.json_graph package.",
+      "primary_source_file": "storage/knowledge_graph.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "storage/knowledge_graph.py": "71-81"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "5544518d601d5664987400501dba7f39117f000be401f3ce71a7c0e6e6755426",
+        "6a4420d97519149117f6ba0de6924d8e6491484208abfab2e113c1917a5d6bfc"
+      ]
+    },
+    {
+      "id": "q033",
+      "question": "In storage/metadata_store.py, what is the default filename used for JSON storage if no path is passed to the constructor?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from metadata_store.py line 6",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The default filename is './metadata_store.json'.",
+      "primary_source_file": "storage/metadata_store.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "storage/metadata_store.py": "5-10"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "bb1245f09df309187fd029e1ea2be1063ea0d5f6eed98b44f262caa0323a48d3"
+      ]
+    },
+    {
+      "id": "q034",
+      "question": "What is the default top_k value retrieved by search_vector from the vector store in retrieval/vector_search.py?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from vector_search.py line 4",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The default top_k value is 30.",
+      "primary_source_file": "retrieval/vector_search.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "retrieval/vector_search.py": "4-10"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "22920028d8b67e5bae762631e68368374faaa9942d824ce264e450110d5d804e"
+      ]
+    },
+    {
+      "id": "q035",
+      "question": "In retrieval/graph_search.py, how are neighbor nodes traversed in the knowledge graph for expansion?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from graph_search.py lines 40-42",
+      "language": "python",
+      "reasoning_capability": "Multi-hop Retrieval",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The graph search retrieves all successors (outgoing edges) and predecessors (incoming edges) for each active node in the graph using kg_manager.graph.successors(node) and kg_manager.graph.predecessors(node).",
+      "primary_source_file": "retrieval/graph_search.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "retrieval/graph_search.py": "37-43"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "ce2b1005eb8172db3afdc3d0de7e90c43226dcacced7e2765b78a0717080b406"
+      ]
+    },
+    {
+      "id": "q036",
+      "question": "What default score is assigned to graph-expanded chunks that do not already have a score in retrieval/graph_search.py?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from graph_search.py line 68",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "A default score of 0.5 is assigned to graph-expanded items.",
+      "primary_source_file": "retrieval/graph_search.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "retrieval/graph_search.py": "64-70"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "ce2b1005eb8172db3afdc3d0de7e90c43226dcacced7e2765b78a0717080b406"
+      ]
+    },
+    {
+      "id": "q037",
+      "question": "In retrieval/metadata_filter.py, how are the filtering criteria applied to chunks?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from metadata_filter.py lines 8-20",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The function loops over all fields in the criteria dictionary and compares their values to the corresponding fields in the chunk's metadata dictionary. A chunk is only kept if all criteria fields match the metadata fields exactly (meta.get(key) == val). If criteria is empty, it returns all chunks unfiltered.",
+      "primary_source_file": "retrieval/metadata_filter.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "retrieval/metadata_filter.py": "3-23"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "2daa12491a9109f20d5379604d534d01d0cda58aab5e9765767d451ef54a90df"
+      ]
+    },
+    {
+      "id": "q038",
+      "question": "In retrieval/mmr_rerank.py, how is the Maximal Marginal Relevance (MMR) score computed for each candidate chunk?",
+      "difficulty": "hard",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from mmr_rerank.py lines 64-69",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Multi Chunk",
+      "verified_answer": "The MMR score balances relevance to the query with redundancy against already selected chunks. For each unselected chunk index idx, it is calculated as: mmr_score = lambda_param * relevance - (1 - lambda_param) * max_sim_to_selected, where relevance is the cosine similarity of the candidate chunk to the query, and max_sim_to_selected is the maximum cosine similarity between the candidate chunk and any of the already selected chunks.",
+      "primary_source_file": "retrieval/mmr_rerank.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "retrieval/mmr_rerank.py": "63-74"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "42ee4d115a7e2943aa76aeaed18b440a63d9e76bc6a66e097aaae989c4a8b860",
+        "23012101de1c01487b2d50bd67e0d2949a4668e8ee7935eeb1e81ab48df64df5"
+      ]
+    },
+    {
+      "id": "q039",
+      "question": "In retrieval/mmr_rerank.py, what happens to the configured device parameter if it is set to 'auto' in config.yaml?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from mmr_rerank.py lines 31-32",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "If the device parameter is set to 'auto', it defaults to 'cpu' within the mmr_rerank function.",
+      "primary_source_file": "retrieval/mmr_rerank.py",
+      "supporting_source_files": [
+        "config.yaml"
+      ],
+      "evidence_line_ranges": {
+        "retrieval/mmr_rerank.py": "27-33",
+        "config.yaml": "6-6"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "42ee4d115a7e2943aa76aeaed18b440a63d9e76bc6a66e097aaae989c4a8b860"
+      ]
+    },
+    {
+      "id": "q040",
+      "question": "In retrieval/cross_encoder_rerank.py, how are the input pairs formatted for prediction with the Cross-Encoder model?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from cross_encoder_rerank.py line 30",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The pairs are formatted as a list of lists: [query, chunk['content']] for each retrieved chunk, which are then passed to model.predict(pairs).",
+      "primary_source_file": "retrieval/cross_encoder_rerank.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "retrieval/cross_encoder_rerank.py": "29-31"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "93c65df5936d30a63081123ee1dd356ab7ee67284d16a4db1c3177f775bfef17"
+      ]
+    },
+    {
+      "id": "q041",
+      "question": "What model name is retrieved by default for the Cross-Encoder if reranker_model is not set in config.yaml?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from cross_encoder_rerank.py line 22",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The default reranker model name is 'cross-encoder/ms-marco-MiniLM-L-6-v2'.",
+      "primary_source_file": "retrieval/cross_encoder_rerank.py",
+      "supporting_source_files": [
+        "config.yaml"
+      ],
+      "evidence_line_ranges": {
+        "retrieval/cross_encoder_rerank.py": "19-22",
+        "config.yaml": "14-14"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "93c65df5936d30a63081123ee1dd356ab7ee67284d16a4db1c3177f775bfef17"
+      ]
+    },
+    {
+      "id": "q042",
+      "question": "In agents/router.py, how is the routing confidence score normalized?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from router.py lines 74-79",
+      "language": "python",
+      "reasoning_capability": "Agent Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The confidence score is normalized by dividing the best matching agent's raw rule score by the sum of raw rule scores across all agents (scores[best_agent] / total_signal). If the total signal is zero, the confidence defaults to 0.0.",
+      "primary_source_file": "agents/router.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/router.py": "74-80"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "3daa3a04c12fb54319ceb82bfa34d30ae5514a35936cbf0b84287f38124eca5e"
+      ]
+    },
+    {
+      "id": "q043",
+      "question": "List three regex patterns used to score a query for the code_agent and three for the data_agent in agents/router.py.",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from router.py lines 19-31",
+      "language": "python",
+      "reasoning_capability": "Agent Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "For code_agent: r'\\bfunction\\b', r'\\bclass\\b', r'\\bmethod\\b'. For data_agent: r'\\bhow many\\b', r'\\bcount\\b', r'\\bsum\\b'.",
+      "primary_source_file": "agents/router.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/router.py": "18-35"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "b7dbd816befd904fa62a99979378f93d08a1a4489ce65793e4a51157112a6529"
+      ]
+    },
+    {
+      "id": "q044",
+      "question": "In agents/router.py, what happens to query routing if the normalized confidence score is below the threshold?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from router.py lines 81-83",
+      "language": "python",
+      "reasoning_capability": "Agent Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The query is escalated to the reasoning_agent regardless of which agent had the highest raw score.",
+      "primary_source_file": "agents/router.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/router.py": "81-83"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "3daa3a04c12fb54319ceb82bfa34d30ae5514a35936cbf0b84287f38124eca5e"
+      ]
+    },
+    {
+      "id": "q045",
+      "question": "In agents/orchestrator.py, what process memory counter field is read from Windows PSAPI to determine the memory usage of the current process?",
+      "difficulty": "hard",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from orchestrator.py lines 33-55",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The WorkingSetSize field from the PROCESS_MEMORY_COUNTERS structure is read via the Windows API function GetProcessMemoryInfo.",
+      "primary_source_file": "agents/orchestrator.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/orchestrator.py": "30-58"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "85aa7c34b210f8163fa5d3d53305befc09ebdc5e6be242f1e7687c5e55ceb57a",
+        "9cf33d4b409e42932fc3d6860e8b2a9c00c99790e827b8cde2a09880d671a022",
+        "b695c542fc2b96dc22d6050d4300eb9498e5197a46aeb67dc09572e080122c7d"
+      ]
+    },
+    {
+      "id": "q046",
+      "question": "List the sequence of 5 retrieval steps performed inside the retrieve_node function in agents/orchestrator.py.",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from orchestrator.py lines 95-126",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Long Context",
+      "verified_answer": "1. Vector search using v_manager.search(). 2. Knowledge Graph expansion using expand_by_graph(). 3. Metadata filtering using filter_chunks(). 4. MMR reranking using mmr_rerank(). 5. Cross-Encoder reranking using rerank_cross_encoder().",
+      "primary_source_file": "agents/orchestrator.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/orchestrator.py": "95-126"
+      },
+      "expected_retrieval_type": "hybrid",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "85d990bdef5a20d7a2245374ab1dc313dc519869d054029b5c4d8b1029d81ffe",
+        "49c1f2a1ece4cca356b231cd0f6fbd4dd5b1c8a2e4f1566135773e19d38755f6"
+      ]
+    },
+    {
+      "id": "q047",
+      "question": "How does agent_node in agents/orchestrator.py handle the case where zero chunks are retrieved?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from orchestrator.py lines 135-137",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "It handles this gracefully by returning a fallback answer: 'No relevant context found in the repository.'",
+      "primary_source_file": "agents/orchestrator.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/orchestrator.py": "134-140"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "7271de6704704df1758b8fa373f1bb32ca76bab5885a0f9e003207debc99d522"
+      ]
+    },
+    {
+      "id": "q048",
+      "question": "What LangGraph node types and execution order are used to compile the StateGraph workflow in agents/orchestrator.py?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from orchestrator.py lines 158-168",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The StateGraph has three nodes: 'route', 'retrieve', and 'agent'. The execution order is 'route' -> 'retrieve' -> 'agent' -> END.",
+      "primary_source_file": "agents/orchestrator.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/orchestrator.py": "157-169"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "b76018aabaed0909e01e1c9d3cdfb5d9813804bdb157f31d4acd0c9abdb4fed0"
+      ]
+    },
+    {
+      "id": "q049",
+      "question": "In agents/code_agent.py, how is the retrieved context formatted for the LLM prompt?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from code_agent.py lines 16-21",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The top 5 retrieved chunks are formatted and joined with double newlines. Each chunk includes a header citing its file path, class name, and function name, followed by its content: [File: <file> | Class: <class> | Function: <function>]\\n<content>",
+      "primary_source_file": "agents/code_agent.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/code_agent.py": "16-21"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "0d31c9f65d15229b2ce1dee02398ac7134a5120138383b3ba5cb01d2c339b0ec"
+      ]
+    },
+    {
+      "id": "q050",
+      "question": "What model key is passed to the LLM backend by the code agent in agents/code_agent.py?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from code_agent.py line 30",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The model key is 'code_agent_model'.",
+      "primary_source_file": "agents/code_agent.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/code_agent.py": "23-30"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "0d31c9f65d15229b2ce1dee02398ac7134a5120138383b3ba5cb01d2c339b0ec"
+      ]
+    },
+    {
+      "id": "q051",
+      "question": "In agents/data_agent.py, what metadata field other than file path is cited in the LLM prompt's context header for each chunk?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from data_agent.py line 17",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The line range (Lines: <lines>) of the chunk is cited in the context header for each chunk.",
+      "primary_source_file": "agents/data_agent.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/data_agent.py": "16-19"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f9a4ae40c332b8fccd7254ebadacbb0528b0dd0e2e3366a70223432b709240cc"
+      ]
+    },
+    {
+      "id": "q052",
+      "question": "What model key is passed to the LLM backend by the reasoning agent in agents/reasoning_agent.py?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from reasoning_agent.py line 31",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The model key is 'reasoning_agent_model'.",
+      "primary_source_file": "agents/reasoning_agent.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "agents/reasoning_agent.py": "23-31"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6306fb14d5c074ec06ef93047b80d203ac427a9d229e9f1563ae44ac675b9c76"
+      ]
+    },
+    {
+      "id": "q053",
+      "question": "In llm/backend.py, how is the model key mapped to the actual model name?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from backend.py lines 28-30",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The config is loaded using _load_config(). The model name is retrieved by querying the model key (model_key) from the config dictionary (config.get(model_key, model_key)). If the key is not present in the configuration, it defaults to using the model_key string itself.",
+      "primary_source_file": "llm/backend.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "llm/backend.py": "28-31"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "05d29c29f0214092e8132637e4f03346a14f864dc136038e64281d6c5157bcc2"
+      ]
+    },
+    {
+      "id": "q054",
+      "question": "What exception is raised if the configuration file is missing when _load_config is called in llm/backend.py?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from backend.py lines 11-12",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "A FileNotFoundError is raised.",
+      "primary_source_file": "llm/backend.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "llm/backend.py": "8-15"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "7f9ebee6a1a94dbab77a95d4e08ba3e6d73e320883141af7a0dfbc57ef5e0edc"
+      ]
+    },
+    {
+      "id": "q055",
+      "question": "In the FastAPI endpoints defined in api/main.py, what API endpoints exist and what are their HTTP methods?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from main.py lines 22, 26, 78",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The endpoints are: GET /health, POST /upload, and POST /query.",
+      "primary_source_file": "api/main.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "api/main.py": "78-121"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "24d18fcecfac3862279c9672bc2ecb24f68dfd73dbddab15960f7ffcfab72b07",
+        "d398501d7bc6bdbdd9fb93ca554f41cc0cd02bb37b3812ba066fba4f245aeb25"
+      ]
+    },
+    {
+      "id": "q056",
+      "question": "In api/main.py, what payload fields are expected for the /upload and /query endpoints?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from main.py lines 16-21",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The /upload endpoint expects a JSON payload containing path (a string pointing to the repository path). The /query endpoint expects a JSON payload containing question (a string representing the user's question).",
+      "primary_source_file": "api/main.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "api/main.py": "16-21"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "aa6b096d7466d8dd18bc31057d15341f692154ffe40e3a07dea77a06e0008d06",
+        "df84361f78e2ea48aaad595b01b7feb6bba0a5c9a8752516f9334d90732194c5",
+        "3b45ee661b5cbd04ae4136a0f85d919389b650bdc58d8b8ff5c4e93f70b21f03"
+      ]
+    },
+    {
+      "id": "q057",
+      "question": "In api/main.py, after calling orchestrator.answer(), how does the /query endpoint extract retrieval latency, routing agent, and source files?",
+      "difficulty": "medium",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from main.py lines 85-108",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "It reads the last line of ./logs/query_logs.jsonl, parses it as JSON, and checks if the log's question matches the input query. If so, it extracts the latency, agent, and unique file paths from the metadata of retrieved_chunks.",
+      "primary_source_file": "api/main.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "api/main.py": "83-111"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "24d18fcecfac3862279c9672bc2ecb24f68dfd73dbddab15960f7ffcfab72b07"
+      ]
+    },
+    {
+      "id": "q058",
+      "question": "In ui/app.py, what framework is used to build the front-end user interface and what port is it configured to target on the backend by default?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from app.py lines 1-7",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The user interface is built using Streamlit, and it is configured to target port 8000 (http://localhost:8000) of the backend.",
+      "primary_source_file": "ui/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "ui/app.py": "1-7"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "7ac63713d92e7a8fd14348370ff0830767533dd37cd58e0d484cc7ba1efbae89"
+      ]
+    },
+    {
+      "id": "q059",
+      "question": "In tests/test_e2e_retrieval.py, how is the metadata filter step tested?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from test_e2e_retrieval.py lines 80-82",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The metadata filter step is tested by filtering the expanded graph chunks to keep only those chunks where the language metadata matches 'python' exactly.",
+      "primary_source_file": "tests/test_e2e_retrieval.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "tests/test_e2e_retrieval.py": "80-82"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "0532b7dd2da32a9a0e584271ce7dff77a58d343b909134bbe79b7a4f35debd13",
+        "684a2902cacec7d0904f24f682383e3b5eeb91ab4a2b1bb4dcbc9e253eef4381"
+      ]
+    },
+    {
+      "id": "q060",
+      "question": "In tests/test_benchmark_metrics.py, what are the expected recall@2, precision@4, and MRR values when the retrieved list is ['path/to/A.py', 'path/to/B.py', 'path/to/C.py', 'path/to/D.py', 'path/to/E.py'] and the relevant list is ['path/to/B.py', 'path/to/D.py']?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from test_benchmark_metrics.py lines 42-56",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The expected values are recall@2 = 0.5, precision@4 = 0.5, and MRR = 0.5.",
+      "primary_source_file": "tests/test_benchmark_metrics.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "tests/test_benchmark_metrics.py": "42-56"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "66eddbcc9888025c9fad4db2614b46a2d65a6b9028660e539080270534413593"
+      ]
+    },
+    {
+      "id": "q061",
+      "question": "How is Average Precision (AP) calculated in the test case where the retrieved list has hits at rank 2 and rank 4, each with precision 0.5?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from test_benchmark_metrics.py lines 58-61",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The AP is calculated as the mean of the precision at each correct hit rank: AP = (Precision@2 + Precision@4) / 2 = (0.5 + 0.5) / 2 = 0.5.",
+      "primary_source_file": "tests/test_benchmark_metrics.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "tests/test_benchmark_metrics.py": "58-61"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "66eddbcc9888025c9fad4db2614b46a2d65a6b9028660e539080270534413593"
+      ]
+    },
+    {
+      "id": "q062",
+      "question": "Why is the Wilcoxon signed-rank test preferred over a paired t-test for comparing system performance on QA metrics in CodeGraphRAG?",
+      "difficulty": "hard",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from statistical.py lines 12-19",
+      "language": "python",
+      "reasoning_capability": "Cross-file Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The Wilcoxon test is non-parametric and does not assume normally distributed difference scores. In RAG metrics (like Exact Match or Recall@K), scores are often bimodal (either 0 or 1 per query), making t-test normality assumptions invalid.",
+      "primary_source_file": "eval/benchmark/metrics/statistical.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "eval/benchmark/metrics/statistical.py": "12-19"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "synthesis",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "85b40b455ee10e30b8273a7da735fb9b6b857f7d661a2cbdd9c24e65aad3d274"
+      ]
+    },
+    {
+      "id": "q063",
+      "question": "In eval/benchmark/metrics/statistical.py, how does the bonferroni_correction adjust p-values?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from statistical.py lines 143-164",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "It multiplies each uncorrected p-value by the total number of comparisons n and caps the value at 1.0 (min(p * n, 1.0)).",
+      "primary_source_file": "eval/benchmark/metrics/statistical.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "eval/benchmark/metrics/statistical.py": "143-164"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "2f2afa60b51022ef3b12d200749caa53e3a59496dd2e49be60e9a02ec9facf63"
+      ]
+    },
+    {
+      "id": "q064",
+      "question": "What are the threshold boundaries used to interpret the magnitude of Cohen's d in eval/benchmark/metrics/statistical.py?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Verifiable from statistical.py lines 178-182",
+      "language": "python",
+      "reasoning_capability": "Retrieval Strategy",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "|d| < 0.2 is Negligible, |d| < 0.5 is Small, |d| < 0.8 is Medium, and |d| >= 0.8 is Large.",
+      "primary_source_file": "eval/benchmark/metrics/statistical.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "eval/benchmark/metrics/statistical.py": "178-182"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "1901b46231ce8886fe2b452f5da6716c334de28fd0a1178b968e95c893e3d1f0"
+      ]
+    },
+    {
+      "id": "textual_cf_01",
+      "repo_id": "textual",
+      "question": "How does `App.run()` initialize the asyncio event loop and which driver startup sequence does it follow?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [
+        "src/textual/app.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "2220-2306"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f16a07d76078",
+        "a7d1c98f2ccc"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "App.run is the synchronous entry point calling run_async. Multi-hop: requires reading App.run_async and App._build_driver.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_02",
+      "repo_id": "textual",
+      "question": "What is the async execution flow inside `App.run_async()` before the event loop begins processing messages?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [
+        "src/textual/driver.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "2220-2306",
+        "src/textual/driver.py": "17-301"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "a7d1c98f2ccc",
+        "86724a272288"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "App.run_async orchestrates driver startup and screen push before the event loop. Multi-hop: intersects driver.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_03",
+      "repo_id": "textual",
+      "question": "How does `MessagePump._dispatch_message()` resolve the correct handler method to call for a given message?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message_pump.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/message_pump.py": "707-741"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "279b37e1d660"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: dispatch logic is self-contained in message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_04",
+      "repo_id": "textual",
+      "question": "How does `MessagePump._process_messages_loop()` process the message queue and handle backpressure?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message_pump.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/message_pump.py": "634-693"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "1a11823b4380"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: the full message processing loop is in message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_05",
+      "repo_id": "textual",
+      "question": "Trace the sequence of calls that occurs when `Widget.remove()` is invoked on a mounted widget.",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "4378-4385"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "cd4f62093ae4"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: Widget.remove posts a message that crosses widget.py and message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_06",
+      "repo_id": "textual",
+      "question": "What is the complete call chain inside `Widget.mount()` from invocation to DOM attachment?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [
+        "src/textual/widget.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "1375-1422"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f4f0c7ec09a6",
+        "97e8b292d110"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: Widget.mount calls _find_mount_point and interacts with DOM and message bus.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_07",
+      "repo_id": "textual",
+      "question": "How does `App.push_screen()` manage the screen stack and trigger screen lifecycle callbacks?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "2895-2967"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "04f6a9f634d8"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: push_screen interacts with screen.py lifecycle methods and _replace_screen.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_08",
+      "repo_id": "textual",
+      "question": "What is the control flow of `App.pop_screen()` including focus restoration and outgoing screen teardown?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "3096-3121"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "8af5bae4239e"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: pop_screen triggers screen._on_mount and focus events crossing screen.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_09",
+      "repo_id": "textual",
+      "question": "How does `Button._on_click()` produce a `Button.Pressed` message on the message bus?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widgets/_button.py",
+      "supporting_source_files": [
+        "src/textual/widgets/_button.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/widgets/_button.py": "421-440"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "a9c4e2a71e05",
+        "2ab0cfe01de4"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: _on_click calls self.press() which posts Pressed. Cross-file via message_pump.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_10",
+      "repo_id": "textual",
+      "question": "What is the execution order between `Widget._on_mount()` and any user-defined `Widget.on_mount()` override?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "4750-4754"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f8543641b937"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: _on_mount and its relationship to on_mount is in widget.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_11",
+      "repo_id": "textual",
+      "question": "How does `Driver.start_application_mode()` signal the application to begin rendering?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/driver.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/driver.py": "146-147"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "439e9f035089"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: start_application_mode is defined in driver.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_12",
+      "repo_id": "textual",
+      "question": "How does `Screen.set_focus()` propagate focus change events to the DOM and trigger blur/focus lifecycle events?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/screen.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/screen.py": "1097-1150"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "ad6c68e0e31a"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: set_focus posts events that flow through dom.py and message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_13",
+      "repo_id": "textual",
+      "question": "What is the teardown sequence when `App.exit()` is called, including driver cleanup?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "1270-1288"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "a440097a0a1d"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: App.exit coordinates with driver.py teardown and screen lifecycle.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_14",
+      "repo_id": "textual",
+      "question": "How does `Timer._run()` manage interval callbacks and handle cancellation mid-interval?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/timer.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/timer.py": "150-178"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "a37b8d974d4c"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Timer._run is self-contained in timer.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_15",
+      "repo_id": "textual",
+      "question": "How does `dispatch_key()` determine which widget receives a keypress and what happens if no handler is found?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/_dispatch_key.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/_dispatch_key.py": "12-68"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "7b0645fa15c1"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: key dispatch logic is fully in _dispatch_key.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_16",
+      "repo_id": "textual",
+      "question": "How does `Widget.scroll_to()` calculate the scroll delta and initiate the animation sequence?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "2859-2924"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "1da36a7b1870"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: scroll_to delegates to _animator.py for animation.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_17",
+      "repo_id": "textual",
+      "question": "How does `App.action_focus_next()` cycle focus across all focusable widgets in the DOM?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "4554-4556"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "038958d27a15"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: action_focus_next uses DOM traversal via screen.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_18",
+      "repo_id": "textual",
+      "question": "What happens when `MessagePump.post_message()` is called before the pump has started processing?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message_pump.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/message_pump.py": "860-888"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "556b2c124828"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: queue behavior during pre-run state is documented in message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_19",
+      "repo_id": "textual",
+      "question": "How does `App.install_screen()` register a named screen for deferred use?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "3036-3060"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "63f0a4615a78"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: install_screen is in app.py and does not cross file boundaries.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cf_20",
+      "repo_id": "textual",
+      "question": "How does `Widget._on_unmount()` clean up reactive watchers before the widget is detached from the DOM?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "4849-4851"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "d4fa673c8068"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: _on_unmount cleanup is in widget.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_01",
+      "repo_id": "textual",
+      "question": "How does a `reactive` attribute value change propagate to its corresponding `watch_*` method in `Widget`?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/reactive.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/reactive.py": "371-374"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6488678658de"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: __set__ triggers watcher dispatch via message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_02",
+      "repo_id": "textual",
+      "question": "What data does the `Message` base class carry when posted from a child widget to a parent?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/message.py": "23-158"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "b4c002f3b7da"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Message class structure is in message.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_03",
+      "repo_id": "textual",
+      "question": "How does the `Button.Pressed` message carry a reference to the originating `Button` widget instance?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widgets/_button.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widgets/_button.py": "311-329"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "9f1f73cbc208"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Button.Pressed is defined as a nested class in _button.py with a button attribute.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_04",
+      "repo_id": "textual",
+      "question": "How does message routing work such that a `Button.Pressed` reaches a parent `Screen` handler?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message_pump.py",
+      "supporting_source_files": [
+        "src/textual/widgets/_button.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/message_pump.py": "707-741",
+        "src/textual/widgets/_button.py": "421-440"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "279b37e1d660",
+        "2ab0cfe01de4"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: message routing from button to screen crosses widget.py and message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_05",
+      "repo_id": "textual",
+      "question": "Describe the data flow from a raw terminal keypress to a `Key` event object inside the application.",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/events.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/events.py": "261-316"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "2c56edb71ec5"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: keypress data flows from _xterm_parser.py through driver to events.Key.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_06",
+      "repo_id": "textual",
+      "question": "How does `Color.blend()` combine two color values \u2014 what numeric operations does it perform?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/color.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/color.py": "432-470"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "bf68a9de13bb"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Color.blend is self-contained in color.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_07",
+      "repo_id": "textual",
+      "question": "How does `DOMNode.query()` pass CSS selector criteria through the DOM tree to collect matching nodes?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/dom.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/dom.py": "1397-1415"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6a8a412aa10b"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: query uses CSS selector engine in css/ module.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_08",
+      "repo_id": "textual",
+      "question": "What data transformation occurs between `Widget.render()` output and the final terminal Strip object?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "4432-4458"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "d01262721d3d"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: render output flows through strip.py and _compositor.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_09",
+      "repo_id": "textual",
+      "question": "How does `Reactive.__get__` return the attribute value \u2014 from a backing store or computed on access?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/reactive.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/reactive.py": "290-314"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6b51a9bc3074"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Reactive.__get__ is self-contained in reactive.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_10",
+      "repo_id": "textual",
+      "question": "How does a `Worker` pass its result back to the owning `App` context after async completion?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/worker.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/worker.py": "328-344"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "79e8588661a2"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: Worker result flows through WorkerManager back to App context.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_11",
+      "repo_id": "textual",
+      "question": "How does `App.notify()` construct a notification and dispatch it to the active screen?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "4621-4680"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "4d65d6627aa5"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: App.notify is fully in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_12",
+      "repo_id": "textual",
+      "question": "How does `Signal.publish()` deliver a value to all registered subscribers?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/signal.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/signal.py": "105-137"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "7852c62541c7"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Signal.publish is in signal.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_13",
+      "repo_id": "textual",
+      "question": "How does `DOMNode.set_styles()` apply an inline style string to the DOM node's style object?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/dom.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/dom.py": "1704-1726"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "655fb5839b83"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: set_styles is in dom.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_14",
+      "repo_id": "textual",
+      "question": "What is the data pipeline inside `Widget.get_content_width()` for computing a widget's intrinsic content width?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "1881-1910"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "536d2d968ae0"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: get_content_width is in widget.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_15",
+      "repo_id": "textual",
+      "question": "How does `MessagePump._dispatch_message()` handle exceptions raised inside a message handler?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message_pump.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/message_pump.py": "707-741"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "279b37e1d660"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: exception handling is in _dispatch_message in message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_df_16",
+      "repo_id": "textual",
+      "question": "How does `App._replace_screen()` swap the current screen and transfer any pending messages?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "2852-2871"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "03260fa87a5f"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: _replace_screen interacts with screen.py lifecycle and message queues.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_01",
+      "repo_id": "textual",
+      "question": "What is the class hierarchy of `Widget` and which base classes does it inherit from?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "283-4956"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "45ebefc33dc0"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Widget class definition with MRO bases is in widget.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_02",
+      "repo_id": "textual",
+      "question": "How is `App` structured relative to `MessagePump` and `DOMNode` \u2014 what does each parent provide?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [
+        "src/textual/message_pump.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "296-5040",
+        "src/textual/message_pump.py": "115-920"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6a78f6d76b53",
+        "dd876a732fff"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: requires reading App, MessagePump, and DOMNode class definitions across files.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_03",
+      "repo_id": "textual",
+      "question": "What is the purpose of `DOMNode` and how does it form a shared base for both `App` and `Widget`?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/dom.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/dom.py": "135-1944"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "ca85812c3ea6"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: DOMNode is a shared base \u2014 comparing dom.py, app.py, widget.py is required.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_04",
+      "repo_id": "textual",
+      "question": "How does the `Screen` class act as both a `Widget` and a layout container for its children?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/screen.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/screen.py": "148-2154"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "e31353f1914a"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Screen class definition and responsibility are in screen.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_05",
+      "repo_id": "textual",
+      "question": "What is the role of `MessagePump` in the Textual architecture and what interface does it expose to subclasses?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message_pump.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/message_pump.py": "115-920"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "dd876a732fff"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: MessagePump class is self-contained in message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_06",
+      "repo_id": "textual",
+      "question": "How does `Binding` define a keyboard shortcut and link it to an action string?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/binding.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/binding.py": "55-168"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "867c0c13bcca"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Binding dataclass is in binding.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_07",
+      "repo_id": "textual",
+      "question": "What is the abstract interface of `Driver` and which methods must every concrete driver implement?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/driver.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/driver.py": "17-301"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "86724a272288"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Driver abstract interface is in driver.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_08",
+      "repo_id": "textual",
+      "question": "How does the `Reactive` descriptor integrate with `Widget` and `DOMNode`'s attribute system?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/reactive.py",
+      "supporting_source_files": [
+        "src/textual/widget.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/reactive.py": "125-434",
+        "src/textual/widget.py": "283-4956"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "36852dfc6089",
+        "45ebefc33dc0"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: Reactive descriptor requires reactive.py and widget.py to understand fully.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_09",
+      "repo_id": "textual",
+      "question": "What is the role of the `Worker` class and how does it run background tasks within the Textual event loop?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/worker.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/worker.py": "119-455"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "fa20fe08ed53"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Worker class is in worker.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_10",
+      "repo_id": "textual",
+      "question": "How does `App.compose()` establish the initial widget tree before mounting begins?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "1393-1398"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "148ff53a0260"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: App.compose is in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_11",
+      "repo_id": "textual",
+      "question": "How does Textual separate rendering responsibilities between `Widget.render()` and `_compositor.py`?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [
+        "src/textual/_compositor.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "4432-4458",
+        "src/textual/_compositor.py": "282-1272"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "d01262721d3d",
+        "04e85d379103"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: rendering pipeline spans widget.py and _compositor.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_12",
+      "repo_id": "textual",
+      "question": "What responsibilities does `BindingsMap` have in Textual's key-binding resolution system?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/binding.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/binding.py": "185-393"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "1c440f7cc9fc"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: BindingsMap is in binding.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_13",
+      "repo_id": "textual",
+      "question": "How does `Screen.focus_next()` interact with the DOM to select the next focusable widget?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/screen.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/screen.py": "897-912"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "92deb3122b35"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: focus_next iterates DOM nodes using _widget_navigation.py utilities.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_14",
+      "repo_id": "textual",
+      "question": "What does the `ComposeResult` type alias represent and how does Textual consume its generator output?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "159-159"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "7b962d433136"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: ComposeResult type alias is defined at module level in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_15",
+      "repo_id": "textual",
+      "question": "How does `DOMNode.ancestors` traverse the DOM tree upward to the root?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/dom.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/dom.py": "1243-1254"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "24ab3eb8b3f5"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: ancestors property is in dom.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_16",
+      "repo_id": "textual",
+      "question": "How does Textual merge `App.DEFAULT_CSS` with widget-level `DEFAULT_CSS` during style resolution?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "296-5040"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6a78f6d76b53"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: DEFAULT_CSS merging requires app.py and the CSS cascade rules in css/.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_17",
+      "repo_id": "textual",
+      "question": "How does `Timer` integrate with the asyncio event loop managed by `MessagePump`?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/timer.py",
+      "supporting_source_files": [
+        "src/textual/message_pump.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/timer.py": "32-203",
+        "src/textual/message_pump.py": "378-416"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "9ea1c59e37c7",
+        "813c01bf1cd5"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: Timer uses asyncio from message_pump.py context.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_18",
+      "repo_id": "textual",
+      "question": "What is the `Pilot` class and how does it enable headless testing of Textual applications?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/pilot.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/pilot.py": "62-570"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "593d44f7544e"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Pilot class is in pilot.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_19",
+      "repo_id": "textual",
+      "question": "How does `App.set_focus()` delegate to `Screen.set_focus()` and what is the separation of concerns?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [
+        "src/textual/screen.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "3150-3157",
+        "src/textual/screen.py": "1097-1150"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "afc4ee85ebc4",
+        "ad6c68e0e31a"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: App.set_focus delegates to screen.py for actual focus change.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_20",
+      "repo_id": "textual",
+      "question": "What architectural pattern does Textual use for widget lookup via `DOMNode.query_one()`?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/dom.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/dom.py": "1462-1533"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "d30439eae3a7"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: query_one uses CSS selector engine in css/ subdirectory.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_21",
+      "repo_id": "textual",
+      "question": "How does `App.get_screen()` locate and return an installed screen by name?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "2761-2795"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "8adc386445e2"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: get_screen is in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_22",
+      "repo_id": "textual",
+      "question": "How does `App._build_driver()` select the appropriate driver class based on environment conditions?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "3318-3351"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f41e524ac471"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: driver selection in App references drivers/ subdirectory classes.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_23",
+      "repo_id": "textual",
+      "question": "How does `Widget.focus()` propagate a focus request upward to the active Screen?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [
+        "src/textual/screen.py"
+      ],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "4579-4598",
+        "src/textual/screen.py": "1097-1150"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "a2c76f9ae7a4",
+        "ad6c68e0e31a"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: focus propagation: widget.py -> screen.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_ar_24",
+      "repo_id": "textual",
+      "question": "How does `walk_depth_first()` in `walk.py` traverse the widget tree and what order does it visit nodes?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/walk.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/walk.py": "42-87"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "3b5b8e95b9c0"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: walk_depth_first is self-contained in walk.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_01",
+      "repo_id": "textual",
+      "question": "What is the full signature of `App.run()` and what parameters can a developer pass to customize startup?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "2308-2362"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f16a07d76078"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: App.run signature is in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_02",
+      "repo_id": "textual",
+      "question": "What does `Widget.mount()` return and how can a caller await completion of the mounting operation?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "1424-1506"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "f4f0c7ec09a6"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Widget.mount return type is in widget.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_03",
+      "repo_id": "textual",
+      "question": "What arguments does `App.push_screen()` accept and what type does it return?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "2895-2967"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "04f6a9f634d8"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: App.push_screen signature is in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_04",
+      "repo_id": "textual",
+      "question": "How is `DOMNode.query()` called and what CSS selector syntax does it support?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/dom.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/dom.py": "1397-1415"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6a8a412aa10b"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: query method signature is in dom.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_05",
+      "repo_id": "textual",
+      "question": "What is the public API of `_work_decorator.work` for creating background workers?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/_work_decorator.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/_work_decorator.py": "74-158"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "0d42b7456383"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: the @work decorator definition is in _work_decorator.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_06",
+      "repo_id": "textual",
+      "question": "How does a developer register a `Binding` and what format must the action string follow?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/binding.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/binding.py": "55-168"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "867c0c13bcca"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Binding constructor and fields are in binding.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_07",
+      "repo_id": "textual",
+      "question": "What is the public API of `Pilot` for simulating user input in headless tests?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/pilot.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/pilot.py": "62-570"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "593d44f7544e"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Pilot API is in pilot.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_08",
+      "repo_id": "textual",
+      "question": "What does `MessagePump.call_after_refresh()` do and when should it be used over `call_later()`?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message_pump.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/message_pump.py": "451-467"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "e5d686cba711"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: call_after_refresh is in message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_09",
+      "repo_id": "textual",
+      "question": "How does `MessagePump.set_timer()` work and what does it return to the caller?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/message_pump.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/message_pump.py": "378-416"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "813c01bf1cd5"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: set_timer is in message_pump.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_10",
+      "repo_id": "textual",
+      "question": "What is the return type and error behavior of `DOMNode.query_one()` when no match is found?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/dom.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/dom.py": "1462-1533"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "d30439eae3a7"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: query_one is in dom.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_11",
+      "repo_id": "textual",
+      "question": "How does `DOMNode.add_class()` modify the widget's CSS class list and trigger CSS re-evaluation?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/dom.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/dom.py": "1817-1833"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "91136189f200"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: add_class is in dom.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_api_12",
+      "repo_id": "textual",
+      "question": "What does `App.copy_to_clipboard()` do and under what conditions can it fail silently?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "API Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "1770-1786"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "e94ece802a38"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: copy_to_clipboard is in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cfg_01",
+      "repo_id": "textual",
+      "question": "What CSS pseudo-classes are available to Textual widgets and where are they mapped to Python conditions?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "283-4956"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "45ebefc33dc0"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: PSEUDO_CLASSES dict is inside the Widget class body in widget.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cfg_02",
+      "repo_id": "textual",
+      "question": "How is `DEFAULT_CSS` in a widget parsed and integrated with user-provided application CSS?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widget.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widget.py": "283-4956"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "45ebefc33dc0"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: DEFAULT_CSS is processed by the CSS cascade logic in css/.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cfg_03",
+      "repo_id": "textual",
+      "question": "How does `App.CSS` interact with widget-level `DEFAULT_CSS` during stylesheet resolution?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "296-5040"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6a78f6d76b53"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: CSS resolution requires understanding app.py and css/ cascade rules.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cfg_04",
+      "repo_id": "textual",
+      "question": "What environment variables and module-level constants control Textual's debug and logging behavior?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/constants.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/constants.py": "1-175"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "fcf6f86c29c4"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: all configuration constants are in constants.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cfg_05",
+      "repo_id": "textual",
+      "question": "How does the `Button`'s `variant` parameter translate to CSS modifier classes on the rendered button?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/widgets/_button.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/widgets/_button.py": "331-374"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "44a0f14d8514"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: variant maps to CSS class in Button.__init__ and referenced in DEFAULT_CSS block.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cfg_06",
+      "repo_id": "textual",
+      "question": "How does `App.SCREENS` class variable pre-register named screens for deferred use?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "296-5040"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6a78f6d76b53"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: SCREENS dict handling is in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cfg_07",
+      "repo_id": "textual",
+      "question": "How does `App.BINDINGS` configure global keyboard shortcuts and what format must each entry follow?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/app.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/app.py": "296-5040"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "6a78f6d76b53"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: BINDINGS class variable and resolution are in app.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_cfg_08",
+      "repo_id": "textual",
+      "question": "How does the `features.py` module gate optional Textual features at runtime?",
+      "difficulty": "easy",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/features.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/features.py": "1-29"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "973650ef5492"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: feature flags and their evaluation logic are in features.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_css_01",
+      "repo_id": "textual",
+      "question": "How does the `match()` function in `css/match.py` evaluate CSS selectors against a DOM node?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/css/match.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/css/match.py": "11-24"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "50c586c286f2"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: match() is self-contained in css/match.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_css_02",
+      "repo_id": "textual",
+      "question": "How does `_check_selectors()` iterate over selector sets to determine if a node matches a CSS rule?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Control Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/css/match.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/css/match.py": "27-74"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "c044336cb5d4"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: _check_selectors is self-contained in css/match.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_css_03",
+      "repo_id": "textual",
+      "question": "How does `Stylesheet.apply()` propagate computed styles to all nodes in the DOM tree?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/css/stylesheet.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/css/stylesheet.py": "470-607"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "5b31ec0dc2a9"
+      ],
+      "retrieval_complexity": "Graph Dependent",
+      "notes": "Multi-hop: apply() iterates DOM nodes and resolves styles, crossing dom.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_css_04",
+      "repo_id": "textual",
+      "question": "What is the parsing pipeline inside `Stylesheet.parse()` for converting CSS source text into rules?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/css/stylesheet.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/css/stylesheet.py": "372-407"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "2edc1a1e0135"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: parse() is in css/stylesheet.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_css_05",
+      "repo_id": "textual",
+      "question": "How does `Scalar.resolve()` convert a CSS scalar value (%, fr, cells) to a concrete pixel value?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Configuration Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/css/scalar.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/css/scalar.py": "267-292"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "5ed7bd1a8498"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Scalar.resolve() is in css/scalar.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_css_06",
+      "repo_id": "textual",
+      "question": "How does `Scalar.parse()` tokenize and interpret a CSS scalar string like '1fr' or '50%'?",
+      "difficulty": "medium",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Data Flow",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/css/scalar.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/css/scalar.py": "244-264"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "2ef6e6bd9d81"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: Scalar.parse() is self-contained in css/scalar.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_lay_01",
+      "repo_id": "textual",
+      "question": "How does `VerticalLayout.arrange()` compute and assign positions to child widgets in a vertical stack?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/layouts/vertical.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/layouts/vertical.py": "20-124"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "556ce5107f2f"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: VerticalLayout.arrange is self-contained in layouts/vertical.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    },
+    {
+      "id": "textual_lay_02",
+      "repo_id": "textual",
+      "question": "How does `GridLayout.arrange()` allocate row and column spans to child widgets in a grid layout?",
+      "difficulty": "hard",
+      "split": "test",
+      "language": "python",
+      "reasoning_capability": "Architecture Reasoning",
+      "verified_answer": "See ground truth chunks.",
+      "primary_source_file": "src/textual/layouts/grid.py",
+      "supporting_source_files": [],
+      "evidence_line_ranges": {
+        "src/textual/layouts/grid.py": "48-376"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "5d38f0da4b30"
+      ],
+      "retrieval_complexity": "Single Chunk",
+      "notes": "Single-hop: GridLayout.arrange is self-contained in layouts/grid.py.",
+      "verified": true,
+      "verifier": "auto_then_human",
+      "created_at": "2026-07-07T00:00:00Z"
+    }
+  ]
+}

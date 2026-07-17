@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "failures": [],
+  "warnings": [],
+  "checks_passed": [
+    "Directory exists: d:/Document_RAG/scratch/profile_reproduce_out\\raw",
+    "Directory exists: d:/Document_RAG/scratch/profile_reproduce_out\\metrics",
+    "manifest.json present",
+    "metrics/per_system.json present and non-empty",
+    "metrics/comparison.json present and non-empty",
+    "Raw file exists: CodeGraphRAG.jsonl (1 records)",
+    "Raw file exists: SimpleRAG.jsonl (1 records)",
+    "Raw file exists: SingleAgent.jsonl (1 records)",
+    "recall_at_5 verified for CodeGraphRAG (diff=0.00e+00)",
+    "token_f1 verified for CodeGraphRAG (diff=4.25e-07)",
+    "recall_at_5 verified for SimpleRAG (diff=0.00e+00)",
+    "token_f1 verified for SimpleRAG (diff=3.33e-07)",
+    "recall_at_5 verified for SingleAgent (diff=0.00e+00)",
+    "token_f1 verified for SingleAgent (diff=3.87e-07)",
+    "Checksum verified: CodeGraphRAG.jsonl",
+    "Checksum verified: SimpleRAG.jsonl",
+    "Checksum verified: SingleAgent.jsonl"
+  ],
+  "n_failures": 0,
+  "n_warnings": 0,
+  "n_checks_passed": 17
+}

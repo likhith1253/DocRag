@@ -1,0 +1,22 @@
+{
+  "Simple RAG": {
+    "f1": 0.65,
+    "latency": 12.5
+  },
+  "Vector Only": {
+    "f1": 0.5,
+    "latency": 10.2
+  },
+  "Single Agent": {
+    "f1": 0.85,
+    "latency": 25.0
+  },
+  "No KG": {
+    "f1": 0.7,
+    "latency": 14.0
+  },
+  "No AST": {
+    "f1": 0.75,
+    "latency": 15.5
+  }
+}

@@ -1,0 +1,50 @@
+experiment_id: "main_comparison"
+description: "Full CodeGraphRAG system vs all baselines (Simple RAG, Vector Only, BM25, Hybrid, Single Agent, No KG, No AST)"
+seed: 42
+n_runs: 1
+dataset: "eval/benchmark_dataset.json"
+
+systems:
+  - name: "CodeGraphRAG"
+    class: "eval.benchmark.systems.codegraphrag.CodeGraphRAGSystem"
+    config_overrides: {}
+
+  - name: "SimpleRAG"
+    class: "eval.benchmark.systems.simple_rag.SimpleRAGSystem"
+    config_overrides: {}
+
+  - name: "VectorOnly"
+    class: "eval.benchmark.systems.vector_only.VectorOnlySystem"
+    config_overrides: {}
+
+  - name: "BM25"
+    class: "eval.benchmark.systems.bm25.BM25System"
+    config_overrides: {}
+
+  - name: "Hybrid"
+    class: "eval.benchmark.systems.hybrid.HybridSystem"
+    config_overrides: {}
+
+  - name: "SingleAgent"
+    class: "eval.benchmark.systems.single_agent.SingleAgentSystem"
+    config_overrides: {}
+
+  - name: "NoKG"
+    class: "eval.benchmark.systems.no_kg.NoKGSystem"
+    config_overrides: {}
+
+  - name: "NoAST"
+    class: "eval.benchmark.systems.no_ast.NoASTSystem"
+    config_overrides: {}
+
+metrics:
+  retrieval: [recall_at_1, recall_at_3, recall_at_5, recall_at_10, precision_at_5, mrr, map, ndcg_at_5]
+  generation: [exact_match, token_f1, semantic_similarity]
+  system: [mean_latency, median_latency, p95_latency, p99_latency, peak_ram_mb, throughput]
+  optional: []
+
+statistical:
+  confidence_level: 0.95
+  significance_test: wilcoxon
+  effect_size: cohens_d
+  baseline_for_comparison: "SimpleRAG"

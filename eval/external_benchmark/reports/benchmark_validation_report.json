@@ -1,0 +1,1884 @@
+{
+  "generated_at": "2026-07-07T15:24:31.423549Z",
+  "benchmark_path": "d:\\Document_RAG\\eval\\external_benchmark\\full_benchmark.json",
+  "total_entries": 88,
+  "total_experiments": 14,
+  "passed_experiments": 14,
+  "failed_experiments": 0,
+  "results": [
+    {
+      "experiment": "JSON Schema Validation",
+      "passed": 88,
+      "total": 88,
+      "failures": []
+    },
+    {
+      "experiment": "Source File Existence",
+      "passed": 88,
+      "total": 88,
+      "failures": []
+    },
+    {
+      "experiment": "Evidence Line Range Validity",
+      "passed": 88,
+      "total": 88,
+      "failures": []
+    },
+    {
+      "experiment": "Answer Correctness (Evidence Alignment)",
+      "passed": 88,
+      "total": 88,
+      "failures": [],
+      "detail": [
+        {
+          "id": "textual_cf_01",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "event",
+            "loop",
+            "run",
+            "app",
+            "asyncio"
+          ],
+          "evidence_window_lines": 55,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_02",
+          "alignment_ratio": 0.417,
+          "matched_tokens": [
+            "async",
+            "messages",
+            "loop",
+            "run_async",
+            "app"
+          ],
+          "evidence_window_lines": 87,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_03",
+          "alignment_ratio": 0.556,
+          "matched_tokens": [
+            "message",
+            "_dispatch_message",
+            "handler",
+            "method",
+            "call"
+          ],
+          "evidence_window_lines": 35,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_04",
+          "alignment_ratio": 0.857,
+          "matched_tokens": [
+            "message",
+            "queue",
+            "messagepump",
+            "handle",
+            "process",
+            "_process_messages_loop"
+          ],
+          "evidence_window_lines": 60,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_05",
+          "alignment_ratio": 0.25,
+          "matched_tokens": [
+            "widget",
+            "remove"
+          ],
+          "evidence_window_lines": 8,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_06",
+          "alignment_ratio": 0.444,
+          "matched_tokens": [
+            "widget",
+            "call",
+            "dom",
+            "mount"
+          ],
+          "evidence_window_lines": 83,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_07",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "stack",
+            "screen",
+            "push_screen",
+            "app"
+          ],
+          "evidence_window_lines": 73,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_08",
+          "alignment_ratio": 0.2,
+          "matched_tokens": [
+            "pop_screen",
+            "screen"
+          ],
+          "evidence_window_lines": 26,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_09",
+          "alignment_ratio": 0.167,
+          "matched_tokens": [
+            "_on_click"
+          ],
+          "evidence_window_lines": 4,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_10",
+          "alignment_ratio": 0.2,
+          "matched_tokens": [
+            "on_mount",
+            "_on_mount"
+          ],
+          "evidence_window_lines": 5,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_11",
+          "alignment_ratio": 0.333,
+          "matched_tokens": [
+            "application",
+            "start_application_mode"
+          ],
+          "evidence_window_lines": 2,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_12",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "focus",
+            "change",
+            "blur",
+            "events",
+            "set_focus"
+          ],
+          "evidence_window_lines": 54,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_13",
+          "alignment_ratio": 0.25,
+          "matched_tokens": [
+            "exit",
+            "app"
+          ],
+          "evidence_window_lines": 19,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_14",
+          "alignment_ratio": 0.375,
+          "matched_tokens": [
+            "interval",
+            "_run",
+            "timer"
+          ],
+          "evidence_window_lines": 29,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_15",
+          "alignment_ratio": 0.375,
+          "matched_tokens": [
+            "dispatch_key",
+            "handler",
+            "found"
+          ],
+          "evidence_window_lines": 57,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_16",
+          "alignment_ratio": 0.375,
+          "matched_tokens": [
+            "scroll_to",
+            "scroll",
+            "animation"
+          ],
+          "evidence_window_lines": 66,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_17",
+          "alignment_ratio": 0.222,
+          "matched_tokens": [
+            "focus",
+            "action_focus_next"
+          ],
+          "evidence_window_lines": 3,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_18",
+          "alignment_ratio": 0.333,
+          "matched_tokens": [
+            "post_message",
+            "has",
+            "processing"
+          ],
+          "evidence_window_lines": 29,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_19",
+          "alignment_ratio": 0.571,
+          "matched_tokens": [
+            "screen",
+            "app",
+            "use",
+            "install_screen"
+          ],
+          "evidence_window_lines": 25,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cf_20",
+          "alignment_ratio": 0.125,
+          "matched_tokens": [
+            "_on_unmount"
+          ],
+          "evidence_window_lines": 3,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_01",
+          "alignment_ratio": 0.222,
+          "matched_tokens": [
+            "reactive",
+            "value"
+          ],
+          "evidence_window_lines": 4,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_02",
+          "alignment_ratio": 0.667,
+          "matched_tokens": [
+            "data",
+            "message",
+            "base",
+            "widget",
+            "parent",
+            "class"
+          ],
+          "evidence_window_lines": 136,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_03",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "message",
+            "widget",
+            "button",
+            "pressed"
+          ],
+          "evidence_window_lines": 19,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_04",
+          "alignment_ratio": 0.4,
+          "matched_tokens": [
+            "message",
+            "handler",
+            "screen",
+            "work"
+          ],
+          "evidence_window_lines": 35,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_05",
+          "alignment_ratio": 0.182,
+          "matched_tokens": [
+            "event",
+            "key"
+          ],
+          "evidence_window_lines": 56,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_06",
+          "alignment_ratio": 0.375,
+          "matched_tokens": [
+            "color",
+            "blend",
+            "two"
+          ],
+          "evidence_window_lines": 39,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_07",
+          "alignment_ratio": 0.417,
+          "matched_tokens": [
+            "query",
+            "dom",
+            "selector",
+            "nodes",
+            "css"
+          ],
+          "evidence_window_lines": 19,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_08",
+          "alignment_ratio": 0.273,
+          "matched_tokens": [
+            "render",
+            "widget",
+            "object"
+          ],
+          "evidence_window_lines": 27,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_09",
+          "alignment_ratio": 0.444,
+          "matched_tokens": [
+            "reactive",
+            "value",
+            "__get__",
+            "return"
+          ],
+          "evidence_window_lines": 25,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_10",
+          "alignment_ratio": 0.3,
+          "matched_tokens": [
+            "result",
+            "async",
+            "worker"
+          ],
+          "evidence_window_lines": 17,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_11",
+          "alignment_ratio": 0.429,
+          "matched_tokens": [
+            "app",
+            "notify",
+            "notification"
+          ],
+          "evidence_window_lines": 60,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_12",
+          "alignment_ratio": 0.429,
+          "matched_tokens": [
+            "all",
+            "signal",
+            "publish"
+          ],
+          "evidence_window_lines": 33,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_13",
+          "alignment_ratio": 0.444,
+          "matched_tokens": [
+            "object",
+            "inline",
+            "style",
+            "set_styles"
+          ],
+          "evidence_window_lines": 23,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_14",
+          "alignment_ratio": 0.444,
+          "matched_tokens": [
+            "widget",
+            "get_content_width",
+            "width",
+            "content"
+          ],
+          "evidence_window_lines": 30,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_15",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "message",
+            "_dispatch_message",
+            "handler",
+            "handle"
+          ],
+          "evidence_window_lines": 35,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_df_16",
+          "alignment_ratio": 0.222,
+          "matched_tokens": [
+            "_replace_screen",
+            "screen"
+          ],
+          "evidence_window_lines": 20,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_01",
+          "alignment_ratio": 0.833,
+          "matched_tokens": [
+            "widget",
+            "base",
+            "classes",
+            "class",
+            "inherit"
+          ],
+          "evidence_window_lines": 4674,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_02",
+          "alignment_ratio": 0.875,
+          "matched_tokens": [
+            "domnode",
+            "relative",
+            "parent",
+            "messagepump",
+            "app",
+            "provide",
+            "each"
+          ],
+          "evidence_window_lines": 4745,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_03",
+          "alignment_ratio": 0.625,
+          "matched_tokens": [
+            "base",
+            "domnode",
+            "widget",
+            "app",
+            "form"
+          ],
+          "evidence_window_lines": 1810,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_04",
+          "alignment_ratio": 1.0,
+          "matched_tokens": [
+            "widget",
+            "both",
+            "children",
+            "screen",
+            "act",
+            "layout",
+            "container",
+            "class"
+          ],
+          "evidence_window_lines": 2007,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_05",
+          "alignment_ratio": 0.286,
+          "matched_tokens": [
+            "textual",
+            "messagepump"
+          ],
+          "evidence_window_lines": 806,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_06",
+          "alignment_ratio": 0.429,
+          "matched_tokens": [
+            "action",
+            "binding",
+            "string"
+          ],
+          "evidence_window_lines": 114,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_07",
+          "alignment_ratio": 0.375,
+          "matched_tokens": [
+            "abstract",
+            "driver",
+            "methods"
+          ],
+          "evidence_window_lines": 285,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_08",
+          "alignment_ratio": 0.571,
+          "matched_tokens": [
+            "reactive",
+            "widget",
+            "descriptor",
+            "attribute"
+          ],
+          "evidence_window_lines": 310,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_09",
+          "alignment_ratio": 0.6,
+          "matched_tokens": [
+            "within",
+            "event",
+            "loop",
+            "run",
+            "worker",
+            "class"
+          ],
+          "evidence_window_lines": 337,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_10",
+          "alignment_ratio": 0.222,
+          "matched_tokens": [
+            "widget",
+            "compose"
+          ],
+          "evidence_window_lines": 6,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_11",
+          "alignment_ratio": 0.375,
+          "matched_tokens": [
+            "render",
+            "textual",
+            "widget"
+          ],
+          "evidence_window_lines": 27,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_12",
+          "alignment_ratio": 0.375,
+          "matched_tokens": [
+            "bindingsmap",
+            "key",
+            "binding"
+          ],
+          "evidence_window_lines": 209,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_13",
+          "alignment_ratio": 0.625,
+          "matched_tokens": [
+            "select",
+            "widget",
+            "focusable",
+            "focus_next",
+            "next"
+          ],
+          "evidence_window_lines": 16,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_14",
+          "alignment_ratio": 0.125,
+          "matched_tokens": [
+            "composeresult"
+          ],
+          "evidence_window_lines": 1,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_15",
+          "alignment_ratio": 0.429,
+          "matched_tokens": [
+            "ancestors",
+            "domnode",
+            "dom"
+          ],
+          "evidence_window_lines": 12,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_16",
+          "alignment_ratio": 0.889,
+          "matched_tokens": [
+            "textual",
+            "widget",
+            "default_css",
+            "merge",
+            "app",
+            "resolution",
+            "style",
+            "level"
+          ],
+          "evidence_window_lines": 4745,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_17",
+          "alignment_ratio": 0.286,
+          "matched_tokens": [
+            "event",
+            "timer"
+          ],
+          "evidence_window_lines": 172,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_18",
+          "alignment_ratio": 0.571,
+          "matched_tokens": [
+            "textual",
+            "pilot",
+            "class",
+            "headless"
+          ],
+          "evidence_window_lines": 509,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_19",
+          "alignment_ratio": 0.333,
+          "matched_tokens": [
+            "screen",
+            "set_focus"
+          ],
+          "evidence_window_lines": 8,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_20",
+          "alignment_ratio": 0.222,
+          "matched_tokens": [
+            "widget",
+            "query_one"
+          ],
+          "evidence_window_lines": 72,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_21",
+          "alignment_ratio": 0.714,
+          "matched_tokens": [
+            "get_screen",
+            "name",
+            "installed",
+            "screen",
+            "return"
+          ],
+          "evidence_window_lines": 35,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_22",
+          "alignment_ratio": 0.333,
+          "matched_tokens": [
+            "_build_driver",
+            "class",
+            "driver"
+          ],
+          "evidence_window_lines": 34,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_23",
+          "alignment_ratio": 0.429,
+          "matched_tokens": [
+            "focus",
+            "widget",
+            "screen"
+          ],
+          "evidence_window_lines": 20,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_ar_24",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "walk_depth_first",
+            "tree",
+            "walk",
+            "nodes"
+          ],
+          "evidence_window_lines": 46,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_01",
+          "alignment_ratio": 0.333,
+          "matched_tokens": [
+            "run",
+            "pass",
+            "app"
+          ],
+          "evidence_window_lines": 55,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_02",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "widget",
+            "await",
+            "return",
+            "mount"
+          ],
+          "evidence_window_lines": 83,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_03",
+          "alignment_ratio": 0.667,
+          "matched_tokens": [
+            "push_screen",
+            "app",
+            "return",
+            "type"
+          ],
+          "evidence_window_lines": 73,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_04",
+          "alignment_ratio": 0.429,
+          "matched_tokens": [
+            "query",
+            "selector",
+            "css"
+          ],
+          "evidence_window_lines": 19,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_05",
+          "alignment_ratio": 0.286,
+          "matched_tokens": [
+            "work",
+            "workers"
+          ],
+          "evidence_window_lines": 85,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_06",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "action",
+            "must",
+            "binding",
+            "string"
+          ],
+          "evidence_window_lines": 114,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_07",
+          "alignment_ratio": 0.375,
+          "matched_tokens": [
+            "user",
+            "pilot",
+            "headless"
+          ],
+          "evidence_window_lines": 509,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_08",
+          "alignment_ratio": 0.167,
+          "matched_tokens": [
+            "call_after_refresh"
+          ],
+          "evidence_window_lines": 17,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_09",
+          "alignment_ratio": 0.4,
+          "matched_tokens": [
+            "return",
+            "set_timer"
+          ],
+          "evidence_window_lines": 39,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_10",
+          "alignment_ratio": 0.75,
+          "matched_tokens": [
+            "match",
+            "found",
+            "return",
+            "type",
+            "error",
+            "query_one"
+          ],
+          "evidence_window_lines": 72,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_11",
+          "alignment_ratio": 0.333,
+          "matched_tokens": [
+            "add_class",
+            "class",
+            "css"
+          ],
+          "evidence_window_lines": 17,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_api_12",
+          "alignment_ratio": 0.167,
+          "matched_tokens": [
+            "copy_to_clipboard"
+          ],
+          "evidence_window_lines": 17,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_01",
+          "alignment_ratio": 0.7,
+          "matched_tokens": [
+            "textual",
+            "python",
+            "widgets",
+            "classes",
+            "pseudo",
+            "css",
+            "available"
+          ],
+          "evidence_window_lines": 4674,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_02",
+          "alignment_ratio": 0.875,
+          "matched_tokens": [
+            "application",
+            "parsed",
+            "default_css",
+            "widget",
+            "user",
+            "provided",
+            "css"
+          ],
+          "evidence_window_lines": 4674,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_03",
+          "alignment_ratio": 0.778,
+          "matched_tokens": [
+            "widget",
+            "default_css",
+            "app",
+            "stylesheet",
+            "resolution",
+            "css",
+            "level"
+          ],
+          "evidence_window_lines": 4745,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_04",
+          "alignment_ratio": 0.8,
+          "matched_tokens": [
+            "control",
+            "textual",
+            "module",
+            "level",
+            "debug",
+            "variables",
+            "constants",
+            "environment"
+          ],
+          "evidence_window_lines": 175,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_05",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "button",
+            "classes",
+            "variant",
+            "css"
+          ],
+          "evidence_window_lines": 44,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_06",
+          "alignment_ratio": 0.889,
+          "matched_tokens": [
+            "register",
+            "variable",
+            "named",
+            "screens",
+            "pre",
+            "app",
+            "use",
+            "class"
+          ],
+          "evidence_window_lines": 4745,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_07",
+          "alignment_ratio": 0.818,
+          "matched_tokens": [
+            "configure",
+            "bindings",
+            "keyboard",
+            "global",
+            "app",
+            "must",
+            "follow",
+            "format",
+            "each"
+          ],
+          "evidence_window_lines": 4745,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_08",
+          "alignment_ratio": 0.167,
+          "matched_tokens": [
+            "features"
+          ],
+          "evidence_window_lines": 29,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_css_01",
+          "alignment_ratio": 0.625,
+          "matched_tokens": [
+            "node",
+            "match",
+            "selectors",
+            "dom",
+            "css"
+          ],
+          "evidence_window_lines": 14,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_css_02",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "node",
+            "_check_selectors",
+            "matches",
+            "selector",
+            "css"
+          ],
+          "evidence_window_lines": 48,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_css_03",
+          "alignment_ratio": 0.667,
+          "matched_tokens": [
+            "apply",
+            "styles",
+            "all",
+            "stylesheet",
+            "dom",
+            "nodes"
+          ],
+          "evidence_window_lines": 138,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_css_04",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "source",
+            "parse",
+            "stylesheet",
+            "rules",
+            "css"
+          ],
+          "evidence_window_lines": 36,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_css_05",
+          "alignment_ratio": 0.5,
+          "matched_tokens": [
+            "value",
+            "cells",
+            "scalar",
+            "resolve"
+          ],
+          "evidence_window_lines": 26,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_css_06",
+          "alignment_ratio": 0.429,
+          "matched_tokens": [
+            "parse",
+            "scalar",
+            "string"
+          ],
+          "evidence_window_lines": 21,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_lay_01",
+          "alignment_ratio": 0.222,
+          "matched_tokens": [
+            "child",
+            "arrange"
+          ],
+          "evidence_window_lines": 105,
+          "aligned": true,
+          "pass": true
+        },
+        {
+          "id": "textual_lay_02",
+          "alignment_ratio": 0.6,
+          "matched_tokens": [
+            "grid",
+            "column",
+            "child",
+            "layout",
+            "arrange",
+            "row"
+          ],
+          "evidence_window_lines": 329,
+          "aligned": true,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "experiment": "Duplicate Detection",
+      "duplicate_ids": [],
+      "duplicate_questions": [],
+      "pass": true
+    },
+    {
+      "experiment": "Label Validation",
+      "passed": 88,
+      "total": 88,
+      "failures": []
+    },
+    {
+      "experiment": "Chunk ID Independence",
+      "passed": 88,
+      "total": 88,
+      "failures": []
+    },
+    {
+      "experiment": "Missing Evidence Detection",
+      "passed": 88,
+      "total": 88,
+      "failures": []
+    },
+    {
+      "experiment": "Verification Metadata Completeness",
+      "passed": 88,
+      "total": 88,
+      "failures": []
+    },
+    {
+      "experiment": "Repository Coverage",
+      "total_py_files_in_src": 247,
+      "covered_files": 26,
+      "coverage_percent": 10.53,
+      "uncovered_sample": [
+        "src/textual/actions.py",
+        "src/textual/await_complete.py",
+        "src/textual/await_remove.py",
+        "src/textual/box_model.py",
+        "src/textual/cache.py",
+        "src/textual/canvas.py",
+        "src/textual/case.py",
+        "src/textual/clock.py",
+        "src/textual/command.py",
+        "src/textual/compose.py",
+        "src/textual/containers.py",
+        "src/textual/content.py",
+        "src/textual/coordinate.py",
+        "src/textual/design.py",
+        "src/textual/errors.py",
+        "src/textual/eta.py",
+        "src/textual/expand_tabs.py",
+        "src/textual/file_monitor.py",
+        "src/textual/filter.py",
+        "src/textual/fuzzy.py"
+      ],
+      "pass": true
+    },
+    {
+      "experiment": "Statistical Distribution",
+      "total_entries": 88,
+      "capability_distribution": {
+        "control-flow reasoning": 22,
+        "data-flow reasoning": 19,
+        "architectural reasoning": 26,
+        "api reasoning": 12,
+        "configuration reasoning": 9
+      },
+      "complexity_distribution": {
+        "multi-hop": 33,
+        "single-hop": 55
+      },
+      "difficulty_distribution": {
+        "hard": 32,
+        "medium": 38,
+        "easy": 18
+      },
+      "file_coverage_count": 26,
+      "max_capability_dominance_ratio": 0.295,
+      "max_difficulty_dominance_ratio": 0.432,
+      "capability_balanced": true,
+      "difficulty_balanced": true,
+      "pass": true
+    },
+    {
+      "experiment": "Retrieval Label Justification",
+      "passed": 88,
+      "total": 88,
+      "failures": []
+    },
+    {
+      "experiment": "Contradictory / Multiple-Answer Detection",
+      "duplicate_question_fingerprints": {},
+      "pass": true
+    },
+    {
+      "experiment": "Cross-System Fairness Audit",
+      "passed": 88,
+      "total": 88,
+      "failures": [],
+      "detail": [
+        {
+          "id": "textual_cf_01",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_02",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_03",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_04",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_05",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_06",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_07",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_08",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_09",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_10",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_11",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_12",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_13",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_14",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_15",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_16",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_17",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_18",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_19",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cf_20",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_01",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_df_02",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_03",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_04",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_df_05",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_df_06",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_07",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_df_08",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_df_09",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_10",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_df_11",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_12",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_13",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_14",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_15",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_df_16",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_01",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_02",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_03",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_04",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_05",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_06",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_07",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_08",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_09",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_10",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_11",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_12",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_13",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_14",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_15",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_16",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_17",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_18",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_19",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_20",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_21",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_22",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_23",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_ar_24",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_01",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_02",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_03",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_04",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_05",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_06",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_07",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_08",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_09",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_10",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_11",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_api_12",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_01",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_02",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_03",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_04",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_05",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_06",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_07",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_cfg_08",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_css_01",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_css_02",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_css_03",
+          "complexity": "multi-hop",
+          "fair_to_baselines": true,
+          "note": "Multi-hop with documented evidence",
+          "pass": true
+        },
+        {
+          "id": "textual_css_04",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_css_05",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_css_06",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_lay_01",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        },
+        {
+          "id": "textual_lay_02",
+          "complexity": "single-hop",
+          "fair_to_baselines": true,
+          "note": "Single-hop: BM25 evaluable",
+          "pass": true
+        }
+      ]
+    }
+  ]
+}

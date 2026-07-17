@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+qdrant_storage/
+profile_qdrant_storage/
+logs/
+*.log
+*.txt
+!mistakes.txt
+eval_output.txt
+knowledge_graph.json
+metadata_store.json

@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What function is used to add two numbers in calc.py?",
+    "answer": "The `add` function is used to add two numbers.",
+    "category": "Code Search",
+    "sources": ["calc.py"]
+  },
+  {
+    "question": "What is the accuracy metric in config.json?",
+    "answer": "The accuracy metric is 0.95.",
+    "category": "Data Extraction",
+    "sources": ["config.json"]
+  }
+]

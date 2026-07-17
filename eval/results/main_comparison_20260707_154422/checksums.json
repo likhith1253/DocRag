@@ -1,0 +1,10 @@
+{
+  "CodeGraphRAG.jsonl": "344bfa6e57b49b8bd97bdb8dfa14e169f85ce48b6d3ec2b5f3b6f36dfef27164",
+  "SimpleRAG.jsonl": "21fffa1c0ce44d242b3075d2395b4f2d3cb75004c26a1a212ae961d6a5de13d8",
+  "VectorOnly.jsonl": "453b5cee9042bf0a27aeb9fc5805200abbc3300974ed87753ea793c0dac3bcd6",
+  "BM25.jsonl": "b23a9ca00996e7d7102159be2a8d6ea784894d805c2ba96733fe4b8813ef1aa1",
+  "Hybrid.jsonl": "dcf49b3a9c7b0c9b823ea5303b4f270a13078026ad1b229d47c26637a16073fc",
+  "SingleAgent.jsonl": "8dc93b1167ff378759df0f48882d7d38fd317c2f689790a602b43bf5a5cbdc84",
+  "NoKG.jsonl": "959f55e9d93693c95a91949e7429b51904d23ef2201adb87e0d3224bc06ff463",
+  "NoAST.jsonl": "cb2ab81d9f05669dbc6aa91978bb935bfde9aa20a7d9784d6560134019154d6e"
+}

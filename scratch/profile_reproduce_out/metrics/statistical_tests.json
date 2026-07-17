@@ -1,0 +1,102 @@
+{
+  "recall_at_5": {
+    "CodeGraphRAG": {
+      "metric": "recall_at_5",
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1.0,
+      "wilcoxon": {
+        "statistic": 0.0,
+        "p_value": 1.0,
+        "significant": false,
+        "alternative": "two-sided",
+        "n_pairs": 1
+      },
+      "cohens_d": null,
+      "cohens_d_interpretation": "undefined",
+      "n_queries": 1
+    },
+    "SimpleRAG": {
+      "metric": "recall_at_5",
+      "mean": 0.0,
+      "ci_lower": 0.0,
+      "ci_upper": 0.0,
+      "wilcoxon": {
+        "statistic": NaN,
+        "p_value": 1.0,
+        "significant": false,
+        "alternative": "two-sided",
+        "note": "All differences are zero \u2014 test undefined"
+      },
+      "cohens_d": null,
+      "cohens_d_interpretation": "undefined",
+      "n_queries": 1
+    },
+    "SingleAgent": {
+      "metric": "recall_at_5",
+      "mean": 0.5,
+      "ci_lower": 0.5,
+      "ci_upper": 0.5,
+      "wilcoxon": {
+        "statistic": 0.0,
+        "p_value": 1.0,
+        "significant": false,
+        "alternative": "two-sided",
+        "n_pairs": 1
+      },
+      "cohens_d": null,
+      "cohens_d_interpretation": "undefined",
+      "n_queries": 1
+    }
+  },
+  "token_f1": {
+    "CodeGraphRAG": {
+      "metric": "token_f1",
+      "mean": 0.033816,
+      "ci_lower": 0.033816,
+      "ci_upper": 0.033816,
+      "wilcoxon": {
+        "statistic": 0.0,
+        "p_value": 1.0,
+        "significant": false,
+        "alternative": "two-sided",
+        "n_pairs": 1
+      },
+      "cohens_d": null,
+      "cohens_d_interpretation": "undefined",
+      "n_queries": 1
+    },
+    "SimpleRAG": {
+      "metric": "token_f1",
+      "mean": 0.033333,
+      "ci_lower": 0.033333,
+      "ci_upper": 0.033333,
+      "wilcoxon": {
+        "statistic": NaN,
+        "p_value": 1.0,
+        "significant": false,
+        "alternative": "two-sided",
+        "note": "All differences are zero \u2014 test undefined"
+      },
+      "cohens_d": null,
+      "cohens_d_interpretation": "undefined",
+      "n_queries": 1
+    },
+    "SingleAgent": {
+      "metric": "token_f1",
+      "mean": 0.040115,
+      "ci_lower": 0.040115,
+      "ci_upper": 0.040115,
+      "wilcoxon": {
+        "statistic": 0.0,
+        "p_value": 1.0,
+        "significant": false,
+        "alternative": "two-sided",
+        "n_pairs": 1
+      },
+      "cohens_d": null,
+      "cohens_d_interpretation": "undefined",
+      "n_queries": 1
+    }
+  }
+}

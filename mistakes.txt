@@ -1,0 +1,13 @@
+# mistakes.txt
+# Append-only error/lesson log for this project.
+# READ THIS ENTIRE FILE BEFORE STARTING ANY NEW TASK OR PHASE.
+# Format for each entry:
+#
+# [PHASE X] [DATE/TIME]
+# ISSUE: <what broke or went wrong>
+# CAUSE: <root cause, if known>
+# FIX: <what was done to resolve it>
+# AVOID-NEXT-TIME: <one line - the actual lesson>
+# ---
+#
+# (entries begin below this line)

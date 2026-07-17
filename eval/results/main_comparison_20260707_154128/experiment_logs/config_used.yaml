@@ -1,0 +1,60 @@
+dataset: eval/benchmark_dataset.json
+description: Full CodeGraphRAG system vs all baselines (Simple RAG, Vector Only, BM25,
+  Hybrid, Single Agent, No KG, No AST)
+experiment_id: main_comparison
+metrics:
+  generation:
+  - exact_match
+  - token_f1
+  - semantic_similarity
+  - rouge_l
+  optional:
+  - bleu
+  retrieval:
+  - recall_at_1
+  - recall_at_3
+  - recall_at_5
+  - recall_at_10
+  - precision_at_5
+  - mrr
+  - map
+  - ndcg_at_5
+  system:
+  - mean_latency
+  - median_latency
+  - p95_latency
+  - p99_latency
+  - peak_ram_mb
+  - throughput
+n_runs: 1
+seed: 42
+statistical:
+  baseline_for_comparison: SimpleRAG
+  confidence_level: 0.95
+  effect_size: cohens_d
+  significance_test: wilcoxon
+systems:
+- class: eval.benchmark.systems.codegraphrag.CodeGraphRAGSystem
+  config_overrides: {}
+  name: CodeGraphRAG
+- class: eval.benchmark.systems.simple_rag.SimpleRAGSystem
+  config_overrides: {}
+  name: SimpleRAG
+- class: eval.benchmark.systems.vector_only.VectorOnlySystem
+  config_overrides: {}
+  name: VectorOnly
+- class: eval.benchmark.systems.bm25.BM25System
+  config_overrides: {}
+  name: BM25
+- class: eval.benchmark.systems.hybrid.HybridSystem
+  config_overrides: {}
+  name: Hybrid
+- class: eval.benchmark.systems.single_agent.SingleAgentSystem
+  config_overrides: {}
+  name: SingleAgent
+- class: eval.benchmark.systems.no_kg.NoKGSystem
+  config_overrides: {}
+  name: NoKG
+- class: eval.benchmark.systems.no_ast.NoASTSystem
+  config_overrides: {}
+  name: NoAST

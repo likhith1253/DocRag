@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "purpose": "benchmark",
+  "description": "Profile dataset",
+  "repositories": [
+    {
+      "repo_id": "codegraphrag_main",
+      "name": "CodeGraphRAG",
+      "url": "local",
+      "commit": "unknown",
+      "is_internal": true,
+      "description": "The CodeGraphRAG repository itself \u2014 evaluated on its own source code.",
+      "language": "python"
+    },
+    {
+      "repo_id": "textual",
+      "name": "Textual",
+      "url": "https://github.com/Textualize/textual",
+      "commit": "1d99508b928a771b51e1a527319c6b87dcff9e05",
+      "is_internal": false,
+      "description": "A Rapid Application Development framework for Python."
+    }
+  ],
+  "items": [
+    {
+      "id": "q001",
+      "question": "What chunking strategy is configured in config.yaml?",
+      "difficulty": "easy",
+      "repo_id": "codegraphrag_main",
+      "verified": true,
+      "verifier": "human",
+      "created_at": "2026-07-07T00:00:00Z",
+      "split": "test",
+      "notes": "Directly verifiable from config.yaml line 4",
+      "language": "yaml",
+      "reasoning_capability": "Configuration Reasoning",
+      "retrieval_complexity": "Single Chunk",
+      "verified_answer": "The chunking strategy is ast_semantic_overlap, configured under the chunking section of config.yaml.",
+      "primary_source_file": "config.yaml",
+      "supporting_source_files": [
+        "ingestion/chunker.py"
+      ],
+      "evidence_line_ranges": {
+        "config.yaml": "1-12",
+        "ingestion/chunker.py": "10-28"
+      },
+      "expected_retrieval_type": "dense",
+      "expected_reasoning_type": "factual-lookup",
+      "verification_method": "source-code-inspection",
+      "ground_truth_retrieval_chunks": [
+        "740fb0997019d1c9467c09c120d4557e5c0155c2a2a2c4ac1472fc2fb122ea10",
+        "735bd0a32a467fe99f11d9a5e0e6e500281f5c8b9b922ed1f5ac5a702b3c0d85",
+        "b26bb364fbdb6ff9cb2bfd4a2a657b007bbfbb53686e0a6a0f6f165588895a13"
+      ]
+    }
+  ]
+}
