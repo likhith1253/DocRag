@@ -1,0 +1,166 @@
+{
+  "collections": {
+    "AI": {
+      "status": "indexed",
+      "queries": [
+        {
+          "query": "What is the main contribution of this paper?",
+          "is_possible": true,
+          "latency": 48.44377136230469,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "What dataset was evaluated?",
+          "is_possible": true,
+          "latency": 32.976595401763916,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "What are the limitations?",
+          "is_possible": true,
+          "latency": 52.172685384750366,
+          "citations_count": 5,
+          "passed": true
+        },
+        {
+          "query": "What accuracy did GPT-10 achieve?",
+          "is_possible": false,
+          "latency": 37.25258541107178,
+          "citations_count": 5,
+          "passed": true
+        }
+      ]
+    },
+    "RAG": {
+      "status": "indexed",
+      "queries": [
+        {
+          "query": "What is retrieval augmented generation?",
+          "is_possible": true,
+          "latency": 36.450175046920776,
+          "citations_count": 5,
+          "passed": true
+        },
+        {
+          "query": "What are the limitations of RAG systems?",
+          "is_possible": true,
+          "latency": 37.946722745895386,
+          "citations_count": 5,
+          "passed": true
+        },
+        {
+          "query": "What GPU was used for training?",
+          "is_possible": false,
+          "latency": 38.202056646347046,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "Who is the author of the most cited RAG paper?",
+          "is_possible": false,
+          "latency": 37.20000863075256,
+          "citations_count": 5,
+          "passed": true
+        }
+      ]
+    },
+    "LLM": {
+      "status": "indexed",
+      "queries": [
+        {
+          "query": "What is the main contribution of this paper?",
+          "is_possible": true,
+          "latency": 56.41304540634155,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "What dataset was evaluated?",
+          "is_possible": true,
+          "latency": 36.558440923690796,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "What are the limitations?",
+          "is_possible": true,
+          "latency": 21.27330207824707,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "What accuracy did GPT-10 achieve?",
+          "is_possible": false,
+          "latency": 31.76842164993286,
+          "citations_count": 5,
+          "passed": true
+        }
+      ]
+    },
+    "ComputerVision": {
+      "status": "indexed",
+      "queries": [
+        {
+          "query": "What datasets are used for evaluation?",
+          "is_possible": true,
+          "latency": 39.740336179733276,
+          "citations_count": 5,
+          "passed": true
+        },
+        {
+          "query": "Describe the model architecture.",
+          "is_possible": true,
+          "latency": 48.4789514541626,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "What accuracy did GPT-10 achieve?",
+          "is_possible": false,
+          "latency": 32.220690965652466,
+          "citations_count": 5,
+          "passed": true
+        }
+      ]
+    },
+    "GraphML": {
+      "status": "failed_indexing"
+    },
+    "Robotics": {
+      "status": "indexed",
+      "queries": [
+        {
+          "query": "What is the main contribution of this paper?",
+          "is_possible": true,
+          "latency": 33.628456830978394,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "What dataset was evaluated?",
+          "is_possible": true,
+          "latency": 34.38728976249695,
+          "citations_count": 5,
+          "passed": true
+        },
+        {
+          "query": "What are the limitations?",
+          "is_possible": true,
+          "latency": 35.80062985420227,
+          "citations_count": 5,
+          "passed": false
+        },
+        {
+          "query": "What accuracy did GPT-10 achieve?",
+          "is_possible": false,
+          "latency": 41.21409010887146,
+          "citations_count": 5,
+          "passed": true
+        }
+      ]
+    }
+  },
+  "isolation_passed": true
+}

@@ -1,0 +1,210 @@
+{
+  "question_id": "Q2",
+  "phase": "retrieval",
+  "timestamp": "2026-07-22T16:18:37.131965",
+  "data": {
+    "retrieved_chunks": [
+      {
+        "chunk_index": 0,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 10,
+        "section": "Roboti Publishing, 2015.",
+        "chunk_text": "Asynchronous Methods for Deep Reinforcement Learning",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 1,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 8,
+        "section": "methods show significant speedups from using greater numbers of parallel actor-learners. Results for Sarsa are shown in Supplementary",
+        "chunk_text": "Figure S10.\nAsynchronous Methods for Deep Reinforcement Learning",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 2,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 8,
+        "section": "the asynchronous reinforcement learning framework could",
+        "chunk_text": "Asynchronous Methods for Deep Reinforcement Learning\nBeamrider\nBreakout\nPong\nQ*bert\nSpace Invaders\n10000\n350\n20\n4500\n800\n15\n4000\n300\n700\n8000\n10\n3500\n1-step Q, 1 threads\n1-step Q, 2 threads\n1-step Q, 4 threads\n1-step Q, 8 threads\n1-step Q, 16 threads\n1-step Q, 1 threads\n1-step Q, 2 threads\n1-step Q, 4 threads\n1-step Q, 8 threads\n1-step Q, 16 threads\n1-step Q, 1 threads\n1-step Q, 2 threads\n1-step Q, 4 threads\n1-step Q, 8 threads\n1-step Q, 16 threads\n250\n600\n5\n3000\n6000\n200\n500\n0\n2500\nScore\nScore\n",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 3,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 5,
+        "section": "car racing simulator (Wymann et al., 2013). We also use",
+        "chunk_text": "Asynchronous Methods for Deep Reinforcement Learning\nBeamrider\nBreakout\nPong\nQ*bert\nSpace Invaders\n16000\n600\n30\n12000\n1600\n14000\n1400\n500\n20\n10000\n12000\n1200\n400\n10\n8000\nDQN\n1-step Q\n1-step SARSA\nn-step Q\nA3C\nDQN\n1-step Q\n1-step SARSA\nn-step Q\nA3C\nDQN\n1-step Q\n1-step SARSA\nn-step Q\nA3C\nDQN\n1-step Q\n1-step SARSA\nn-step Q\nA3C\n10000\n1000\n8000\n300\n0\n6000\n800\nScore\nScore\nScore\nScore\nScore\n6000\n600\n200\n10\n4000\n4000\n400\n100\n20\n2000\n2000\n200\nDQN\n1-step Q\n1-step SARSA\nn-step Q\nA3C\n0\n0\n30\n0\n0\n0\n2\n4\n6\n8\n10",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 4,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 6,
+        "section": "received only a visual input in the form of an RGB image",
+        "chunk_text": "Asynchronous Methods for Deep Reinforcement Learning\nNumber of threads",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 5,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 7,
+        "section": "against the total number of training frames for different",
+        "chunk_text": "Asynchronous Methods for Deep Reinforcement Learning\nA3C, Beamrider\nA3C, Breakout\nA3C, Pong\nA3C, Q*bert\nA3C, Space Invaders\n16000\n1000\n30\n12000\n1400\n14000\n10000\n1200\n800\n20\n12000\n8000\n1000\n10000\n600\n10\n6000\n800\n8000\n400\n0\nScore\nScore\nScore\nScore\nScore\n6000\n4000\n600\n4000\n200\n10\n2000\n400\n2000\n0\n20\n0\n200\n0\n2000\n200\n30\n2000\n0\n10-4\n10-3\n10-2\n10-4\n10-3\n10-2\n10-4\n10-3\n10-2\n10-4\n10-3\n10-2\n10-4\n10-3\n10-2\nLearning rate\nLearning rate\nLearning rate\nLearning rate\nLearning rate\nFigure 2. Scatter plots of scor",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 6,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 8,
+        "section": "Training epochs",
+        "chunk_text": "Figure 3. Data efficiency comparison of different numbers of actor-learners for three asynchronous methods on five Atari games. The\nx-axis shows the total number of training epochs where an epoch corresponds to four million frames (across all threads). The y-axis\nshows the average score. Each curve shows the average over the three best learning rates. Single step methods show increased data\nefficiency from more parallel workers. Results for Sarsa are shown in Supplementary Figure S9.\nBeamrider\nB",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 7,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 5,
+        "section": "Training time (hours)",
+        "chunk_text": "Figure 1. Learning speed comparison for DQN and the new asynchronous algorithms on five Atari 2600 games. DQN was trained on\na single Nvidia K40 GPU while the asynchronous methods were trained using 16 CPU cores. The plots are averaged over 5 runs. In\nthe case of DQN the runs were for different seeds with fixed hyperparameters. For asynchronous methods we average over the best 5\nmodels from 50 experiments with learning rates sampled from LogUniform(10−4, 10−2) and all other hyperparameters fixed",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 8,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 11,
+        "section": "maintains its own separate gradient and momentum vector.",
+        "chunk_text": "RMSProp: While RMSProp (Tieleman & Hinton, 2012) has been widely used in the deep learning literature,\nit has not been extensively studied in the asynchronous optimization setting. The standard non-centered",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 9,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 11,
+        "section": "7. Optimization Details",
+        "chunk_text": "We investigated two different optimization algorithms with our asynchronous framework – stochastic gradient\ndescent and RMSProp. Our implementations of these algorithms do not use any locking in order to maximize",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 10,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 11,
+        "section": "throughput when using a large number of threads.",
+        "chunk_text": "Momentum SGD: The implementation of SGD in an asynchronous setting is relatively straightforward and\nwell studied (Recht et al., 2011). Let θ be the parameter vector that is shared across all threads and let ∆θi\nbe the accumulated gradients of the loss with respect to parameters θ computed by thread number i. Each",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 11,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 8,
+        "section": "Training time (hours)",
+        "chunk_text": "Figure 4. Training speed comparison of different numbers of actor-learners on five Atari games. The x-axis shows training time in\nhours while the y-axis shows the average score. Each curve shows the average over the three best learning rates. All asynchronous",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 12,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 3,
+        "section": "state-action pairs potentially much more efficient.",
+        "chunk_text": "Take action a with ϵ-greedy policy based on Q(s, a; θ)\nReceive new state s′ and reward r\n�r\nfor terminal s′\ny =\nr + γ maxa′ Q(s′, a′; θ−)\nfor non-terminal s′\nAccumulate gradients wrt θ: dθ ←dθ + ∂(y−Q(s,a;θ))2\n∂θ\ns = s′\nT ←T + 1 and t ←t + 1\nif T\nmod Itarget == 0 then\nUpdate the target network θ−←θ\nend if\nif t mod IAsyncUpdate == 0 or s is terminal then\nPerform asynchronous update of θ using dθ.\nClear gradients dθ ←0.\nend if\nuntil T > Tmax",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 13,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 8,
+        "section": "Training time (hours)",
+        "chunk_text": "0\n2\n4\n6\n8\n10\n12\n14",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 14,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 8,
+        "section": "Training epochs",
+        "chunk_text": "0\n10\n20\n30\n40",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 15,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 6,
+        "section": "at https://youtu.be/0xo1Ldx3L5Q.",
+        "chunk_text": "Table 2. The average training speedup for each method and num-\nber of threads averaged over seven Atari games. To compute the",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 16,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 5,
+        "section": "4 days on CPU",
+        "chunk_text": "623.0%\n112.6%",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 17,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 6,
+        "section": "Method",
+        "chunk_text": "1\n2\n4\n8\n16\n1-step Q\n1.0\n3.0\n6.3\n13.3\n24.1\n1-step SARSA\n1.0\n2.8\n5.9\n13.1\n22.1\nn-step Q\n1.0\n2.7\n5.9\n10.7\n17.2\nA3C\n1.0\n2.1\n3.7\n6.9\n12.5",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 18,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 5,
+        "section": "4 days on CPU",
+        "chunk_text": "496.8%\n116.6%\nA3C, LSTM",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 19,
+        "repository": "Asynchronous Methods for Deep Reinforcement Learning",
+        "paper_title": "Asynchronous Methods for Deep Reinforcement Learning",
+        "pdf_filename": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+        "page": 1,
+        "section": "countered by an online RL agent is non-stationary, and on-",
+        "chunk_text": "Proceedings of the 33 rd International Conference on Machine\nLearning, New York, NY, USA, 2016. JMLR: W&CP volume",
+        "similarity": 0.0
+      }
+    ],
+    "num_chunks": 20
+  }
+}

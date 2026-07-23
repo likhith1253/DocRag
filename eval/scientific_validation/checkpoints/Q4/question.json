@@ -1,0 +1,13 @@
+{
+  "question_id": "Q4",
+  "phase": "question",
+  "timestamp": "2026-07-22T16:47:11.625235",
+  "data": {
+    "question_id": "Q4",
+    "paper": "Auto-Encoding Variational Bayes.pdf",
+    "question": "How does the Stochastic Gradient VB estimator enable efficient inference in Variational Autoencoders?",
+    "expected_answer": "The paper introduces the reparameterization trick to rewrite the expectation of the latent variable variational lower bound into a differentiable form with respect to encoder parameters, enabling standard backpropagation training for continuous latent variable models.",
+    "difficulty": "Easy",
+    "evidence_type": "EQUATION"
+  }
+}

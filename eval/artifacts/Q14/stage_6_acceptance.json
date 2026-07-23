@@ -1,0 +1,26 @@
+{
+  "question_id": "Q14",
+  "paper": "Skeletonbased_Approaches_based_on_Machine_Vision_A.pdf",
+  "question": "What are skeleton-based approaches in machine vision for action recognition?",
+  "expected_answer": "Skeleton-based action recognition uses joint positions extracted from videos to recognize human actions. The approach represents actions as sequences of body joint positions and uses methods like RNNs, CNNs, or Graph Neural Networks to capture temporal and spatial relationships between joints.",
+  "generated_answer": "I cannot find this information in the uploaded documents.",
+  "status": "FAILED",
+  "acceptance_status": "NEEDS_REPAIR",
+  "latency_ms": 1879.97,
+  "latency_breakdown": {
+    "planner_ms": 0.0003000000106112566,
+    "embedding_ms": 0.0,
+    "qdrant_ms": 0.0,
+    "vector_ms": 0.0,
+    "mmr_ms": 0.0,
+    "reranker_ms": 0.0,
+    "llm_ms": 0.0,
+    "total_ms": 0.0
+  },
+  "metrics": {
+    "grounding_score": 20.0,
+    "hallucination_score": 60.0,
+    "semantic_similarity": 30.0,
+    "routing_accuracy": 1.0
+  }
+}

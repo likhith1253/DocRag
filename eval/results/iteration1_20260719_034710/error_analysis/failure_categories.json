@@ -1,0 +1,29 @@
+{
+  "CodeGraphRAG": {
+    "total_queries": 152,
+    "total_failures": 152,
+    "failure_rate": 1.0,
+    "retrieval_failures": 0,
+    "generation_failures": 0,
+    "both_failures": 152,
+    "by_category": {
+      "Control Flow": 26,
+      "API Reasoning": 18,
+      "Architecture Reasoning": 35,
+      "Configuration Reasoning": 26,
+      "Data Flow": 24,
+      "Cross-file Reasoning": 1,
+      "Agent Reasoning": 4,
+      "Retrieval Strategy": 12,
+      "Function Lookup": 3,
+      "Bug Localization": 1,
+      "Multi-hop Retrieval": 1,
+      "Dependency Tracing": 1
+    },
+    "by_difficulty": {
+      "medium": 47,
+      "easy": 69,
+      "hard": 36
+    }
+  }
+}

@@ -1,0 +1,404 @@
+[
+  {
+    "id": "Q1",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "expected": "The paper proposes a deep Q-learning approach for adaptive ramp metering that learns optimal signal timings to regulate vehicle flows from on-ramps to highways. The approach improves traffic flow efficiency and reduces congestion by dynamically adjusting metering rates based on traffic state.",
+    "key_concepts": [
+      "deep Q-learning",
+      "ramp metering",
+      "adaptive signal timing",
+      "traffic flow"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "face67afbbb1e93f00351f33fb2fa642a82440be929b9b552a3fe4065c79d14b",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Abstract"
+      },
+      {
+        "chunk_id": "13a448756b18be6838612cfa739fa59e99eb1c11e3288cbf9e2b116846536add",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Conclusion and Future Research"
+      },
+      {
+        "chunk_id": "8fe6b410981dc42ed034b3ff4aa1c5f1e97933ad6b6bf7fe627668eb8bcd4039",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-"
+      },
+      {
+        "chunk_id": "3107205ed74139c00f93874b7301a659056cf906cde327a37507acbe4c20bbdf",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Related Works"
+      },
+      {
+        "chunk_id": "0b27cef575b3d00c8cda01b0931686abccc86e7d68e4d7452c4b3f8331331f2a",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Training"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q2",
+    "question": "How does the paper address ramp metering using reinforcement learning?",
+    "expected": "The paper models ramp metering as a Markov Decision Process where the agent learns a Q-function to select optimal metering rates. The state includes traffic occupancy and flow information, the action is the metering rate, and the reward is based on throughput and safety. The agent is trained using deep Q-learning with experience replay.",
+    "key_concepts": [
+      "MDP",
+      "Q-learning",
+      "state",
+      "action",
+      "reward",
+      "experience replay"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "face67afbbb1e93f00351f33fb2fa642a82440be929b9b552a3fe4065c79d14b",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Abstract"
+      },
+      {
+        "chunk_id": "8fe6b410981dc42ed034b3ff4aa1c5f1e97933ad6b6bf7fe627668eb8bcd4039",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-"
+      },
+      {
+        "chunk_id": "3107205ed74139c00f93874b7301a659056cf906cde327a37507acbe4c20bbdf",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Related Works"
+      },
+      {
+        "chunk_id": "0b27cef575b3d00c8cda01b0931686abccc86e7d68e4d7452c4b3f8331331f2a",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Training"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q3",
+    "question": "What are the experimental results for traffic flow in the ramp metering study?",
+    "expected": "The deep Q-learning agent achieves higher throughput and lower average vehicle delay compared to baseline methods. Performance metrics show improvements in total vehicles processed and reduction in congestion-related delays in the test network.",
+    "key_concepts": [
+      "throughput",
+      "vehicle delay",
+      "baseline comparison",
+      "performance metrics"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "00ecde1760e3c876bb494f13091c2c8767cc89d4614b38c439bb37e7c4e61945",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Introduction"
+      },
+      {
+        "chunk_id": "98f9502d4f5ad3906b54cf42fba89f76e96327deb216819d239c41a1a4165e03",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "]"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q4",
+    "question": "What approach is used for automatic compliance checking in privacy documents?",
+    "expected": "The paper proposes an automated system that checks privacy policy documents for compliance with regulations like GDPR. It uses natural language processing to detect problematic clauses and flags sections that may violate compliance requirements.",
+    "key_concepts": [
+      "GDPR",
+      "compliance checking",
+      "NLP",
+      "privacy policy",
+      "problematic clauses"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "a6b8a7468f126d84df70d4f876449daf669fec252ee4d716a4b9e7a123faddb8",
+        "file": "Language Models are Few-Shot Learners.pdf",
+        "section": "Introduction"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q5",
+    "question": "What datasets were used to evaluate privacy document compliance?",
+    "expected": "The evaluation uses datasets of real privacy policy documents from various websites and services. These documents are manually annotated with compliance violations and used to train and test the automated compliance checking system.",
+    "key_concepts": [
+      "privacy policies",
+      "manual annotation",
+      "real documents",
+      "compliance violations"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "7e964038a325037d9d517fa97f9eab12d9c8162eb1c7b8f16309ff1197d5208f",
+        "file": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "section": "5. Decision tree and Random Forest have been used by Tesfay and al. [6], but"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q6",
+    "question": "What is the DynamicK recommendation approach for personalized decisions?",
+    "expected": "DynamicK is a recommendation system that dynamically adjusts the number of recommendations based on user preference diversity. It uses collaborative filtering with a dynamic K parameter that changes based on the user's item preference distribution.",
+    "key_concepts": [
+      "collaborative filtering",
+      "dynamic K",
+      "personalization",
+      "preference diversity"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "1e7fcf2cc1947f84459132b3770f3db3307c7e54ec78468127604e2bcd51b835",
+        "file": "A_Comparative_Analysis_of_Bias_Amplification_in_Gr.pdf",
+        "section": "28 of 28"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q7",
+    "question": "What are the key hyperparameters and algorithmic details in DynamicK?",
+    "expected": "DynamicK uses matrix factorization for collaborative filtering with hyperparameters including latent factor dimensions, learning rate, and regularization parameters. The dynamic K mechanism adjusts recommendation list length based on entropy or variance of user preference vectors.",
+    "key_concepts": [
+      "matrix factorization",
+      "latent factors",
+      "entropy",
+      "variance",
+      "learning rate"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "0b27cef575b3d00c8cda01b0931686abccc86e7d68e4d7452c4b3f8331331f2a",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Training"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q8",
+    "question": "Why do fuzzy commitments offer insufficient protection according to this paper?",
+    "expected": "The paper demonstrates that fuzzy commitments can be attacked using various cryptanalytic techniques. Even with fuzzy vaults or fuzzy extractors, adversaries can recover the original secret or fingerprint template through collision attacks or threshold cracking, making the scheme vulnerable to practical attacks.",
+    "key_concepts": [
+      "fuzzy vaults",
+      "fuzzy extractors",
+      "collision attacks",
+      "cryptanalysis",
+      "template recovery"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "b41a4e1419d0e99bf7d7cb182aafceb768283adb021ac6752aef7e6cbfb1f603",
+        "file": "Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+        "section": "system facial images and obtain the output of the system"
+      },
+      {
+        "chunk_id": "a603069030456f58466badcb5ec44a9aa25fa53c0d65e38e52db5796672e32d1",
+        "file": "Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+        "section": "system facial images and obtain the output of the system"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q9",
+    "question": "How does portfolio-based algorithm selection relate to generalization performance?",
+    "expected": "The paper studies how algorithm portfolios generalize to new instances. It shows that the selection mechanism's ability to generalize depends on the training distribution diversity, the portfolio composition, and the feature space coverage. Better generalization requires portfolios that cover diverse algorithm strengths.",
+    "key_concepts": [
+      "portfolio",
+      "algorithm selection",
+      "generalization",
+      "training distribution",
+      "feature space"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "5db7c15e9102525fa295b7c8d131d055119e10c24916548fa0acddf89ac8eed0",
+        "file": "Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+        "section": "Abstract"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q10",
+    "question": "How does the paper address contradictions in NLP tasks?",
+    "expected": "The paper addresses contradictions where semantic similarity suggests different interpretations (e.g., 'fish' can be both a general animal and exclude certain fish-like animals). It proposes methods to detect and resolve such contradictions in natural language understanding tasks.",
+    "key_concepts": [
+      "contradiction detection",
+      "semantic similarity",
+      "interpretation",
+      "NLP"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "a6b8a7468f126d84df70d4f876449daf669fec252ee4d716a4b9e7a123faddb8",
+        "file": "Language Models are Few-Shot Learners.pdf",
+        "section": "Introduction"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q11",
+    "question": "What is the approach for modelling human routines and social practices?",
+    "expected": "The paper proposes a formal framework for modeling human routines as sequences of actions and social practices as shared behavioral patterns. It uses agent-based simulation and conceptual modeling to represent how individuals and groups execute routine behaviors in social contexts.",
+    "key_concepts": [
+      "agent-based modeling",
+      "routine behavior",
+      "social practices",
+      "simulation"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "1447e082a0461da8c69ec803d2e9f09456093d05e76833c551bcd1cdacf3dafa",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "analysis and simulation study. IEEE Transactions on Intelligent Transportation Systems, 2014. 15(5): p."
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q12",
+    "question": "What are the main FPGA acceleration techniques for deep learning?",
+    "expected": "The paper reviews FPGA-based deep learning acceleration techniques including custom datapath design, memory optimization, quantization for reduced precision, pipelining, and parallelization. FPGAs provide advantages in latency, throughput, and energy efficiency compared to CPUs for inference tasks.",
+    "key_concepts": [
+      "datapath design",
+      "memory optimization",
+      "quantization",
+      "pipelining",
+      "parallelization",
+      "inference"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "5a656c456c12dcd00def5deb7fa897c07135938653c2ecdaa1ece9859d6980bc",
+        "file": "Language Models are Few-Shot Learners.pdf",
+        "section": "213 million parameters [VSP+17] in the original paper, 300 million parameters [DCLT18], 1.5 billion parameters"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q13",
+    "question": "What algorithms are proposed for AI-based power grid voltage control?",
+    "expected": "The paper proposes using reinforcement learning algorithms (Q-learning, policy gradient) for decentralized voltage control in power grids. It compares these to traditional control methods and shows that RL-based approaches can adapt to changing grid conditions.",
+    "key_concepts": [
+      "Q-learning",
+      "policy gradient",
+      "voltage control",
+      "decentralized control",
+      "grid management"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "8fe6b410981dc42ed034b3ff4aa1c5f1e97933ad6b6bf7fe627668eb8bcd4039",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-"
+      },
+      {
+        "chunk_id": "3107205ed74139c00f93874b7301a659056cf906cde327a37507acbe4c20bbdf",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Related Works"
+      },
+      {
+        "chunk_id": "0b27cef575b3d00c8cda01b0931686abccc86e7d68e4d7452c4b3f8331331f2a",
+        "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "section": "Training"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  },
+  {
+    "id": "Q14",
+    "question": "What are skeleton-based approaches in machine vision for action recognition?",
+    "expected": "Skeleton-based action recognition uses joint positions extracted from videos to recognize human actions. The approach represents actions as sequences of body joint positions and uses methods like RNNs, CNNs, or Graph Neural Networks to capture temporal and spatial relationships between joints.",
+    "key_concepts": [
+      "joint positions",
+      "skeleton extraction",
+      "temporal modeling",
+      "GNN",
+      "RNN",
+      "action recognition"
+    ],
+    "final_chunks": [],
+    "found_in_final_context": false,
+    "matched_sentence": null,
+    "matched_chunk_id": null,
+    "found_in_index_elsewhere": true,
+    "index_locations": [
+      {
+        "chunk_id": "2900ff3861f9599e2794b3324381ffc45ba5d655a60145c76f99d91ab111f261",
+        "file": "World Models.pdf",
+        "section": "7. Discussion"
+      }
+    ],
+    "determined_cause": "Document routing / Zero chunks retrieved (no final context)"
+  }
+]

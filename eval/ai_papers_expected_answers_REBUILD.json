@@ -1,0 +1,198 @@
+[
+  {
+    "id": "Q1",
+    "paper": "Unknown.pdf",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "expected_answer": "Ramp metering that uses traffic signals to regulate vehicle flows from the on-ramps has been\nwidely implemented to improve vehicle mobility of the freeway. Previous studies generally\nupdate signal timings in real-time based on predefined traffic measures collected by point\ndetectors, such as traffic",
+    "key_concepts": [
+      "traffic",
+      "vehicle",
+      "ramp",
+      "metering",
+      "uses"
+    ],
+    "category": "main_contribution"
+  },
+  {
+    "id": "Q2",
+    "paper": "Unknown.pdf",
+    "question": "How does the paper address ramp metering using reinforcement learning?",
+    "expected_answer": "Ramp metering uses traffic signals to regulate vehicle flows from on-ramps to the mainline of\nthe freeway. It alleviates the negative impacts of \u201ccapacity drop\u201d resulting from massive\nmerging behaviors and reduces the total time spent in the traffic system [1, 2]. Several field\ntests have demonstrat",
+    "key_concepts": [
+      "traffic",
+      "vehicle",
+      "ramp",
+      "metering",
+      "uses"
+    ],
+    "category": "methodology"
+  },
+  {
+    "id": "Q3",
+    "paper": "Unknown.pdf",
+    "question": "What are the experimental results for traffic flow in the ramp metering study?",
+    "expected_answer": "Ramp metering uses traffic signals to regulate vehicle flows from on-ramps to the mainline of\nthe freeway. It alleviates the negative impacts of \u201ccapacity drop\u201d resulting from massive\nmerging behaviors and reduces the total time spent in the traffic system [1, 2]. Several field\ntests have demonstrat",
+    "key_concepts": [
+      "traffic",
+      "vehicle",
+      "ramp",
+      "metering",
+      "uses"
+    ],
+    "category": "results"
+  },
+  {
+    "id": "Q4",
+    "paper": "Unknown.pdf",
+    "question": "What approach is used for automatic compliance checking in privacy documents?",
+    "expected_answer": "To generate GDPR compliance, data processors must implement the principle of\naccountability, assessing, and documenting compliance concerning both privacy\ndocuments and practices. Privatech is conceived as an agile software, able to host\ntext-assessment features and to extend the scope of its compli",
+    "key_concepts": [
+      "data",
+      "compliance",
+      "processors",
+      "gdpr",
+      "must"
+    ],
+    "category": "main_contribution"
+  },
+  {
+    "id": "Q5",
+    "paper": "Unknown.pdf",
+    "question": "What datasets were used to evaluate privacy document compliance?",
+    "expected_answer": "This section gives a comprehensive overview of current research and tools related\nto privacy policies assessment described in the literature.\n3.1\nAssessing the clarity and transparency of privacy policies\nSeveral research studies show good results in assessing the complexity of a pri-\nvacy policy an",
+    "key_concepts": [
+      "privacy",
+      "assessing",
+      "research",
+      "policies",
+      "results"
+    ],
+    "category": "experimental_setup"
+  },
+  {
+    "id": "Q6",
+    "paper": "Unknown.pdf",
+    "question": "What is the DynamicK recommendation approach for personalized decisions?",
+    "expected_answer": "Dynamic-K Recommendation with Personalized Decision Boundary\n3 In this paper, firstly, we argue that it is critical to provide a dynamic-K recom-\nmendation where the K should be different with respect to the candidate item set\nand the target user instead of fixed-N recommendation. Then we formulate ",
+    "key_concepts": [
+      "dynamic-k",
+      "recommendation",
+      "joint",
+      "learning",
+      "methods"
+    ],
+    "category": "main_contribution"
+  },
+  {
+    "id": "Q7",
+    "paper": "Unknown.pdf",
+    "question": "What are the key hyperparameters and algorithmic details in DynamicK?",
+    "expected_answer": "Our bounds apply in the widely-applicable setting where on any fixed input, algorithmic per-\nformance is a piecewise-constant function of the algorithm\u2019s parameters. This structure has been\nobserved in algorithm configuration for integer programming, greedy algorithms, clustering, and\ncomputational ",
+    "key_concepts": [
+      "algorithm",
+      "apply",
+      "each",
+      "feature",
+      "tree\u2019s"
+    ],
+    "category": "hyperparameters"
+  },
+  {
+    "id": "Q8",
+    "paper": "Unknown.pdf",
+    "question": "Why do fuzzy commitments offer insufficient protection according to this paper?",
+    "expected_answer": "(either feature vectors in unprotected mode or protected\nbiometric templates in the case of the protected ones).\nFuzzy commitment [10] is a cryptographic primitive that\nallows precise and secure reconstruction of a noisy input.\nA noisy source is sampled once, and a binary string b is\ngenerated. The ",
+    "key_concepts": [
+      "protected",
+      "case",
+      "fuzzy",
+      "commitment",
+      "10"
+    ],
+    "category": "main_contribution"
+  },
+  {
+    "id": "Q9",
+    "paper": "Unknown.pdf",
+    "question": "How does portfolio-based algorithm selection relate to generalization performance?",
+    "expected_answer": "Algorithms for many problems have tunable parameters.\nWith a deft parameter tuning, these\nalgorithms can often efficiently solve computationally challenging problems.\nHowever, the best\nparameter setting for one problem is rarely optimal for another. Algorithm portfolios\u2014which are\nfinite sets of para",
+    "key_concepts": [
+      "algorithm",
+      "parameter",
+      "portfolio",
+      "algorithms",
+      "problems"
+    ],
+    "category": "methodology"
+  },
+  {
+    "id": "Q10",
+    "paper": "Unknown.pdf",
+    "question": "How does the paper address contradictions in NLP tasks?",
+    "expected_answer": "utterance that contradicts the dialogue history.\nThe annotator needs to select the correct label\n(contradiction or non-contradiction) for all five\ndialogues to pass the test. This mechanism tests\nwhether an annotator understands the task.\n\u2022 Maximum Annotation Count Limit:\nThe\nmaximum number of examp",
+    "key_concepts": [
+      "dialogue",
+      "annotator",
+      "contradiction",
+      "task",
+      "maximum"
+    ],
+    "category": "main_contribution"
+  },
+  {
+    "id": "Q11",
+    "paper": "Unknown.pdf",
+    "question": "What is the approach for modelling human routines and social practices?",
+    "expected_answer": "Our routines play an important role in a wide range of social challenges such as climate change, disease outbreaks and\ncoordinating staff and patients in a hospital. Studying these systems via agent-based simulations enables researchers\nto gain insight into complex aspects of these challenges such a",
+    "key_concepts": [
+      "routines",
+      "social",
+      "challenges",
+      "such",
+      "role"
+    ],
+    "category": "methodology"
+  },
+  {
+    "id": "Q12",
+    "paper": "Unknown.pdf",
+    "question": "What are the main FPGA acceleration techniques for deep learning?",
+    "expected_answer": "FPGA appears as a semi-custom circuit in the field of\napplication specific integrated circuits. The basic structure of\nFPGA includes programmable input and output units,\nconfigurable logic blocks, digital clock management modules,\nembedded block RAM, wiring resources, and embedded\ndedicated hardware",
+    "key_concepts": [
+      "fpga",
+      "embedded",
+      "hardware",
+      "operation",
+      "time"
+    ],
+    "category": "main_contribution"
+  },
+  {
+    "id": "Q13",
+    "paper": "Unknown.pdf",
+    "question": "What algorithms are proposed for AI-based power grid voltage control?",
+    "expected_answer": "Nowadays, the rapid development of artificial intelligence (AI) technologies provides new ideas\nand solutions for solving many challenges in the field of power grid operation and control. The\napplication of deep reinforcement learning has been extensively explored to solve complex power\nengineering ",
+    "key_concepts": [
+      "power",
+      "control",
+      "grid",
+      "complex",
+      "rapid"
+    ],
+    "category": "methodology"
+  },
+  {
+    "id": "Q14",
+    "paper": "Unknown.pdf",
+    "question": "What are skeleton-based approaches in machine vision for action recognition?",
+    "expected_answer": "\u201cFusing geometric features for skeleton-based action recognition us-\ning multilayer LSTM networks,\u201d IEEE Transactions on Multimedia,\nvol. 20, no. 9, pp. 2330\u20132343, 2018.\n[141] R. Cui, A. Zhu, S. Zhang, and G. Hua, \u201cMulti-source learning for\nsten, \u201cKey-skeleton based feedback tool for assisting physi",
+    "key_concepts": [
+      "recognition",
+      "vol",
+      "action",
+      "skeleton-based",
+      "ieee"
+    ],
+    "category": "methodology"
+  }
+]

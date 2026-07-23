@@ -1,0 +1,26 @@
+{
+  "question_id": "Q12",
+  "paper": "Overview_of_FPGA_deep_learning_acceleration_based_.pdf",
+  "question": "What are the main FPGA acceleration techniques for deep learning?",
+  "expected_answer": "The paper reviews FPGA-based deep learning acceleration techniques including custom datapath design, memory optimization, quantization for reduced precision, pipelining, and parallelization. FPGAs provide advantages in latency, throughput, and energy efficiency compared to CPUs for inference tasks.",
+  "generated_answer": "I cannot find this information in the uploaded documents.",
+  "status": "FAILED",
+  "acceptance_status": "NEEDS_REPAIR",
+  "latency_ms": 2189.71,
+  "latency_breakdown": {
+    "planner_ms": 0.0001999999312829459,
+    "embedding_ms": 0.0,
+    "qdrant_ms": 0.0,
+    "vector_ms": 0.0,
+    "mmr_ms": 0.0,
+    "reranker_ms": 0.0,
+    "llm_ms": 0.0,
+    "total_ms": 0.0
+  },
+  "metrics": {
+    "grounding_score": 20.0,
+    "hallucination_score": 60.0,
+    "semantic_similarity": 30.0,
+    "routing_accuracy": 1.0
+  }
+}

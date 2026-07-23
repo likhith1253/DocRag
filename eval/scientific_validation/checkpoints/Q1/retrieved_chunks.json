@@ -1,0 +1,110 @@
+{
+  "question_id": "Q1",
+  "phase": "retrieval",
+  "timestamp": "2026-07-22T15:12:53.796873",
+  "data": {
+    "retrieved_chunks": [
+      {
+        "chunk_index": 0,
+        "repository": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "paper_title": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "pdf_filename": "papers/AI/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "page": 1,
+        "section": "Abstract",
+        "chunk_text": "Ramp metering that uses traffic signals to regulate vehicle flows from the on-ramps has been\nwidely implemented to improve vehicle mobility of the freeway. Previous studies generally\nupdate signal timings in real-time based on predefined traffic measures collected by point\ndetectors, such as traffic volumes and occupancies. Comparing with point detectors, traffic\ncameras—which have been increasingly deployed on road networks—could cover larger areas\nand provide more detailed traffic information.",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 1,
+        "repository": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "paper_title": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "pdf_filename": "papers/AI/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "page": 2,
+        "section": "Introduction",
+        "chunk_text": "Ramp metering uses traffic signals to regulate vehicle flows from on-ramps to the mainline of\nthe freeway. It alleviates the negative impacts of “capacity drop” resulting from massive\nmerging behaviors and reduces the total time spent in the traffic system [1, 2]. Several field\ntests have demonstrated the effectiveness of ramp metering in terms of throughput, vehicle-\nmiles-traveled, vehicle-hours-traveled, and travel time reliability [3-6]. For instance, a large-\nscale experiment conducted in M",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 2,
+        "repository": "Rethink AIbased Power Grid Control Diving Into Alg",
+        "paper_title": "Rethink AIbased Power Grid Control Diving Into Alg",
+        "pdf_filename": "papers/AI/Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+        "page": 1,
+        "section": "Abstract",
+        "chunk_text": "Recently, deep reinforcement learning (DRL)-based approach has shown promise\nin solving complex decision and control problems in power engineering domain.\nIn this paper, we present an in-depth analysis of DRL-based voltage control from\naspects of algorithm selection, state space representation, and reward engineering.\nTo resolve observed issues, we propose a novel imitation learning-based approach\nto directly map power grid operating points to effective actions without any interim\nreinforcement ",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 3,
+        "repository": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "paper_title": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "pdf_filename": "papers/AI/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "page": 1,
+        "section": "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-",
+        "chunk_text": "ramp, and 3) higher traffic flows downstream of the merging area. The results suggest that the\nproposed method is able to extract useful information from the video data for better ramp\nmetering controls.\nKeywords: Ramp metering, Deep Q-learning, Traffic videos\n1",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 4,
+        "repository": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "paper_title": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "pdf_filename": "papers/AI/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "page": 6,
+        "section": "Training",
+        "chunk_text": "(\n)\n(\n)\n, ~\n; ,\n~\nE\nmax\n( ,\n,\n)\n( , ,\n)\ni\ns a\nr s\ni\na\nL w\nr\nQ s a w\nQ s a w\nρ\nζ\nγ\n−\n′\n′\n\n\n′\n′\n=\n+\n−\n\n\n\n\ndata\n<st, at, rt, st+1>\n<st+1, at+1, rt+1, st+2>\n<st+2, at+2, rt+2, st+3>\n<st+3, at+3, rt+3, st+4>\n…\nUpdate\nweights\nQ-network\nTarget\nnetwork\ntrained\nfreezing\nAgent\nAction a\nState s\nReward r\nupdate target network\nwith certain frequency\nEnvironment\nStore <s, a, r, s’>\nNew state s’\nFigure 4: 4 Approaches for stabilizing the training process in deep Q-learning: a) relay buffer; b) target net",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 5,
+        "repository": "Rethink AIbased Power Grid Control Diving Into Alg",
+        "paper_title": "Rethink AIbased Power Grid Control Diving Into Alg",
+        "pdf_filename": "papers/AI/Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+        "page": 1,
+        "section": "arXiv:2012.13026v1  [cs.AI]  23 Dec 2020",
+        "chunk_text": "Nowadays, the rapid development of artificial intelligence (AI) technologies provides new ideas\nand solutions for solving many challenges in the field of power grid operation and control. The\napplication of deep reinforcement learning has been extensively explored to solve complex power\nengineering problems, such as grid emergency control [1], real-time autonomous energy management\n[2] and topology adjustment [3]. Specifically, DRL-based power grid control paradigm has become\na hot spot and prov",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 6,
+        "repository": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "paper_title": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "pdf_filename": "papers/AI/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "page": 13,
+        "section": "Conclusion and Future Research",
+        "chunk_text": "This study proposes a DRL method for local ramp metering based on traffic video data. The\nproposed method learns optimal strategies directly from high-dimensional visual inputs,\novercoming the reliance on hand-crafted traffic measures. The better performance of the\nproposed method is demonstrated in a real-world case study. Compared with the traditional PI-\nALINEA method, the proposed method results in lower travel times in the mainline, shorter\nvehicle queue lengths at the on-ramp, and could be",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 7,
+        "repository": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "paper_title": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "pdf_filename": "papers/AI/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "page": 2,
+        "section": "Related Works",
+        "chunk_text": "The signal timing plans for ramp metering could be fixed or traffic responsive. Wattleworth\n[10] firstly formulated a linear programming model to optimize a fixed signal timing plan for\nramp metering based on historical traffic volume data. Responsive approaches adapt to traffic\nflow fluctuations by updating signal timings in response to real-time traffic measures. The\nresponsive approaches can be classified as rule-based, optimization-based, and RL-based.\nThe rule-based approaches update signal",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 8,
+        "repository": "Rethink AIbased Power Grid Control Diving Into Alg",
+        "paper_title": "Rethink AIbased Power Grid Control Diving Into Alg",
+        "pdf_filename": "papers/AI/Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+        "page": 7,
+        "section": "References",
+        "chunk_text": "[1] Q. Huang, R. Huang, W. Hao, J. Tan, R. Fan, and Z. Huang, “Adaptive power system emergency control\nusing deep reinforcement learning,” IEEE Trans. Smart Grid, vol. 11, no. 22, pp. 1171-1182, 2020.\n[2] Y. Ye, D. Qiu, X. Wu, G. Strbac and J. Ward, \"Model-Free real-time autonomous control for a residential\nmulti-energy system using deep reinforcement learning,\" IEEE Trans. Smart Grid, vol. 11, no. 4, pp. 3068-3082,\nJuly 2020.\n[3] T. Lan, J. Duan, B. Zhang, D. Shi, Z. Wang, R. Diao, and X. Zhang",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 9,
+        "repository": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "paper_title": "A Deep Reinforcement Learning Approach for Ramp Me",
+        "pdf_filename": "papers/AI/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+        "page": 14,
+        "section": "analysis and simulation study. IEEE Transactions on Intelligent Transportation Systems, 2014. 15(5): p.",
+        "chunk_text": "2024-2039.\n10.\nWattleworth, J.A., Peak-period analysis and control of a freeway system. 1965, Texas Transportation\nInstitute.\n11.\nMasher, D.P., et al., Guidelines for design and operation of ramp control systems. 1975, Stanford\nResearch Institute: California, U.S.\n12.\nPapageorgiou, M., H. Hadj-Salem, and J.-M. Blosseville, ALINEA: A local feedback control law for on-\nramp metering. Transportation Research Record: Jounral of the Transportation Research Board, 1991.\n14\n1320(1): p. 58-67.\n13.\nSmara",
+        "similarity": 0.0
+      }
+    ],
+    "num_chunks": 10
+  }
+}

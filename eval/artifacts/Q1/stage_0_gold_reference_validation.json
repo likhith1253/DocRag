@@ -1,0 +1,47 @@
+{
+  "stage_id": 0,
+  "stage_name": "Gold Reference Validation",
+  "status": "PASSED",
+  "inputs": {
+    "question_id": "Q1",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "expected_answer_len": 75
+  },
+  "outputs": {
+    "question_id": "Q1",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "expected_answer": "The paper proposes a deep Q-learning approach for adaptive ramp metering...",
+    "expected_claims": [],
+    "gold_chunk_ids": [
+      0,
+      1,
+      2
+    ],
+    "expected_grounding_labels": [
+      "SUPPORTED"
+    ],
+    "expected_metric_ranges": {
+      "grounding_score_min": 70.0
+    },
+    "is_gold_valid": true
+  },
+  "intermediate_artifacts": {
+    "num_gold_chunks": 3,
+    "num_expected_claims": 0
+  },
+  "runtime_ms": 52.39109999820357,
+  "error_messages": [],
+  "invariant_violations": [],
+  "provenance": {
+    "run_id": "616cdf52-53c6-4be5-b676-070b34647e8d",
+    "timestamp": "2026-07-22T17:50:37Z",
+    "git_commit": "4930f7e",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "llm_model": "qwen2.5:3b-instruct",
+    "config_hash": "623805eaf4ed",
+    "dataset_version": "v1.0"
+  }
+}

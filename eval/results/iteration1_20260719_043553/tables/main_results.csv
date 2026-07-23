@@ -1,0 +1,2 @@
+System,recall_at_5,mrr,ndcg_at_5,token_f1,semantic_similarity,rouge_l,mean_s,p95_s
+CodeGraphRAG,0.0000,0.0000,0.0000,0.0567,0.7646,0.0000,2.6950,4.8161

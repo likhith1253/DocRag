@@ -5,11 +5,14 @@ infrastructure (progress tracking, snapshot/resume, batching, registry,
 embedding cache, logging) while replacing code-specific logic with
 PDF parsing and document chunking.
 
-Removed:
-  - Git commit tracking
-  - Language detection
-  - AST parsing / Knowledge Graph construction
-  - Code priority-tier logic (controller/service/api heuristics)
+Performance changes vs original:
+  - PDF parsing is parallelised via ThreadPoolExecutor (PARSE_WORKERS threads).
+  - A module-level parsed-text cache (_PARSED_CACHE) avoids re-opening the same
+    PDF within one process (useful on resume/retry scenarios).
+  - Per-stage wall-clock timings are logged with throughput (items/s).
+  - A single failed PDF never stops the entire run; it is skipped with a warning
+    and counted in progress.failed_files.
+  - Worker count is read from config.yaml workers.parse_workers (default: 4).
 
 Preserved:
   - ProgressRegistry & IndexingProgressTracker
@@ -24,8 +27,10 @@ Preserved:
 
 import os
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 import logging
+import threading
 import yaml
 
 try:
@@ -48,12 +53,30 @@ CONFIG_PATH = os.path.join(
 # PDF extensions to index
 _PDF_EXTENSIONS = {".pdf"}
 
+# ---------------------------------------------------------------------------
+# Module-level parsed-text cache
+# Keyed by absolute PDF path. Prevents re-parsing the same file twice
+# within the same process (e.g. after a partial resume).
+# Thread-safe: protected by _PARSE_CACHE_LOCK.
+# ---------------------------------------------------------------------------
+_PARSED_CACHE: dict = {}
+_PARSE_CACHE_LOCK = threading.Lock()
+
 
 def _load_indexing_config() -> dict:
     if not os.path.exists(CONFIG_PATH):
         return {}
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return yaml.safe_load(f).get("indexing", {})
+
+
+def _load_worker_config() -> dict:
+    """Load workers block from config.yaml, with safe defaults."""
+    if not os.path.exists(CONFIG_PATH):
+        return {}
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        full = yaml.safe_load(f) or {}
+    return full.get("workers", {})
 
 
 def _batch_chunks(chunks: list, batch_size: int):
@@ -89,20 +112,26 @@ def _is_pdf_file(file_path: str) -> bool:
 
 def _discover_pdf_files(target_path: str) -> dict:
     """
-    Walk the target directory and return a dict:
+    Walk the target directory (or semicolon-separated directories) and return:
         { relative_file_path: absolute_file_path }
     for all PDF files.
     """
     pdf_files = {}
-    for root, dirs, files in os.walk(target_path):
-        # Skip hidden directories
-        dirs[:] = [d for d in dirs if not d.startswith(".")]
-        for fname in files:
-            if not _is_pdf_file(fname):
-                continue
-            full_path = os.path.join(root, fname)
-            rel_path = os.path.relpath(full_path, target_path).replace("\\", "/")
-            pdf_files[rel_path] = full_path
+    paths = [p.strip() for p in target_path.split(";") if p.strip()]
+    for path in paths:
+        if not os.path.exists(path):
+            continue
+        base_name = os.path.basename(os.path.normpath(path))
+        for root, dirs, files in os.walk(path):
+            # Skip hidden directories
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
+            for fname in files:
+                if not _is_pdf_file(fname):
+                    continue
+                full_path = os.path.join(root, fname)
+                sub_rel = os.path.relpath(full_path, path).replace("\\", "/")
+                rel_path = f"{base_name}/{sub_rel}" if len(paths) > 1 else sub_rel
+                pdf_files[rel_path] = full_path
     return pdf_files
 
 
@@ -113,25 +142,48 @@ def _parse_and_chunk_pdf(
 ) -> list:
     """
     Parse a single PDF and produce document chunks.
+
+    Results are memoised in _PARSED_CACHE (keyed by abs_path) so that
+    if the same PDF is encountered again in the same process the expensive
+    parsing step is skipped.
+
     Returns list of chunk dicts or [] on parse failure.
     """
     from ingestion.pdf_parser import parse_pdf, get_sections_with_pages
     from ingestion.doc_chunker import chunk_document
 
+    # --- Cache check ---
+    with _PARSE_CACHE_LOCK:
+        if abs_path in _PARSED_CACHE:
+            cached_parsed = _PARSED_CACHE[abs_path]
+        else:
+            cached_parsed = None
+
+    if cached_parsed is None:
+        try:
+            cached_parsed = parse_pdf(
+                abs_path,
+                filename_hint=os.path.splitext(os.path.basename(rel_path))[0],
+            )
+            with _PARSE_CACHE_LOCK:
+                _PARSED_CACHE[abs_path] = cached_parsed
+        except Exception as e:
+            logger.warning(f"[Worker] Failed to parse {rel_path}: {e}")
+            return []
+
     try:
-        parsed = parse_pdf(abs_path, filename_hint=os.path.splitext(os.path.basename(rel_path))[0])
-        sections = get_sections_with_pages(parsed)
+        sections = get_sections_with_pages(cached_parsed)
         chunks = chunk_document(
             file_path=rel_path,
             sections=sections,
-            paper_title=parsed.get("title", ""),
-            authors=parsed.get("authors", ""),
-            year=parsed.get("year", ""),
+            paper_title=cached_parsed.get("title", ""),
+            authors=cached_parsed.get("authors", ""),
+            year=cached_parsed.get("year", ""),
             collection_id=collection_id,
         )
         return chunks
     except Exception as e:
-        logger.warning(f"[Worker] Failed to parse/chunk {rel_path}: {e}")
+        logger.warning(f"[Worker] Failed to chunk {rel_path}: {e}")
         return []
 
 
@@ -142,14 +194,18 @@ def background_ingest_repository(
     Background task: index a folder of PDF research papers into a Qdrant collection.
 
     Stages:
-        discovering  → find all PDF files and compute diff vs snapshot
-        parsing      → parse PDFs and produce chunks
+        discovering       → find all PDF files and compute diff vs snapshot
+        parsing           → parse PDFs in parallel and produce chunks
         metadata_generation → persist metadata
         indexing_tier1 / indexing_tier2 → embed and upsert to Qdrant
-        completed    → mark READY
+        completed         → mark READY
     """
     from storage.progress import ProgressRegistry
     import time
+
+    # Read worker config
+    worker_cfg = _load_worker_config()
+    parse_workers = max(1, worker_cfg.get("parse_workers", 4))
 
     progress = ProgressRegistry.get_tracker(repo_id)
     progress.update(
@@ -163,6 +219,10 @@ def background_ingest_repository(
         embeddings_completed=0,
         embedding_rate=0.0,
         eta_seconds=-1.0,
+        parse_workers=parse_workers,
+        failed_files=0,
+        retried_files=0,
+        current_file="",
     )
 
     try:
@@ -251,12 +311,10 @@ def background_ingest_repository(
                 modified_files.append(file_path)
 
         duration = time.time() - t_start
+        n_discovered = len(added_files) + len(modified_files) + len(deleted_files)
         log_indexing_stage(
-            repo_id,
-            "discovery",
-            "END",
-            duration=duration,
-            items=len(added_files) + len(modified_files) + len(deleted_files),
+            repo_id, "discovery", "END",
+            duration=duration, items=n_discovered,
         )
 
         files_to_parse = set(added_files + modified_files)
@@ -267,28 +325,70 @@ def background_ingest_repository(
         )
 
         # ----------------------------------------------------------------
-        # 2. Parse only changed PDF files
+        # 2. Parse PDF files — PARALLEL via ThreadPoolExecutor
         # ----------------------------------------------------------------
         t_start = time.time()
         log_indexing_stage(repo_id, "parsing", "START", items=len(files_to_parse))
 
         new_chunks_by_file: dict = {}
+        failed_parse_count = 0
+
         if files_to_parse:
-            for idx, rel_path in enumerate(sorted(files_to_parse)):
+            sorted_files = sorted(files_to_parse)
+            completed_count = 0
+            completed_lock = threading.Lock()
+
+            def _parse_one(rel_path: str):
+                """Worker: parse one PDF and return (rel_path, chunks)."""
                 abs_path = all_pdf_files.get(rel_path)
                 if not abs_path or not os.path.exists(abs_path):
                     logger.warning(f"[Worker] PDF not found on disk: {rel_path}")
-                    progress.update(files_processed=idx + 1)
-                    continue
+                    return rel_path, []
+                progress.update(current_file=os.path.basename(rel_path))
                 chunks = _parse_and_chunk_pdf(abs_path, rel_path, repo_id)
-                new_chunks_by_file[rel_path] = chunks
-                progress.update(files_processed=idx + 1)
+                return rel_path, chunks
+
+            with ThreadPoolExecutor(max_workers=parse_workers) as executor:
+                future_to_path = {
+                    executor.submit(_parse_one, rel): rel
+                    for rel in sorted_files
+                }
+                for future in as_completed(future_to_path):
+                    try:
+                        rel_path, chunks = future.result()
+                        new_chunks_by_file[rel_path] = chunks
+                        if not chunks:
+                            failed_parse_count += 1
+                    except Exception as e:
+                        rel_path = future_to_path[future]
+                        logger.warning(f"[Worker] Unhandled parse error for {rel_path}: {e}")
+                        new_chunks_by_file[rel_path] = []
+                        failed_parse_count += 1
+
+                    with completed_lock:
+                        completed_count += 1
+                    progress.update(
+                        files_processed=completed_count,
+                        failed_files=failed_parse_count,
+                    )
 
         duration = time.time() - t_start
         total_new_chunks = sum(len(v) for v in new_chunks_by_file.values())
+        throughput = len(files_to_parse) / max(0.01, duration)
         log_indexing_stage(
-            repo_id, "parsing", "END", duration=duration, items=total_new_chunks
+            repo_id, "parsing", "END",
+            duration=duration,
+            items=total_new_chunks,
+            throughput=throughput,
         )
+        logger.info(
+            f"[Worker] Parsed {len(files_to_parse)} PDFs in {duration:.1f}s "
+            f"({throughput:.2f} PDFs/s, {parse_workers} workers, "
+            f"{failed_parse_count} failed)"
+        )
+
+        # Clear current file display
+        progress.update(current_file="")
 
         # ----------------------------------------------------------------
         # 3. Compute chunk diff (add / delete)
@@ -359,7 +459,8 @@ def background_ingest_repository(
 
         duration = time.time() - t_start
         log_indexing_stage(
-            repo_id, "metadata_generation", "END", duration=duration, items=len(chunks_to_add)
+            repo_id, "metadata_generation", "END",
+            duration=duration, items=len(chunks_to_add),
         )
 
         # Save snapshot before embedding (for resume)
@@ -447,11 +548,11 @@ def background_ingest_repository(
         throughput = len(chunks_needed) / max(0.1, duration)
         log_indexing_stage(
             repo_id, "indexing_tier1", "END",
-            duration=duration, items=len(chunks_needed), throughput=throughput
+            duration=duration, items=len(chunks_needed), throughput=throughput,
         )
 
         # ----------------------------------------------------------------
-        # Tier 2: finalize (no deferred batch in DocumentRAG — all done above)
+        # Tier 2: finalize
         # ----------------------------------------------------------------
         registry.update_status(repo_id, RepoStatus.INDEXING_TIER2)
         progress.update(status=RepoStatus.INDEXING_TIER2, stage="indexing_tier2")
@@ -468,10 +569,17 @@ def background_ingest_repository(
         repo.last_error = None
         registry.register(repo)
 
+        # Invalidate content-aware router cache so next query uses fresh chunk embeddings
+        try:
+            from retrieval.repository_router import invalidate_router_cache
+            invalidate_router_cache(repo_id)
+        except Exception:
+            pass
+
         progress.update(status=RepoStatus.READY, stage="completed", percentage=100.0)
         log_indexing_stage(
             repo_id, "overall", "END",
-            duration=time.time() - progress.start_time
+            duration=time.time() - progress.start_time,
         )
 
         if profiler:

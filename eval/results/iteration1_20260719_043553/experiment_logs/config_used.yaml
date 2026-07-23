@@ -1,0 +1,22 @@
+dataset: eval/benchmark_dataset.json
+description: Iteration 1 evaluation
+experiment_id: iteration1
+limit: 5
+metrics:
+  generation:
+  - token_f1
+  retrieval:
+  - recall_at_1
+  - recall_at_3
+  - recall_at_5
+  - precision_at_5
+  - mrr
+  system:
+  - mean_latency
+  - peak_ram_mb
+n_runs: 1
+seed: 42
+systems:
+- class: eval.benchmark.systems.codegraphrag.CodeGraphRAGSystem
+  config_overrides: {}
+  name: CodeGraphRAG

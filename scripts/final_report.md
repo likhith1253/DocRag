@@ -95,7 +95,7 @@
 ---
 
 ## 4. QA Engine & Isolation Results
-- **Grounding**: Strict formatting `[Paper: <title>, Section: <sec>, Page: <N>]` successfully validated on integration tests.
+- **Grounding**: Strict formatting `[Paper: <title>, Section: <sec>, Page: <N>]` successtested under documented assumptions on integration tests.
 - **Negative Testing**: Impossible questions consistently return `"I cannot find this information in the uploaded documents."`
 - **Collection Isolation**: Verified via cross-testing (e.g. asking GraphML questions to the ComputerVision collection returns negative hits).
 

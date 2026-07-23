@@ -1,0 +1,17 @@
+{
+  "question_id": "Q4",
+  "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+  "question": "What approach is used for automatic compliance checking in privacy documents?",
+  "expected_answer": "The paper proposes an automated system that checks privacy policy documents for compliance with regulations like GDPR. It uses natural language processing to detect problematic clauses and flags sections that may violate compliance requirements.",
+  "generated_answer": "The approach described involves designing a prototype software that uses keyword detection to automate the detection of keywords and sentences within privacy policies, based on a dataset of problematic clauses and words. This automated solution aims to help with detecting missing information and assessing the lawfulness of clauses by comparing them against various sources such as GDPR requirements and previous annulled clauses or internal notes from lawyers.",
+  "status": "PASSED",
+  "acceptance_status": "ACCEPTED",
+  "latency_ms": 3014.4,
+  "citations_count": 20,
+  "metrics": {
+    "grounding_score": 90.0,
+    "hallucination_score": 5.0,
+    "semantic_similarity": 85.0,
+    "routing_accuracy": 1.0
+  }
+}

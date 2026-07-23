@@ -1,0 +1,49 @@
+{
+  "stage_id": 6,
+  "stage_name": "Regression & Acceptance Validation",
+  "status": "WARNING",
+  "inputs": {
+    "num_upstream_stages": 6,
+    "noise_tolerance_pct": 1.0
+  },
+  "outputs": {
+    "acceptance_status": "REJECTED",
+    "passed_gates": [
+      "Upstream Stage Invariants",
+      "RAG Retrieval Gold Chunk Threshold"
+    ],
+    "gate_failures": [
+      {
+        "gate": "Grounding Score Minimum Expectation",
+        "details": "Grounding score 66.67% is below gold reference expectation 70.00%"
+      },
+      {
+        "gate": "Hallucination Score Maximum Expectation",
+        "details": "Hallucination score 33.33% exceeds gold reference threshold 20.00%"
+      }
+    ]
+  },
+  "intermediate_artifacts": {
+    "num_gate_failures": 2,
+    "num_passed_gates": 2
+  },
+  "runtime_ms": 93.71910000481876,
+  "error_messages": [],
+  "invariant_violations": [
+    {
+      "name": "Acceptance Gate Satisfaction",
+      "details": "System rejected due to 2 gate failures: [{'gate': 'Grounding Score Minimum Expectation', 'details': 'Grounding score 66.67% is below gold reference expectation 70.00%'}, {'gate': 'Hallucination Score Maximum Expectation', 'details': 'Hallucination score 33.33% exceeds gold reference threshold 20.00%'}]",
+      "severity": "WARNING"
+    }
+  ],
+  "provenance": {
+    "run_id": "005f30b7-988b-4088-b30a-fd0dd0ae61d2",
+    "timestamp": "2026-07-22T18:17:25Z",
+    "git_commit": "4930f7e",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "llm_model": "qwen2.5:3b-instruct",
+    "config_hash": "623805eaf4ed",
+    "dataset_version": "v1.0"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "CodeGraphRAG": {
+    "total_queries": 5,
+    "total_failures": 5,
+    "failure_rate": 1.0,
+    "retrieval_failures": 0,
+    "generation_failures": 0,
+    "both_failures": 5,
+    "by_category": {
+      "Function Lookup": 1,
+      "Configuration Reasoning": 2,
+      "Architecture Reasoning": 1,
+      "Retrieval Strategy": 1
+    },
+    "by_difficulty": {
+      "easy": 5
+    }
+  }
+}

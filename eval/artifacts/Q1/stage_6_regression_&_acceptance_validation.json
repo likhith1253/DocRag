@@ -1,0 +1,35 @@
+{
+  "stage_id": 6,
+  "stage_name": "Regression & Acceptance Validation",
+  "status": "PASSED",
+  "inputs": {
+    "num_upstream_stages": 0,
+    "noise_tolerance_pct": 1.0
+  },
+  "outputs": {
+    "acceptance_status": "ACCEPTED",
+    "passed_gates": [
+      "Upstream Stage Invariants",
+      "Grounding Score Minimum Expectation",
+      "Hallucination Score Maximum Expectation"
+    ],
+    "gate_failures": []
+  },
+  "intermediate_artifacts": {
+    "num_gate_failures": 0,
+    "num_passed_gates": 3
+  },
+  "runtime_ms": 45.5736000003526,
+  "error_messages": [],
+  "invariant_violations": [],
+  "provenance": {
+    "run_id": "e1216fa6-7ecb-4ee4-a7c8-d2beb23d8dd0",
+    "timestamp": "2026-07-22T17:50:52Z",
+    "git_commit": "4930f7e",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "llm_model": "qwen2.5:3b-instruct",
+    "config_hash": "623805eaf4ed",
+    "dataset_version": "v1.0"
+  }
+}

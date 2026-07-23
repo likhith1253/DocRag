@@ -1,0 +1,210 @@
+{
+  "question_id": "Q4",
+  "phase": "retrieval",
+  "timestamp": "2026-07-22T17:21:33.010901",
+  "data": {
+    "retrieved_chunks": [
+      {
+        "chunk_index": 0,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 8,
+        "section": "Conclusion",
+        "chunk_text": "We have introduced a novel estimator of the variational lower bound, Stochastic Gradient VB\n(SGVB), for efficient approximate inference with continuous latent variables. The proposed estima-\ntor can be straightforwardly differentiated and optimized using standard stochastic gradient meth-\nods. For the case of i.i.d. datasets and continuous latent variables per datapoint we introduce an\nefficient algorithm for efficient inference and learning, Auto-Encoding VB (AEVB), that learns an\napproximate i",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 1,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 1,
+        "section": "Introduction",
+        "chunk_text": "How can we perform efficient approximate inference and learning with directed probabilistic models\nwhose continuous latent variables and/or parameters have intractable posterior distributions? The\nvariational Bayesian (VB) approach involves the optimization of an approximation to the intractable\nposterior. Unfortunately, the common mean-field approach requires analytical solutions of expecta-\ntions w.r.t. the approximate posterior, which are also intractable in the general case. We show how a\nre",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 2,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 1,
+        "section": "arXiv:1312.6114v11  [stat.ML]  10 Dec 2022",
+        "chunk_text": "For the case of an i.i.d. dataset and continuous latent variables per datapoint, we propose the Auto-\nEncoding VB (AEVB) algorithm. In the AEVB algorithm we make inference and learning especially\nefficient by using the SGVB estimator to optimize a recognition model that allows us to perform very\nefficient approximate posterior inference using simple ancestral sampling, which in turn allows us\nto efficiently learn the model parameters, without the need of expensive iterative inference schemes\n(su",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 3,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 1,
+        "section": "Abstract",
+        "chunk_text": "How can we perform efficient inference and learning in directed probabilistic\nmodels, in the presence of continuous latent variables with intractable posterior\ndistributions, and large datasets? We introduce a stochastic variational inference\nand learning algorithm that scales to large datasets and, under some mild differ-\nentiability conditions, even works in the intractable case. Our contributions are\ntwo-fold. First, we show that a reparameterization of the variational lower bound\nyields a lo",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 4,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 6,
+        "section": "Related work",
+        "chunk_text": "The wake-sleep algorithm [HDFN95] is, to the best of our knowledge, the only other on-line learn-\ning method in the literature that is applicable to the same general class of continuous latent variable\nmodels. Like our method, the wake-sleep algorithm employs a recognition model that approximates\nthe true posterior. A drawback of the wake-sleep algorithm is that it requires a concurrent optimiza-\ntion of two objective functions, which together do not correspond to optimization of (a bound of)\nth",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 5,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 7,
+        "section": "1600 Frey Face, Nz =20",
+        "chunk_text": "Figure 2: Comparison of our AEVB method to the wake-sleep algorithm, in terms of optimizing the\nlower bound, for different dimensionality of latent space (Nz). Our method converged considerably\nfaster and reached a better solution in all experiments. Interestingly enough, more latent variables\ndoes not result in more overfitting, which is explained by the regularizing effect of the lower bound.\nVertical axis: the estimated average variational lower bound per datapoint. The estimator variance\nwas",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 6,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 3,
+        "section": "3. Efficient approximate marginal inference of the variable x. This allows us to perform all",
+        "chunk_text": "z(l) ∼qφ(z|x(i)). This gradient estimator exhibits exhibits very high variance (see e.g. [BJP12])\nand is impractical for our purposes.\n2.3\nThe SGVB estimator and AEVB algorithm\nIn this section we introduce a practical estimator of the lower bound and its derivatives w.r.t. the\nparameters. We assume an approximate posterior in the form qφ(z|x), but please note that the\ntechnique can be applied to the case qφ(z), i.e. where we do not condition on x, as well. The fully\nvariational Bayesian method f",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 7,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 1,
+        "section": "Method",
+        "chunk_text": "The strategy in this section can be used to derive a lower bound estimator (a stochastic objective\nfunction) for a variety of directed graphical models with continuous latent variables. We will restrict\nourselves here to the common case where we have an i.i.d. dataset with latent variables per datapoint,\nand where we like to perform maximum likelihood (ML) or maximum a posteriori (MAP) inference\non the (global) parameters, and variational inference on the latent variables. It is, for example,\n1\n",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 8,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 4,
+        "section": "appendix B), such that only the expected reconstruction error Eqφ(z|x(i))",
+        "chunk_text": "�\nrequires\nestimation by sampling. The KL-divergence term can then be interpreted as regularizing φ, encour-\naging the approximate posterior to be close to the prior pθ(z). This yields a second version of the\nSGVB estimator �LB(θ, φ; x(i)) ≃L(θ, φ; x(i)), corresponding to eq. (3), which typically has less\nvariance than the generic estimator:\nL\n�\n(log pθ(x(i)|z(i,l)))\n�LB(θ, φ; x(i)) = −DKL(qφ(z|x(i))||pθ(z)) + 1\nL\nl=1\nwhere\nz(i,l) = gφ(ϵ(i,l), x(i))\nand\nϵ(l) ∼p(ϵ)\n(7)\nGiven multiple datapoints f",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 9,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 11,
+        "section": "MLP’s as probabilistic encoders and decoders",
+        "chunk_text": "In variational auto-encoders, neural networks are used as probabilistic encoders and decoders. There\nare many possible choices of encoders and decoders, depending on the type of data and model. In\nour example we used relatively simple neural networks, namely multi-layered perceptrons (MLPs).\nFor the encoder we used a MLP with Gaussian output, while for the decoder we used MLPs with\neither Gaussian or Bernoulli outputs, depending on the type of data.\nC.1\nBernoulli MLP as decoder\nIn this case let ",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 10,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 13,
+        "section": "Full VB",
+        "chunk_text": "(19)\nwhere we, similarly as above, choose a prior p(ζ) and a function hφ(ζ) such that the following\nholds:\nL(φ; X) =\n�\nqφ(θ) (log pθ(X) + log pα(θ) −log qφ(θ)) dθ\n=\ndζ\n(20)\n�\np(ζ) (log pθ(X) + log pα(θ) −log qφ(θ))\n����\nθ=hφ(ζ)\nFor notational conciseness we introduce a shorthand notation fφ(x, z, θ):\nfφ(x, z, θ) = N · (log pθ(x|z) + log pθ(z) −log qφ(z|x)) + log pα(θ) −log qφ(θ)\n(21)\nUsing equations (20) and (18), the Monte Carlo estimate of the variational lower bound, given\ndatapoint x(i), is:",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 11,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 12,
+        "section": "Full VB",
+        "chunk_text": "As written in the paper, it is possible to perform variational inference on both the parameters θ and\nthe latent variables z, as opposed to just the latent variables as we did in the paper. Here, we’ll derive\nour estimator for that case.\nLet pα(θ) be some hyperprior for the parameters introduced above, parameterized by α. The\nmarginal likelihood can be written as:\nlog pα(X) = DKL(qφ(θ)||pα(θ|X)) + L(φ; X)\n(13)\nwhere the first RHS term denotes a KL divergence of the approximate from the true post",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 12,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 8,
+        "section": "Future work",
+        "chunk_text": "Since the SGVB estimator and the AEVB algorithm can be applied to almost any inference and\nlearning problem with continuous latent variables, there are plenty of future directions: (i) learning\nhierarchical generative architectures with deep neural networks (e.g. convolutional networks) used\nfor the encoders and decoders, trained jointly with AEVB; (ii) time-series models (i.e. dynamic\nBayesian networks); (iii) application of SGVB to the global parameters; (iv) supervised models\nwith latent vari",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 13,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 2,
+        "section": "3. Efficient approximate marginal inference of the variable x. This allows us to perform all",
+        "chunk_text": "kinds of inference tasks where a prior over x is required. Common applications in computer\nvision include image denoising, inpainting and super-resolution.\n2\nFor the purpose of solving the above problems, let us introduce a recognition model qφ(z|x): an\napproximation to the intractable true posterior pθ(z|x). Note that in contrast with the approximate\nposterior in mean-field variational inference, it is not necessarily factorial and its parameters φ are\nnot computed from some closed-form expecta",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 14,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 6,
+        "section": "Experiments",
+        "chunk_text": "We trained generative models of images from the MNIST and Frey Face datasets3 and compared\nlearning algorithms in terms of the variational lower bound, and the estimated marginal likelihood.\nThe generative model (encoder) and variational approximation (decoder) from section 3 were used,\nwhere the described encoder and decoder have an equal number of hidden units. Since the Frey\nFace data are continuous, we used a decoder with Gaussian outputs, identical to the encoder, except\nthat the means were",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 15,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 10,
+        "section": "Solution of −DKL(qφ(z)||pθ(z)), Gaussian case",
+        "chunk_text": "The variational lower bound (the objective to be maximized) contains a KL term that can often be\nintegrated analytically. Here we give the solution when both the prior pθ(z) = N(0, I) and the\nposterior approximation qφ(z|x(i)) are Gaussian. Let J be the dimensionality of z. Let µ and σ\ndenote the variational mean and s.d. evaluated at datapoint i, and let µj and σj simply denote the\nj-th element of these vectors. Then:\n�\nN(z; µ, σ2) log N(z; 0, I) dz\n�\nqθ(z) log p(z) dz =\nJ\n�\n= −J\n(µ2\nj + σ2\nj )",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 16,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 5,
+        "section": "Example: Variational Auto-Encoder",
+        "chunk_text": "In this section we’ll give an example where we use a neural network for the probabilistic encoder\nqφ(z|x) (the approximation to the posterior of the generative model pθ(x, z)) and where the param-\neters φ and θ are optimized jointly with the AEVB algorithm.\nLet the prior over the latent variables be the centered isotropic multivariate Gaussian pθ(z) =\nN(z; 0, I). Note that in this case, the prior lacks parameters. We let pθ(x|z) be a multivariate\nGaussian (in case of real-valued data) or Bernoul",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 17,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 12,
+        "section": "Monte Carlo EM",
+        "chunk_text": "The Monte Carlo EM algorithm does not employ an encoder, instead it samples from the pos-\nterior of the latent variables using gradients of the posterior computed with ∇z log pθ(z|x) =\n∇z log pθ(z) + ∇z log pθ(x|z). The Monte Carlo EM procedure consists of 10 HMC leapfrog\nsteps with an automatically tuned stepsize such that the acceptance rate was 90%, followed by 5\nweight updates steps using the acquired sample. For all algorithms the parameters were updated\nusing the Adagrad stepsizes (with ac",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 18,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 2,
+        "section": "1. Intractability:",
+        "chunk_text": "the case where the integral of the marginal likelihood pθ(x)\n=\n�\npθ(z)pθ(x|z) dz is intractable (so we cannot evaluate or differentiate the marginal like-\nlihood), where the true posterior density pθ(z|x) = pθ(x|z)pθ(z)/pθ(x) is intractable\n(so the EM algorithm cannot be used), and where the required integrals for any reason-\nable mean-field VB algorithm are also intractable. These intractabilities are quite common\nand appear in cases of moderately complicated likelihood functions pθ(x|z), e.g. ",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 19,
+        "repository": "Auto Encoding Variational Bayes",
+        "paper_title": "Auto Encoding Variational Bayes",
+        "pdf_filename": "Auto-Encoding Variational Bayes.pdf",
+        "page": 14,
+        "section": "Full VB",
+        "chunk_text": "model pα(θ), pθ(z), qφ(θ) and qφ(z|x) are Gaussian, and therefore four terms of fφ can be solved\nanalytically. The resulting estimator is:\n\n\nL\n�\nJ\n�\nL(φ; X) ≃1\nN ·\n+ log pθ(x(i)z(i))\n�\n1 + log((σ(l)\nz,j)2) −(µ(l)\nz,j)2 −(σ(l)\nz,j)2�\n\n1\nL\n2\nj=1\nl=1\nJ\n�\n+ 1\n(24)\n�\n1 + log((σ(l)\nθ,j)2) −(µ(l)\nθ,j)2 −(σ(l)\nθ,j)2�\n2\nj=1\nµ(i)\nj\nand σ(i)\nj\nsimply denote the j-th element of vectors µ(i) and σ(i).\n14",
+        "similarity": 0.0
+      }
+    ],
+    "num_chunks": 20
+  }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": "2026-07-22T18:45:00Z",
+    "metrics_before": {
+      "grounding_score": 45.0,
+      "hallucination_score": 40.0,
+      "routing_accuracy": 0.28
+    },
+    "metrics_after": {
+      "grounding_score": 85.0,
+      "hallucination_score": 10.0,
+      "routing_accuracy": 1.0
+    },
+    "latency_ms": 3412.5,
+    "regression_result": "PASSED",
+    "files_responsible": [
+      "ingestion/pdf_parser.py",
+      "retrieval/repository_router.py",
+      "retrieval/cross_encoder_rerank.py"
+    ]
+  }
+]

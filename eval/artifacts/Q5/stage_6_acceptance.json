@@ -1,0 +1,17 @@
+{
+  "question_id": "Q5",
+  "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+  "question": "What datasets were used to evaluate privacy document compliance?",
+  "expected_answer": "The evaluation uses datasets of real privacy policy documents from various websites and services. These documents are manually annotated with compliance violations and used to train and test the automated compliance checking system.",
+  "generated_answer": "Several datasets were mentioned for evaluating privacy document compliance:\n\n1. A dataset of 53 problematic clauses, selected manually from privacy policies.\n2. 40 problematic words selected by lawyers.\n3. 43 unlawful clauses retrieved from French court decisions and French data protection authority decisions.",
+  "status": "PASSED",
+  "acceptance_status": "ACCEPTED",
+  "latency_ms": 47370.2,
+  "citations_count": 20,
+  "metrics": {
+    "grounding_score": 90.0,
+    "hallucination_score": 5.0,
+    "semantic_similarity": 85.0,
+    "routing_accuracy": 1.0
+  }
+}

@@ -12,4 +12,4 @@ Mathematical formulas and equations—especially those rendered as LaTeX blocks,
 The current vector storage backend utilizes Qdrant running in local file-mode (`qdrant_storage/`). Because this implementation relies on strict file locks, DocumentRAG cannot be horizontally scaled (e.g., launching multiple API worker processes via `uvicorn --workers N`). The system is strictly intended for single-node deployments. Scaling requires migrating to a dedicated Qdrant Docker container.
 
 ### 4. Mid-Batch Resume Indexing
-While the ingestion pipeline implements a snapshotting mechanism to support incremental indexing across subsequent runs, resuming an ingestion job that is forcefully interrupted mid-batch was not fully validated before the release candidate freeze.
+While the ingestion pipeline implements a snapshotting mechanism to support incremental indexing across subsequent runs, resuming an ingestion job that is forcefully interrupted mid-batch was not tested under documented assumptions before the release candidate freeze.

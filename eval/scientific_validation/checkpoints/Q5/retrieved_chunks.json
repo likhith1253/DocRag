@@ -1,0 +1,210 @@
+{
+  "question_id": "Q5",
+  "phase": "retrieval",
+  "timestamp": "2026-07-22T16:59:16.334422",
+  "data": {
+    "retrieved_chunks": [
+      {
+        "chunk_index": 0,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 8,
+        "section": "Privatech Project",
+        "chunk_text": "To generate GDPR compliance, data processors must implement the principle of\naccountability, assessing, and documenting compliance concerning both privacy\ndocuments and practices. Privatech is conceived as an agile software, able to host\ntext-assessment features and to extend the scope of its compliance’s assessment\nto the data processors’ activity. This paper focuses on the legal textual analysis\nrequired to enable GDPR compliance.\nPrivatech seeks to create a collaborative platform for data pro",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 1,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 6,
+        "section": "dataset [7]. Bhatia and Breaux [6] also worked on the identification of incom-",
+        "chunk_text": "pleteness in privacy policies by representing a data practice as a semantic frame.\nThey analyzed five privacy policies and identified 281 data practices from which\nthey identified 17 unique semantic roles they used to assess the completeness\nof a privacy policy vis-`a-vis a given data practice (i.e. duration of retention,\ntransfer).\n3.2\nEnsuring data subject empowerment and control on its privacy\nDifferent streams of research have contributed to increase consumers’ control of\ntheir data by provi",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 2,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 1,
+        "section": "arXiv:2012.12718v1  [cs.AI]  23 Dec 2020",
+        "chunk_text": "Concerns for data protection have become ubiquitous in our increasingly data-\ndriven society. Consumers, citizens, corporations, public organizations, and other\nsocial actors are affected by these concerns either as producers or consumers of\npersonal data. Recent regulations, such as the European Union General Data\nProtection Regulation (GDPR) and the California Consumer Privacy Act (CCPA),\nhave attempted to provide a legal framework to address those concerns by em-\npowering individuals with new",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 3,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 5,
+        "section": "Methods and Technologies",
+        "chunk_text": "This section gives a comprehensive overview of current research and tools related\nto privacy policies assessment described in the literature.\n3.1\nAssessing the clarity and transparency of privacy policies\nSeveral research studies show good results in assessing the complexity of a pri-\nvacy policy and subsequent compliance with article 12 of GDPR, requiring the\nuse of plain and unambiguous language.\nThe difficulty to read privacy policies As a factor of complexity, research\nhas looked at the diff",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 4,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 7,
+        "section": "2. The Naive Bayes classifier has been used by Zimmeck and Bellovin [25]) to",
+        "chunk_text": "identify privacy practices in policy text. This classifier showed strong results\nin terms of both performance and time-cost on the classification of privacy\npolicy clauses following a privacy risk-based approach and GDPR [5].",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 5,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 12,
+        "section": "9. Gopinath, A.A.M., Wilson, S., Sadeh, N.: Supervised and unsupervised methods for",
+        "chunk_text": "robust separation of section titles and prose text in web documents. In: Proceedings\nof the 2018 Conference on Empirical Methods in Natural Language Processing. pp.\n850–855 (2018)\nCompliance Generation for Privacy Documents under GDPR\n13",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 6,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 9,
+        "section": "4. Assessment of the readability of privacy policies since the GDPR requires",
+        "chunk_text": "the use of plain and clear language.\nEach time Privatech flags a clause as problematic or unlawful, the user can\nsee the legal basis of this automatic qualification (either a legal article of GDPR\nor the reference of a judicial/data protection authority decision). Each time a\npiece of information is listed as missing, the user can see which information is\nmissing and gives feedback about the prediction of the software.",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 7,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 4,
+        "section": "Analysis of Lawyers Tasks for Legal Advice on GDPR Compliance The sec-",
+        "chunk_text": "ond case study sought to identify and automate selected tasks performed by\nlawyers in the law firm, which are complex, mainly due to an overload of infor-\nmation, but which nonetheless are repetitive and with low value. In agreement\nwith the four lawyers who participated in the case study —two partners, one\nsenior associate, and a junior associate— the case study focused on detecting\nunlawful clauses and missing information in privacy policies.\nDiagnosis - For reviewing privacy policies, lawyers",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 8,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 12,
+        "section": "7. Contissa, G., Docter, K., Lagioia, F., Lippi, M., Micklitz, H.W., Pa�lka, P., Sar-",
+        "chunk_text": "tor, G., Torroni, P.: Claudette meets gdpr: Automating the evaluation of privacy\npolicies using artificial intelligence. Available at SSRN 3208596 (2018)",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 9,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 9,
+        "section": "1. Detection of problematic clauses i.e. segments of text that could breach",
+        "chunk_text": "GDPR.",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 10,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 7,
+        "section": "5. Decision tree and Random Forest have been used by Tesfay and al. [6], but",
+        "chunk_text": "they showed lower precision than Naive Bayes and Support Vector Machines.\nIt seems that the best results arise from a combination of approaches. Wil-\nson and al. [20] used convolutional neural networks (CNNs), logistic regression\n(LR), and SVMs to classify policy text into privacy practice categories. Some\nresearchers are relying mainly on Keyword approach [22] to analyze privacy\npolicies, while other combines keywords detection and ML classifiers, such as\nCLAUDETTE [7].\nAnnotation methodologies",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 11,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 4,
+        "section": "5. Offline privacy policies: While a company may have a limited number of",
+        "chunk_text": "online privacy policies, they generally are bound by a large number of in-\nternal and contractual documents containing information about privacy and\ndata practices e.g., Contracts in B2B contexts, user notices in B2C. These\ndocuments are often neglected in the compliance assessment process.",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 12,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 13,
+        "section": "15. Palmirani, M., Martoni, M., Rossi, A., Bartolini, C., Robaldo, L.: Legal ontology",
+        "chunk_text": "for modelling gdpr concepts and norms. In: JURIX. pp. 91–100 (2018)",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 13,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 4,
+        "section": "4. Data supply chain: Data processing activities generally imply the partici-",
+        "chunk_text": "pation of multiple actors in the ‘supply chain’. Corporations, whether con-\ntrollers or processors, may be unable to verify the compliance of privacy\nand data management policies of subcontractors downstream with their own\npractices and policies, as well as with those of their clients.",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 14,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 13,
+        "section": "19. Shvartzshnaider, Y., Apthorpe, N., Feamster, N., Nissenbaum, H.: Analyz-",
+        "chunk_text": "ing privacy policies\nusing contextual integrity annotations. arXiv preprint\narXiv:1809.02236 (2018)",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 15,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 12,
+        "section": "4. Anton, A.I., Earp, J.B., He, Q., Stufflebeam, W., Bolchini, D., Jensen, C.: Financial",
+        "chunk_text": "privacy policies and the need for standardization. IEEE Security & privacy 2(2),\n36–45 (2004)",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 16,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 13,
+        "section": "21. V. Stourm, D. Restrepo Amariles, S.N.: A framework for managers to evaluate and",
+        "chunk_text": "respond to privacy regulation (2019)",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 17,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 14,
+        "section": "26. Zimmeck, S., Story, P., Smullen, D., Ravichander, A., Wang, Z., Reidenberg, J.,",
+        "chunk_text": "Russell, N.C., Sadeh, N.: Maps: Scaling privacy compliance analysis to a million\napps. Proceedings on Privacy Enhancing Technologies 2019(3), 66–86 (2019)",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 18,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 8,
+        "section": "3. The PRIVACYQA is the latest shared corpus of the Usable privacy policy",
+        "chunk_text": "project. It is composed of privacy policy questions and 3500 annotations of\nrelevant answers and aims to support the developing of question-answering\ntools on privacy [16].",
+        "similarity": 0.0
+      },
+      {
+        "chunk_index": 19,
+        "repository": "Compliance Generation for Privacy Documents under ",
+        "paper_title": "Compliance Generation for Privacy Documents under ",
+        "pdf_filename": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+        "page": 7,
+        "section": "3. Lebanoff and Liu [11] explored the auxiliary-classifier generative adversarial",
+        "chunk_text": "networks (AC-GAN) model to discriminate between real/fake privacy policy\nsentences (depending on their vagueness) and to classify these sentences\nsimultaneously from ‘clear’ to ‘extremely vague’.",
+        "similarity": 0.0
+      }
+    ],
+    "num_chunks": 20
+  }
+}

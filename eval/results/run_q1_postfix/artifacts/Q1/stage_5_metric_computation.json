@@ -1,0 +1,55 @@
+{
+  "stage_id": 5,
+  "stage_name": "Metric Computation",
+  "status": "PASSED",
+  "inputs": {
+    "expected_answer_len": 293,
+    "raw_llm_answer_len": 610,
+    "num_claims": 3,
+    "num_chunks": 15
+  },
+  "outputs": {
+    "metrics": {
+      "context_quality": 100.0,
+      "retrieval_quality": 100.0,
+      "grounding_score": 66.66666666666666,
+      "hallucination_score": 33.33333333333333,
+      "semantic_correctness": 80.21931052207947,
+      "semantic_similarity": 80.21931052207947,
+      "numerical_correctness": 100.0,
+      "numerical_similarity": 100.0,
+      "completeness": 66.90429449081421,
+      "conciseness": 50.0,
+      "overall_score": 74.92288927237193
+    },
+    "score_explanations": {
+      "context_quality": "Context Precision: 15/15 retrieved chunks matched the target paper.",
+      "retrieval_quality": "Retrieval Recall: 15 relevant chunks retrieved out of 15 total.",
+      "grounding_score": "2 supported, 0 partially supported out of 3 valid claims.",
+      "hallucination_score": "1 out of 3 valid claims have no supporting evidence.",
+      "semantic_correctness": "Semantic similarity computed using SentenceTransformer (all-MiniLM-L6-v2). The model encodes both texts into 384-dimensional embeddings and computes cosine similarity. Score of 0.802 indicates high semantic alignment.",
+      "numerical_correctness": "No numerical values in expected answer to compare",
+      "completeness": "Evaluated recall across 2 expected claims (avg recall: 66.9%).",
+      "conciseness": "Answer is overly verbose",
+      "overall_score": "Weighted sum (base max 100.0) with 3.3 point hallucination penalty applied."
+    },
+    "overall_score": 74.92288927237193
+  },
+  "intermediate_artifacts": {
+    "base_score": 78.25622260570526,
+    "hallucination_penalty": 3.333333333333333
+  },
+  "runtime_ms": 163.5861999966437,
+  "error_messages": [],
+  "invariant_violations": [],
+  "provenance": {
+    "run_id": "e6cedab2-5969-4436-9618-cc7dddbc3296",
+    "timestamp": "2026-07-22T18:34:42Z",
+    "git_commit": "4930f7e",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "llm_model": "qwen2.5:3b-instruct",
+    "config_hash": "623805eaf4ed",
+    "dataset_version": "v1.0"
+  }
+}

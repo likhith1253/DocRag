@@ -1,0 +1,50 @@
+{
+  "stage_id": 0,
+  "stage_name": "Gold Reference Validation",
+  "status": "PASSED",
+  "inputs": {
+    "question_id": "Q1",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "expected_answer_len": 293
+  },
+  "outputs": {
+    "question_id": "Q1",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "expected_answer": "The paper proposes a deep Q-learning approach for adaptive ramp metering that learns optimal signal timings to regulate vehicle flows from on-ramps to highways. The approach improves traffic flow efficiency and reduces congestion by dynamically adjusting metering rates based on traffic state.",
+    "expected_claims": [],
+    "gold_chunk_ids": [
+      0,
+      1,
+      2
+    ],
+    "expected_grounding_labels": [
+      "SUPPORTED"
+    ],
+    "expected_metric_ranges": {
+      "grounding_score_min": 70.0,
+      "hallucination_score_max": 20.0,
+      "semantic_similarity_min": 60.0
+    },
+    "is_gold_valid": true
+  },
+  "intermediate_artifacts": {
+    "num_gold_chunks": 3,
+    "num_expected_claims": 0,
+    "pdf_path": "D:\\DocRag\\demo_dataset\\Artificial_Intelligence\\A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+  },
+  "runtime_ms": 38.00800000317395,
+  "error_messages": [],
+  "invariant_violations": [],
+  "provenance": {
+    "run_id": "2713691a-5ae8-4d14-a96a-b8c07b3568f8",
+    "timestamp": "2026-07-22T18:30:38Z",
+    "git_commit": "4930f7e",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "llm_model": "qwen2.5:3b-instruct",
+    "config_hash": "623805eaf4ed",
+    "dataset_version": "v1.0"
+  }
+}

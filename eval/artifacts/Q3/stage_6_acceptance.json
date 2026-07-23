@@ -1,0 +1,22 @@
+{
+  "question_id": "Q3",
+  "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+  "question": "What are the experimental results for traffic flow in the ramp metering study?",
+  "expected_answer": "The deep Q-learning agent achieves higher throughput and lower average vehicle delay compared to baseline methods. Performance metrics show improvements in total vehicles processed and reduction in congestion-related delays in the test network.",
+  "generated_answer": "1. Travel Time Reduction: The proposed DRL ramp metering method significantly reduces vehicle travel times on the mainline compared to baseline scenarios.\n- The maximum value of median travel times under the proposed DRL method is 3.4 minutes (11.7% reduction vs no-control, 20.0% faster than PI-ALINEA).\n2. Stability & Consistency: Narrower travel time ranges compared to PI-ALINEA.\n3. High Demand Effectiveness: Most pronounced benefits under high-demand traffic conditions.",
+  "status": "PASSED",
+  "acceptance_status": "ACCEPTED",
+  "metrics": {
+    "grounding_score": 92.5,
+    "hallucination_score": 5.0,
+    "semantic_similarity": 88.0,
+    "routing_accuracy": 1.0
+  },
+  "citations": [
+    "Page 1",
+    "Page 2",
+    "Page 9-10",
+    "Page 13-14"
+  ],
+  "latency_ms": 4210.0
+}

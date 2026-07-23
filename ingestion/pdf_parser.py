@@ -60,24 +60,48 @@ _HEADING_KEYWORDS = [
     r"^training",
     r"^analysis",
     r"^limitations?",
-    r"^\d+\.?\s+[A-Z]",          # e.g. "1. Introduction" or "2 Methods"
-    r"^\d+\.\d+\.?\s+[A-Za-z]",  # e.g. "2.1 Dataset"
+    r"^\d+\.\s+[A-Z][a-z]+",     # e.g. "1. Introduction" or "2. Methods"
+    r"^\d+\.\d+\.?\s+[A-Z][a-z]+", # e.g. "2.1 Dataset"
 ]
 _HEADING_RE = re.compile("|".join(_HEADING_KEYWORDS), re.IGNORECASE)
+
+
+# Characters that reliably indicate a body-text line (not a section heading)
+_NON_HEADING_PREFIX_RE = re.compile(
+    r'^(?:'
+    r'\[|'                          # reference bracket [1], [Author et al.]
+    r'\(|'                          # parenthetical lines
+    r'\d+\.\s+[a-z]|'              # numbered list item starting lowercase: "1. however..."
+    r'\d{4}|'                       # bare year: "2020"
+    r'http|'                        # URLs
+    r'\|'                           # table row fragment
+    r')',
+    re.IGNORECASE
+)
 
 
 def _is_heading(text: str, font_size: float, avg_body_size: float) -> bool:
     """
     Heuristic: a text block is a section heading if it matches keyword
     patterns OR has a noticeably larger font size than body text.
+
+    Threshold raised to 1.25x (was 1.10x) to prevent bold body text,
+    table captions, and numbered references from being promoted to headings.
+    Additional exclusion rules prevent reference list lines from being misclassified.
     """
     stripped = text.strip()
     if not stripped or len(stripped) > 200:
         return False
+    # Exclude lines that are clearly body text, affiliations, emails, or references
+    if _NON_HEADING_PREFIX_RE.match(stripped):
+        return False
+    if re.search(r'university|laboratory|department|school|college|institute|email|http|@|proceedings|ieee|acm|vol\.|no\.|tandon|key lab', stripped, re.IGNORECASE):
+        return False
     if _HEADING_RE.match(stripped):
         return True
-    # Font-size heuristic: heading font is > 10% larger than body average
-    if avg_body_size > 0 and font_size > avg_body_size * 1.10 and len(stripped) < 100:
+    # Font-size heuristic: heading font must be > 25% larger than body average
+    # (raised from 10% to reduce false positives on bold body text)
+    if avg_body_size > 0 and font_size > avg_body_size * 1.25 and len(stripped) < 100:
         return True
     return False
 
@@ -98,6 +122,33 @@ def _extract_pdf_metadata(doc) -> Dict[str, str]:
     return {"title": title, "authors": author, "year": year}
 
 
+def _extract_tables_from_page(page) -> List[str]:
+    """
+    Extract tables from a PDF page using PyMuPDF's table detection.
+    Returns list of table content as formatted strings.
+    """
+    tables = []
+    try:
+        # Try to find tables using PyMuPDF's find_tables
+        table_finder = page.find_tables()
+        if table_finder.tables:
+            for table in table_finder.tables:
+                # Extract table content
+                table_content = []
+                for r_idx, row in enumerate(table.extract()):
+                    # Clean up cell content and format as Markdown table
+                    row_text = "| " + " | ".join(str(cell).strip().replace('\n', ' ') if cell else "" for cell in row) + " |"
+                    table_content.append(row_text)
+                    if r_idx == 0:
+                        separator = "| " + " | ".join("---" for _ in row) + " |"
+                        table_content.append(separator)
+                if table_content:
+                    tables.append("\n".join(table_content))
+    except Exception as e:
+        logger.debug(f"Table extraction failed for page: {e}")
+    return tables
+
+
 def _fitz_parse(pdf_path: str) -> Dict[str, Any]:
     """
     Parse PDF using PyMuPDF.
@@ -111,7 +162,8 @@ def _fitz_parse(pdf_path: str) -> Dict[str, Any]:
                     "page": int,          # 1-indexed
                     "blocks": [           # ordered text blocks
                         {"text": str, "font_size": float, "bbox": tuple}
-                    ]
+                    ],
+                    "tables": [str]       # extracted table content
                 }
             ]
         }
@@ -123,6 +175,7 @@ def _fitz_parse(pdf_path: str) -> Dict[str, Any]:
     all_font_sizes = []
 
     for page_num, page in enumerate(doc, start=1):
+        # Extract text blocks
         blocks = page.get_text("dict", flags=fitz.TEXT_PRESERVE_WHITESPACE, sort=True).get("blocks", [])
         page_blocks = []
         for block in blocks:
@@ -144,7 +197,11 @@ def _fitz_parse(pdf_path: str) -> Dict[str, Any]:
                         "bbox": block.get("bbox", (0, 0, 0, 0))
                     })
                     all_font_sizes.append(max_size)
-        pages_data.append({"page": page_num, "blocks": page_blocks})
+        
+        # Extract tables
+        tables = _extract_tables_from_page(page)
+        
+        pages_data.append({"page": page_num, "blocks": page_blocks, "tables": tables})
 
     doc.close()
 
@@ -250,7 +307,8 @@ def get_sections_with_pages(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
             "heading": str,       # Section heading text (or "Body" for preamble)
             "page_start": int,    # First page this section appears on
             "page_end": int,      # Last page this section appears on (inclusive)
-            "content": str        # Full text of the section
+            "content": str,       # Full text of the section (including tables)
+            "tables": List[str]   # Extracted table content for this section
         }
     """
     avg_size = parsed.get("avg_body_font_size", 10.0)
@@ -262,23 +320,32 @@ def get_sections_with_pages(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
     current_page_end = 1
     current_lines: List[str] = []
     current_line_pages: List[int] = []
+    current_tables: List[str] = []
 
     def _flush_section():
-        nonlocal current_heading, current_page_start, current_page_end, current_lines, current_line_pages
+        nonlocal current_heading, current_page_start, current_page_end, current_lines, current_line_pages, current_tables
         text = "\n".join(current_lines).strip()
-        if text:
+        # Add tables to content
+        if current_tables:
+            table_text = "\n\n".join(current_tables)
+            text = f"{text}\n\n{table_text}" if text else table_text
+        if text or current_tables:
             sections.append({
                 "heading": current_heading,
                 "page_start": current_page_start,
                 "page_end": current_page_end,
                 "content": text,
-                "line_pages": current_line_pages
+                "line_pages": current_line_pages,
+                "tables": current_tables.copy()
             })
         current_lines = []
         current_line_pages = []
+        current_tables = []
 
     for page_data in pages:
         page_num = page_data["page"]
+        page_tables = page_data.get("tables", [])
+        
         for block in page_data["blocks"]:
             text = block["text"]
             font_size = block["font_size"]
@@ -287,11 +354,17 @@ def get_sections_with_pages(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
                 current_heading = text.strip()
                 current_page_start = page_num
                 current_page_end = page_num
-                # Don't add heading to lines to avoid duplication if it's identical
+                # RC-3 fix: include the heading text as the first line of the
+                # new section's content so no words are silently dropped.
+                current_lines.append(text.strip())
+                current_line_pages.append(page_num)
             else:
                 current_lines.append(text)
                 current_line_pages.append(page_num)
                 current_page_end = page_num
+        
+        # Add tables from this page to current section
+        current_tables.extend(page_tables)
 
     _flush_section()  # flush last section
 
@@ -299,18 +372,27 @@ def get_sections_with_pages(parsed: Dict[str, Any]) -> List[Dict[str, Any]]:
     if not sections and pages:
         all_lines = []
         all_line_pages = []
+        all_tables = []
         first_page = pages[0]["page"]
         last_page = pages[-1]["page"]
         for pd in pages:
             for bl in pd["blocks"]:
                 all_lines.append(bl["text"])
                 all_line_pages.append(pd["page"])
+            all_tables.extend(pd.get("tables", []))
+        
+        content = "\n".join(all_lines)
+        if all_tables:
+            table_text = "\n\n".join(all_tables)
+            content = f"{content}\n\n{table_text}" if content else table_text
+            
         sections.append({
             "heading": "Body",
             "page_start": first_page,
             "page_end": last_page,
-            "content": "\n".join(all_lines),
-            "line_pages": all_line_pages
+            "content": content,
+            "line_pages": all_line_pages,
+            "tables": all_tables
         })
 
     return sections

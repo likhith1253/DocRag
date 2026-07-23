@@ -1,0 +1,26 @@
+{
+  "question_id": "Q7",
+  "paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+  "question": "What are the key hyperparameters and algorithmic details in DynamicK?",
+  "expected_answer": "DynamicK uses matrix factorization for collaborative filtering with hyperparameters including latent factor dimensions, learning rate, and regularization parameters. The dynamic K mechanism adjusts recommendation list length based on entropy or variance of user preference vectors.",
+  "generated_answer": "I cannot find this information in the uploaded documents.",
+  "status": "FAILED",
+  "acceptance_status": "NEEDS_REPAIR",
+  "latency_ms": 1816.88,
+  "latency_breakdown": {
+    "planner_ms": 0.0003000000106112566,
+    "embedding_ms": 0.0,
+    "qdrant_ms": 0.0,
+    "vector_ms": 0.0,
+    "mmr_ms": 0.0,
+    "reranker_ms": 0.0,
+    "llm_ms": 0.0,
+    "total_ms": 0.0
+  },
+  "metrics": {
+    "grounding_score": 20.0,
+    "hallucination_score": 60.0,
+    "semantic_similarity": 30.0,
+    "routing_accuracy": 1.0
+  }
+}

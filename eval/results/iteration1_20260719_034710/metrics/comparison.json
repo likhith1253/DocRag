@@ -1,0 +1,83 @@
+{
+  "systems": [
+    "CodeGraphRAG"
+  ],
+  "baseline": "CodeGraphRAG",
+  "statistical_tests": {
+    "recall_at_5": {
+      "CodeGraphRAG": {
+        "metric": "recall_at_5",
+        "mean": 0.0,
+        "ci_lower": 0.0,
+        "ci_upper": 0.0,
+        "wilcoxon": {
+          "statistic": NaN,
+          "p_value": 1.0,
+          "significant": false,
+          "alternative": "two-sided",
+          "note": "All differences are zero \u2014 test undefined"
+        },
+        "cohens_d": null,
+        "cohens_d_interpretation": "undefined",
+        "n_queries": 152
+      }
+    },
+    "token_f1": {
+      "CodeGraphRAG": {
+        "metric": "token_f1",
+        "mean": 0.011737,
+        "ci_lower": 0.007076,
+        "ci_upper": 0.017186,
+        "wilcoxon": {
+          "statistic": NaN,
+          "p_value": 1.0,
+          "significant": false,
+          "alternative": "two-sided",
+          "note": "All differences are zero \u2014 test undefined"
+        },
+        "cohens_d": 0.0,
+        "cohens_d_interpretation": "negligible",
+        "n_queries": 152
+      }
+    }
+  },
+  "per_system_means": {
+    "CodeGraphRAG": {
+      "recall_at_1": 0.0,
+      "precision_at_1": 0.0,
+      "ndcg_at_1": 0.0,
+      "recall_at_3": 0.0,
+      "precision_at_3": 0.0,
+      "ndcg_at_3": 0.0,
+      "recall_at_5": 0.0,
+      "precision_at_5": 0.0,
+      "ndcg_at_5": 0.0,
+      "recall_at_10": 0.0,
+      "precision_at_10": 0.0,
+      "ndcg_at_10": 0.0,
+      "mrr": 0.0,
+      "map": 0.0,
+      "exact_match": 0.0,
+      "token_f1": 0.011737,
+      "semantic_similarity": 0.758192,
+      "rouge_l": 0.0,
+      "bleu": NaN,
+      "mean_s": 16.5581,
+      "median_s": 13.5284,
+      "std_s": 17.1237,
+      "min_s": 0.1873,
+      "max_s": 57.9022,
+      "p50_s": 13.5284,
+      "p75_s": 32.5945,
+      "p90_s": 40.0635,
+      "p95_s": 45.8203,
+      "p99_s": 54.8044,
+      "mean_mb": 0.0,
+      "peak_mb": 0.0,
+      "std_mb": 0.0,
+      "queries_per_second": 0.0604,
+      "total_wall_time_s": 2516.83,
+      "total_queries": 152.0
+    }
+  }
+}

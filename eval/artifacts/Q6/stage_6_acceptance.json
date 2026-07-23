@@ -1,0 +1,17 @@
+{
+  "question_id": "Q6",
+  "paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+  "question": "What is the DynamicK recommendation approach for personalized decisions?",
+  "expected_answer": "DynamicK is a recommendation system that dynamically adjusts the number of recommendations based on user preference diversity. It uses collaborative filtering with a dynamic K parameter that changes based on the user's item preference distribution.",
+  "generated_answer": "The DynamicK recommendation approach with personalized decisions involves reformulating a dynamic-K recommendation task as a joint learning problem that combines ranking and personalized classification objectives. This approach is applied over state-of-the-art methods like BPRMF and HRM, extending them to dynamically adjust the number of recommended items (K) for different user-item pairs, rather than having a fixed number for all users. The effectiveness of this dynamic-K model is shown through improvements in metrics compared to traditional top-N recommendation methods.",
+  "status": "PASSED",
+  "acceptance_status": "ACCEPTED",
+  "latency_ms": 54063.7,
+  "citations_count": 18,
+  "metrics": {
+    "grounding_score": 90.0,
+    "hallucination_score": 5.0,
+    "semantic_similarity": 85.0,
+    "routing_accuracy": 1.0
+  }
+}

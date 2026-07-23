@@ -43,6 +43,13 @@ class SemanticCache:
         conn.commit()
         # Do not close, it is cached
 
+    def clear(self):
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM cache")
+        conn.commit()
+        cursor.execute("VACUUM")
+        conn.commit()
 
     def get_cached_answer(self, query: str, repo_id: str) -> Optional[Dict[str, Any]]:
         conn = self._get_conn()
@@ -114,6 +121,12 @@ class SemanticCache:
         )
         conn.commit()
 
+    def close(self):
+        conn = getattr(_thread_local, "conn", None)
+        if conn is not None:
+            conn.close()
+            delattr(_thread_local, "conn")
+
 
 class EmbeddingCache:
     """
@@ -174,6 +187,14 @@ class EmbeddingCache:
             "INSERT OR REPLACE INTO emb_cache (chunk_hash, model_name, embedding_json) VALUES (?, ?, ?)",
             rows
         )
+        conn.commit()
+
+    def clear(self):
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM emb_cache")
+        conn.commit()
+        cursor.execute("VACUUM")
         conn.commit()
 
     def close(self):

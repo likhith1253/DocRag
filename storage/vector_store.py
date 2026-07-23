@@ -280,7 +280,9 @@ class VectorStoreManager:
             entry = {
                 "content": point.payload["content"],
                 "metadata": point.payload["metadata"],
-                "score": point.score,
+                "score": float(point.score),
+                "raw_vector_score": float(point.score),
+                "rerank_score": float(point.score),
                 "id": point.id
             }
             # Attach stored vector for MMR reuse (avoids re-encoding at query time)
@@ -293,6 +295,41 @@ class VectorStoreManager:
                 if first:
                     entry["vector"] = first
             retrieved.append(entry)
+        
+        # If metadata_filters were provided but returned zero results, attempt a best-effort
+        # filename basename match by querying without filters and post-filtering. This
+        # handles cases where stored metadata.file contains a path (e.g. 'papers/AI/...')
+        # while callers pass only the filename (e.g. 'A_Deep_...pdf').
+        if not retrieved and metadata_filters and 'file' in metadata_filters:
+            try:
+                raw_results = self.client.query_points(
+                    collection_name=self.collection_name,
+                    query=query_vector,
+                    query_filter=None,
+                    limit=top_k,
+                    with_vectors=True
+                )
+                from ntpath import basename
+                for point in raw_results.points:
+                    meta = point.payload.get('metadata', {})
+                    f = meta.get('file') or meta.get('paper') or meta.get('paper_title') or ''
+                    if f and basename(f) == metadata_filters['file']:
+                        entry = {
+                            "content": point.payload["content"],
+                            "metadata": meta,
+                            "score": point.score,
+                            "id": point.id
+                        }
+                        pv = point.vector
+                        if isinstance(pv, list) and pv:
+                            entry["vector"] = pv
+                        elif isinstance(pv, dict):
+                            first = next(iter(pv.values()), None)
+                            if first:
+                                entry["vector"] = first
+                        retrieved.append(entry)
+            except Exception:
+                pass
 
         timing = {
             "embedding_ms": (t_embed_end - t_embed_start) * 1000,

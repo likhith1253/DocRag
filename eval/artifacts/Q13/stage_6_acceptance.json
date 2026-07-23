@@ -1,0 +1,26 @@
+{
+  "question_id": "Q13",
+  "paper": "Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+  "question": "What algorithms are proposed for AI-based power grid voltage control?",
+  "expected_answer": "The paper proposes using reinforcement learning algorithms (Q-learning, policy gradient) for decentralized voltage control in power grids. It compares these to traditional control methods and shows that RL-based approaches can adapt to changing grid conditions.",
+  "generated_answer": "I cannot find this information in the uploaded documents.",
+  "status": "FAILED",
+  "acceptance_status": "NEEDS_REPAIR",
+  "latency_ms": 1964.29,
+  "latency_breakdown": {
+    "planner_ms": 0.0001999999312829459,
+    "embedding_ms": 0.0,
+    "qdrant_ms": 0.0,
+    "vector_ms": 0.0,
+    "mmr_ms": 0.0,
+    "reranker_ms": 0.0,
+    "llm_ms": 0.0,
+    "total_ms": 0.0
+  },
+  "metrics": {
+    "grounding_score": 20.0,
+    "hallucination_score": 60.0,
+    "semantic_similarity": 30.0,
+    "routing_accuracy": 1.0
+  }
+}

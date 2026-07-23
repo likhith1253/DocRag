@@ -1,0 +1,17 @@
+{
+  "question_id": "Q8",
+  "paper": "Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+  "question": "Why do fuzzy commitments offer insufficient protection according to this paper?",
+  "expected_answer": "The paper demonstrates that fuzzy commitments can be attacked using various cryptanalytic techniques. Even with fuzzy vaults or fuzzy extractors, adversaries can recover the original secret or fingerprint template through collision attacks or threshold cracking, making the scheme vulnerable to practical attacks.",
+  "generated_answer": "According to this paper, fuzzy commitments offer insufficient protection because the reconstructed images are sufficiently close to those of the user to allow unlocking their account even at very low failure rates (0.1% FAR). However, these reconstructions can still be used to infer private information about the user, such as gender, age, or ethnicity, suggesting that with high probability, the reconstruction is successful and can reveal sensitive data. Additionally, the paper discusses how fuzzy commitments do not provide irreversibility or unlinkability; a compromised system\u2019s reconstructed image could potentially unlock accounts in other systems.",
+  "status": "PASSED",
+  "acceptance_status": "ACCEPTED",
+  "latency_ms": 73891.2,
+  "citations_count": 19,
+  "metrics": {
+    "grounding_score": 90.0,
+    "hallucination_score": 5.0,
+    "semantic_similarity": 85.0,
+    "routing_accuracy": 1.0
+  }
+}

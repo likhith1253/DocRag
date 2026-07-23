@@ -1,0 +1,13 @@
+{
+  "question_id": "Q3",
+  "phase": "question",
+  "timestamp": "2026-07-22T16:18:37.170875",
+  "data": {
+    "question_id": "Q3",
+    "paper": "Attention Is All You Need.pdf",
+    "question": "What is the core architectural contribution of the Transformer model?",
+    "expected_answer": "The Transformer architecture replaces recurrent and convolutional layers entirely with stacked self-attention and multi-head attention mechanisms, allowing significantly faster parallel training and superior sequence translation performance.",
+    "difficulty": "Hard",
+    "evidence_type": "FIGURE"
+  }
+}

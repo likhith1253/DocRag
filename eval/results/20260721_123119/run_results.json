@@ -1,0 +1,226 @@
+[
+  {
+    "id": "Q1",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "expected": "The paper proposes a deep Q-learning approach for adaptive ramp metering that learns optimal signal timings to regulate vehicle flows from on-ramps to highways. The approach improves traffic flow efficiency and reduces congestion by dynamically adjusting metering rates based on traffic state.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1543,
+      "grounding_score_percent": 50.0,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 20.688
+    }
+  },
+  {
+    "id": "Q2",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "question": "How does the paper address ramp metering using reinforcement learning?",
+    "expected": "The paper models ramp metering as a Markov Decision Process where the agent learns a Q-function to select optimal metering rates. The state includes traffic occupancy and flow information, the action is the metering rate, and the reward is based on throughput and safety. The agent is trained using deep Q-learning with experience replay.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1924,
+      "grounding_score_percent": 50.0,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.0967
+    }
+  },
+  {
+    "id": "Q3",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "question": "What are the experimental results for traffic flow in the ramp metering study?",
+    "expected": "The deep Q-learning agent achieves higher throughput and lower average vehicle delay compared to baseline methods. Performance metrics show improvements in total vehicles processed and reduction in congestion-related delays in the test network.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.2126,
+      "grounding_score_percent": 50.0,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1003
+    }
+  },
+  {
+    "id": "Q4",
+    "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "question": "What approach is used for automatic compliance checking in privacy documents?",
+    "expected": "The paper proposes an automated system that checks privacy policy documents for compliance with regulations like GDPR. It uses natural language processing to detect problematic clauses and flags sections that may violate compliance requirements.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1192,
+      "grounding_score_percent": 66.67,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.145
+    }
+  },
+  {
+    "id": "Q5",
+    "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "question": "What datasets were used to evaluate privacy document compliance?",
+    "expected": "The evaluation uses datasets of real privacy policy documents from various websites and services. These documents are manually annotated with compliance violations and used to train and test the automated compliance checking system.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1522,
+      "grounding_score_percent": 83.33,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.0919
+    }
+  },
+  {
+    "id": "Q6",
+    "paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+    "question": "What is the DynamicK recommendation approach for personalized decisions?",
+    "expected": "DynamicK is a recommendation system that dynamically adjusts the number of recommendations based on user preference diversity. It uses collaborative filtering with a dynamic K parameter that changes based on the user's item preference distribution.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1902,
+      "grounding_score_percent": 66.67,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.0923
+    }
+  },
+  {
+    "id": "Q7",
+    "paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+    "question": "What are the key hyperparameters and algorithmic details in DynamicK?",
+    "expected": "DynamicK uses matrix factorization for collaborative filtering with hyperparameters including latent factor dimensions, learning rate, and regularization parameters. The dynamic K mechanism adjusts recommendation list length based on entropy or variance of user preference vectors.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1657,
+      "grounding_score_percent": 83.33,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1045
+    }
+  },
+  {
+    "id": "Q8",
+    "paper": "Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+    "question": "Why do fuzzy commitments offer insufficient protection according to this paper?",
+    "expected": "The paper demonstrates that fuzzy commitments can be attacked using various cryptanalytic techniques. Even with fuzzy vaults or fuzzy extractors, adversaries can recover the original secret or fingerprint template through collision attacks or threshold cracking, making the scheme vulnerable to practical attacks.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.0865,
+      "grounding_score_percent": 100.0,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1484
+    }
+  },
+  {
+    "id": "Q9",
+    "paper": "Generalization_in_portfoliobased_algorithm_selecti.pdf",
+    "question": "How does portfolio-based algorithm selection relate to generalization performance?",
+    "expected": "The paper studies how algorithm portfolios generalize to new instances. It shows that the selection mechanism's ability to generalize depends on the training distribution diversity, the portfolio composition, and the feature space coverage. Better generalization requires portfolios that cover diverse algorithm strengths.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1847,
+      "grounding_score_percent": 66.67,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1673
+    }
+  },
+  {
+    "id": "Q10",
+    "paper": "I_like_fish_especially_dolphins_Addressing_Contrad.pdf",
+    "question": "How does the paper address contradictions in NLP tasks?",
+    "expected": "The paper addresses contradictions where semantic similarity suggests different interpretations (e.g., 'fish' can be both a general animal and exclude certain fish-like animals). It proposes methods to detect and resolve such contradictions in natural language understanding tasks.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1775,
+      "grounding_score_percent": 66.67,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1005
+    }
+  },
+  {
+    "id": "Q11",
+    "paper": "Modelling_Human_Routines_Conceptualising_Social_Pr.pdf",
+    "question": "What is the approach for modelling human routines and social practices?",
+    "expected": "The paper proposes a formal framework for modeling human routines as sequences of actions and social practices as shared behavioral patterns. It uses agent-based simulation and conceptual modeling to represent how individuals and groups execute routine behaviors in social contexts.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1416,
+      "grounding_score_percent": 83.33,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1581
+    }
+  },
+  {
+    "id": "Q12",
+    "paper": "Overview_of_FPGA_deep_learning_acceleration_based_.pdf",
+    "question": "What are the main FPGA acceleration techniques for deep learning?",
+    "expected": "The paper reviews FPGA-based deep learning acceleration techniques including custom datapath design, memory optimization, quantization for reduced precision, pipelining, and parallelization. FPGAs provide advantages in latency, throughput, and energy efficiency compared to CPUs for inference tasks.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1573,
+      "grounding_score_percent": 66.67,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1009
+    }
+  },
+  {
+    "id": "Q13",
+    "paper": "Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+    "question": "What algorithms are proposed for AI-based power grid voltage control?",
+    "expected": "The paper proposes using reinforcement learning algorithms (Q-learning, policy gradient) for decentralized voltage control in power grids. It compares these to traditional control methods and shows that RL-based approaches can adapt to changing grid conditions.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.0943,
+      "grounding_score_percent": 50.0,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1728
+    }
+  },
+  {
+    "id": "Q14",
+    "paper": "Skeletonbased_Approaches_based_on_Machine_Vision_A.pdf",
+    "question": "What are skeleton-based approaches in machine vision for action recognition?",
+    "expected": "Skeleton-based action recognition uses joint positions extracted from videos to recognize human actions. The approach represents actions as sequences of body joint positions and uses methods like RNNs, CNNs, or Graph Neural Networks to capture temporal and spatial relationships between joints.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1595,
+      "grounding_score_percent": 83.33,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 0.1764
+    }
+  }
+]

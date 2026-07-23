@@ -1,0 +1,307 @@
+[
+  {
+    "id": "Q1",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "key_concepts": [
+      "deep Q-learning",
+      "ramp metering",
+      "adaptive signal timing",
+      "traffic flow"
+    ],
+    "retrieved_concept_coverage_percent": 75.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "analysis and simulation study. IEEE Transactions on Intelligent Transportation Systems, 2014. 15(5): p.",
+      "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-",
+      "Introduction",
+      "Conclusion and Future Research",
+      "Training"
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q2",
+    "question": "How does the paper address ramp metering using reinforcement learning?",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "key_concepts": [
+      "MDP",
+      "Q-learning",
+      "state",
+      "action",
+      "reward",
+      "experience replay"
+    ],
+    "retrieved_concept_coverage_percent": 83.33,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "analysis and simulation study. IEEE Transactions on Intelligent Transportation Systems, 2014. 15(5): p.",
+      "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-",
+      "Introduction",
+      "Conclusion and Future Research",
+      "Training"
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q3",
+    "question": "What are the experimental results for traffic flow in the ramp metering study?",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "key_concepts": [
+      "throughput",
+      "vehicle delay",
+      "baseline comparison",
+      "performance metrics"
+    ],
+    "retrieved_concept_coverage_percent": 25.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-",
+      "method is implemented. The queue length over time is relatively stable, ranging from 25-50 m.",
+      "Introduction",
+      "Conclusion and Future Research",
+      "Related Works"
+    ],
+    "root_cause": "Retrieval"
+  },
+  {
+    "id": "Q4",
+    "question": "What approach is used for automatic compliance checking in privacy documents?",
+    "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "key_concepts": [
+      "GDPR",
+      "compliance checking",
+      "NLP",
+      "privacy policy",
+      "problematic clauses"
+    ],
+    "retrieved_concept_coverage_percent": 80.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "5. Decision tree and Random Forest have been used by Tesfay and al. [6], but",
+      "5. Offline privacy policies: While a company may have a limited number of",
+      "4. Assessment of the readability of privacy policies since the GDPR requires",
+      "Privatech Project",
+      "Analysis of Lawyers Tasks for Legal Advice on GDPR Compliance The sec-"
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q5",
+    "question": "What datasets were used to evaluate privacy document compliance?",
+    "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "key_concepts": [
+      "privacy policies",
+      "manual annotation",
+      "real documents",
+      "compliance violations"
+    ],
+    "retrieved_concept_coverage_percent": 25.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "5. Decision tree and Random Forest have been used by Tesfay and al. [6], but",
+      "5. Offline privacy policies: While a company may have a limited number of",
+      "4 Flesch R . How to write plain English.",
+      "26. Zimmeck, S., Story, P., Smullen, D., Ravichander, A., Wang, Z., Reidenberg, J.,",
+      "Conclusion"
+    ],
+    "root_cause": "Retrieval"
+  },
+  {
+    "id": "Q6",
+    "question": "What is the DynamicK recommendation approach for personalized decisions?",
+    "paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+    "key_concepts": [
+      "collaborative filtering",
+      "dynamic K",
+      "personalization",
+      "preference diversity"
+    ],
+    "retrieved_concept_coverage_percent": 0.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "Conclusions",
+      "methods, classification-based methods and hybrid methods.",
+      "Implementation of the Joint Approach",
+      "8. Oard, D.W., Kim, J., et al.: Implicit feedback for recommender systems. In: Proceedings of the",
+      "Introduction"
+    ],
+    "root_cause": "Retrieval"
+  },
+  {
+    "id": "Q7",
+    "question": "What are the key hyperparameters and algorithmic details in DynamicK?",
+    "paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+    "key_concepts": [
+      "matrix factorization",
+      "latent factors",
+      "entropy",
+      "variance",
+      "learning rate"
+    ],
+    "retrieved_concept_coverage_percent": 60.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "arXiv:2012.13315v1  [cs.AI]  24 Dec 2020",
+      "Evaluation",
+      "1 https://arxiv.org/",
+      "4. The pseudo-dimension of UF is Ω",
+      "analysis of portfolio-based algorithm selection."
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q8",
+    "question": "Why do fuzzy commitments offer insufficient protection according to this paper?",
+    "paper": "Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+    "key_concepts": [
+      "fuzzy vaults",
+      "fuzzy extractors",
+      "collision attacks",
+      "cryptanalysis",
+      "template recovery"
+    ],
+    "retrieved_concept_coverage_percent": 20.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "2. Regulation overload: Operational managers and project leaders within com-",
+      "3. Information overload: Information about privacy and data management in",
+      "REFERENCES",
+      "system facial images and obtain the output of the system",
+      "arXiv:2012.13293v1  [cs.CR]  24 Dec 2020"
+    ],
+    "root_cause": "Retrieval"
+  },
+  {
+    "id": "Q9",
+    "question": "How does portfolio-based algorithm selection relate to generalization performance?",
+    "paper": "Generalization_in_portfoliobased_algorithm_selecti.pdf",
+    "key_concepts": [
+      "portfolio",
+      "algorithm selection",
+      "generalization",
+      "training distribution",
+      "feature space"
+    ],
+    "retrieved_concept_coverage_percent": 80.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "arXiv:2012.13315v1  [cs.AI]  24 Dec 2020",
+      "training set of problem instances, the authors provide guarantees for learning a schedule with high",
+      "Discussion.",
+      "training set.",
+      "abstractly, the performance of the algorithm parameterized by ρ given an input z ∈Z."
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q10",
+    "question": "How does the paper address contradictions in NLP tasks?",
+    "paper": "I_like_fish_especially_dolphins_Addressing_Contrad.pdf",
+    "key_concepts": [
+      "contradiction detection",
+      "semantic similarity",
+      "interpretation",
+      "NLP"
+    ],
+    "retrieved_concept_coverage_percent": 75.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "training for natural language generation, translation,",
+      "training and evaluation data for this task. We thus",
+      "dataset is notably more effective at providing su-",
+      "Methods and Technologies",
+      "Experimental Setup"
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q11",
+    "question": "What is the approach for modelling human routines and social practices?",
+    "paper": "Modelling_Human_Routines_Conceptualising_Social_Pr.pdf",
+    "key_concepts": [
+      "agent-based modeling",
+      "routine behavior",
+      "social practices",
+      "simulation"
+    ],
+    "retrieved_concept_coverage_percent": 50.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "5. Decision tree and Random Forest have been used by Tesfay and al. [6], but",
+      "Future work should focus on static or dynamic extensions of SoPrA. SoPrA is fit for our purpose – modelling routines",
+      "Introduction",
+      "82 nations).",
+      "Appendix B provides possible extensions of SoPrA. Appendix C describes the computational and formal versions of"
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q12",
+    "question": "What are the main FPGA acceleration techniques for deep learning?",
+    "paper": "Overview_of_FPGA_deep_learning_acceleration_based_.pdf",
+    "key_concepts": [
+      "datapath design",
+      "memory optimization",
+      "quantization",
+      "pipelining",
+      "parallelization",
+      "inference"
+    ],
+    "retrieved_concept_coverage_percent": 33.33,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "Abstract—In recent years, deep learning has become more and",
+      "REFERENCES",
+      "method based on millimeter wave mD signals. The calculation",
+      "Introduction",
+      "Abstract—In this work, we study the protection that fuzzy"
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q13",
+    "question": "What algorithms are proposed for AI-based power grid voltage control?",
+    "paper": "Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+    "key_concepts": [
+      "Q-learning",
+      "policy gradient",
+      "voltage control",
+      "decentralized control",
+      "grid management"
+    ],
+    "retrieved_concept_coverage_percent": 60.0,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "Imitation learning-based power grid control",
+      "Problem formulation",
+      "Abstract—In recent years, deep learning has become more and",
+      "Data preparation",
+      "Related Works"
+    ],
+    "root_cause": "LLM Reasoning"
+  },
+  {
+    "id": "Q14",
+    "question": "What are skeleton-based approaches in machine vision for action recognition?",
+    "paper": "Skeletonbased_Approaches_based_on_Machine_Vision_A.pdf",
+    "key_concepts": [
+      "joint positions",
+      "skeleton extraction",
+      "temporal modeling",
+      "GNN",
+      "RNN",
+      "action recognition"
+    ],
+    "retrieved_concept_coverage_percent": 16.67,
+    "answer_concept_coverage_percent": 0.0,
+    "retrieved_sections": [
+      "5. Decision tree and Random Forest have been used by Tesfay and al. [6], but",
+      "ducing this scope.",
+      "2019 IEEE International Conference on Multimedia and Expo (ICME).",
+      "dataset for human action recognition utilizing a depth camera and a",
+      "during his time at Microsoft Research Redmond."
+    ],
+    "root_cause": "Retrieval"
+  }
+]

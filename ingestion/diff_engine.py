@@ -57,7 +57,7 @@ def _git_diff(target_path: str, old_commit: str) -> Tuple[List[str], List[str], 
 
 def _hash_diff(target_path: str, old_hashes: Dict[str, str]) -> Tuple[List[str], List[str], List[str], Dict[str, str]]:
     """
-    Fallback diffing using SHA-256.
+    Fallback diffing using SHA-256. Supports semicolon-separated multiple paths.
     Returns (added, modified, deleted, current_hashes)
     """
     binary_extensions = {
@@ -74,20 +74,29 @@ def _hash_diff(target_path: str, old_hashes: Dict[str, str]) -> Tuple[List[str],
     current_hashes = {}
     added, modified, deleted = [], [], []
     
-    # Walk directory to compute current hashes
-    for root, dirs, files in os.walk(target_path):
-        dirs[:] = [d for d in dirs if not d.startswith('.')]
-        for file in files:
-            if file.startswith('.') or is_binary_ext(file):
-                continue
-            full_path = os.path.join(root, file)
-            rel_path = os.path.relpath(full_path, target_path).replace('\\', '/')
-            
-            file_hash = _hash_file(full_path)
-            if not file_hash:
-                continue
+    paths = [p.strip() for p in target_path.split(";") if p.strip()]
+    
+    for path in paths:
+        if not os.path.exists(path):
+            continue
+        base_name = os.path.basename(os.path.normpath(path))
+        for root, dirs, files in os.walk(path):
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
+            for file in files:
+                if file.startswith('.') or is_binary_ext(file):
+                    continue
+                full_path = os.path.join(root, file)
+                sub_rel = os.path.relpath(full_path, path).replace('\\', '/')
+                if len(paths) > 1:
+                    rel_path = f"{base_name}/{sub_rel}"
+                else:
+                    rel_path = sub_rel
                 
-            current_hashes[rel_path] = file_hash
+                file_hash = _hash_file(full_path)
+                if not file_hash:
+                    continue
+                    
+                current_hashes[rel_path] = file_hash
             
     # Compute delta
     for rel_path, file_hash in current_hashes.items():

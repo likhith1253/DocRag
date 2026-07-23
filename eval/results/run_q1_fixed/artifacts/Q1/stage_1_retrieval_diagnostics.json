@@ -1,0 +1,201 @@
+{
+  "stage_id": 1,
+  "stage_name": "Retrieval Diagnostics",
+  "status": "PASSED",
+  "inputs": {
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "target_paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "max_capacity": 15,
+    "gold_chunk_ids": [
+      0,
+      1
+    ]
+  },
+  "outputs": {
+    "total_retrieved": 15,
+    "num_relevant": 15,
+    "retrieved_chunks": [
+      {
+        "content": "A Deep Reinforcement Learning Approach for Ramp Metering",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "Bing Liu,1 Yu Tang,2 Yuxiong Ji,1 Yu Shen,1 and Yuchuan Du1",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "1 Key Laboratory of Road and Traffic Engineering of the Ministry of Education, Tongji",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "2 Tandon School of Engineering, New York University, New York 11201, USA.",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "Correspondence should be addressed to Yu Shen; yshen@tongji.edu.cn",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "Ramp metering that uses traffic signals to regulate vehicle flows from the on-ramps has been",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "widely implemented to improve vehicle mobility of the freeway. Previous studies generally",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "update signal timings in real-time based on predefined traffic measures collected by point",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "detectors, such as traffic volumes and occupancies. Comparing with point detectors, traffic",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "cameras\u2014which have been increasingly deployed on road networks\u2014could cover larger areas",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "and provide more detailed traffic information. In this work, we propose a deep reinforcement",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "learning (DRL) method to explore the potential of traffic video data in improving the efficiency",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "of ramp metering. The proposed method uses traffic video frames as inputs and learns the",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "optimal control strategies directly from the high-dimensional visual inputs. A real-world case",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      },
+      {
+        "content": "study demonstrates that, in comparison with a state-of-the-practice method, the proposed DRL",
+        "metadata": {
+          "page_start": 1,
+          "section": "General",
+          "file": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+          "paper_title": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf"
+        }
+      }
+    ],
+    "diagnostics": {
+      "gold_retrieved": true,
+      "gold_chunk_rank": 1,
+      "mrr": 1.0,
+      "ndcg": 1.0,
+      "recall_at_k": {
+        "recall_at_1": 0.5,
+        "recall_at_3": 1.0,
+        "recall_at_5": 1.0,
+        "recall_at_10": 1.0
+      }
+    }
+  },
+  "intermediate_artifacts": {
+    "relevant_chunks_count": 15,
+    "target_paper_clean": "a deep reinforcement learning approach for ramp me",
+    "retrieved_chunk_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14
+    ]
+  },
+  "runtime_ms": 72.3474000042188,
+  "error_messages": [],
+  "invariant_violations": [],
+  "provenance": {
+    "run_id": "1fbf78f5-1090-4ab4-99fa-127993f707cf",
+    "timestamp": "2026-07-22T18:17:36Z",
+    "git_commit": "4930f7e",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "llm_model": "qwen2.5:3b-instruct",
+    "config_hash": "623805eaf4ed",
+    "dataset_version": "v1.0"
+  }
+}

@@ -124,6 +124,38 @@ def query(payload: QueryPayload):
 
 
 # ---------------------------------------------------------------------------
+# Cache Clearing
+# ---------------------------------------------------------------------------
+
+@app.post("/cache/clear")
+def clear_all_caches():
+    try:
+        from storage.cache import SemanticCache
+        sem_cache = SemanticCache()
+        sem_cache.clear()
+    except Exception as e:
+        print(f"Error clearing semantic cache: {e}")
+
+    try:
+        from storage.cache import EmbeddingCache
+        emb_cache = EmbeddingCache()
+        emb_cache.clear()
+        emb_cache.close()
+    except Exception as e:
+        print(f"Error clearing embedding cache: {e}")
+
+    try:
+        from pathlib import Path
+        cache_path = Path("logs/llm_prompt_cache.json")
+        if cache_path.exists():
+            cache_path.unlink()
+    except Exception as e:
+        print(f"Error clearing LLM prompt cache: {e}")
+
+    return {"status": "success", "message": "All caches cleared successfully."}
+
+
+# ---------------------------------------------------------------------------
 # Indexing progress
 # ---------------------------------------------------------------------------
 

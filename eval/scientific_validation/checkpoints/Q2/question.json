@@ -1,0 +1,13 @@
+{
+  "question_id": "Q2",
+  "phase": "question",
+  "timestamp": "2026-07-22T15:12:53.838641",
+  "data": {
+    "question_id": "Q2",
+    "paper": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+    "question": "What asynchronous methods for deep reinforcement learning are introduced and how do they improve training stability?",
+    "expected_answer": "The paper presents asynchronous variants of four standard RL algorithms (A3C, One-step Q-learning, N-step Q-learning, and Gorilla). Asynchronous execution decouples gradient updates across multiple parallel worker threads, stabilizing deep neural network training without relying on memory replay buffers.",
+    "difficulty": "Medium",
+    "evidence_type": "TABLE"
+  }
+}

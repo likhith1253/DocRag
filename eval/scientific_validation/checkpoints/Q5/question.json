@@ -1,0 +1,13 @@
+{
+  "question_id": "Q5",
+  "phase": "question",
+  "timestamp": "2026-07-22T17:21:33.204347",
+  "data": {
+    "question_id": "Q5",
+    "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "question": "What approach is used for automatic compliance checking in privacy policy documents under regulatory frameworks like GDPR?",
+    "expected_answer": "The paper proposes an automated framework that checks privacy policy documents for compliance with regulations such as GDPR. It uses natural language processing to extract compliance clauses, detect missing disclosures, and flag problematic language that violates regulatory standards.",
+    "difficulty": "Medium",
+    "evidence_type": "MULTI_PAGE"
+  }
+}

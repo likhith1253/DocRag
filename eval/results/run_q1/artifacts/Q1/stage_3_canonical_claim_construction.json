@@ -1,0 +1,65 @@
+{
+  "stage_id": 3,
+  "stage_name": "Canonical Claim Construction",
+  "status": "PASSED",
+  "inputs": {
+    "raw_llm_answer_len": 610,
+    "raw_llm_answer": "The main contribution of the deep reinforcement learning approach for ramp metering is not explicitly detailed in the provided abstract. However, based on the title and context, it appears that their "
+  },
+  "outputs": {
+    "num_claims": 3,
+    "claims": [
+      "Claim(text='The main contribution of the deep reinforcement learning approach for ramp metering is not explicitly detailed in the provided abstract.', claim_type='factual', evidence=[], grounding_status='NOT_FOUND', confidence=0.0, reason='', verification_error='', verification_tier='Single Chunk', escalated_to_cross_evidence=False, escalation_reason='', claim_fidelity='Direct Paper Claim')",
+      "Claim(text='However, based on the title and context, it appears that their work aims to improve traffic flow management at road intersections by applying advanced machine learning techniques, specifically deep reinforcement learning, to optimize traffic signal control.', claim_type='factual', evidence=[], grounding_status='NOT_FOUND', confidence=0.0, reason='', verification_error='', verification_tier='Single Chunk', escalated_to_cross_evidence=False, escalation_reason='', claim_fidelity='Direct Paper Claim')",
+      "Claim(text='This suggests their main contribution could be developing a more sophisticated algorithm for ramp metering that can dynamically adjust traffic lights in real-time to reduce congestion and improve traffic efficiency.', claim_type='comparative', evidence=[], grounding_status='NOT_FOUND', confidence=0.0, reason='', verification_error='', verification_tier='Single Chunk', escalated_to_cross_evidence=False, escalation_reason='', claim_fidelity='Direct Paper Claim')"
+    ],
+    "canonical_claim_set": [
+      {
+        "canonical_id": "claim_001_8891b5",
+        "claim_hash": "8891b5ecfd",
+        "normalized_text": "the main contribution of the deep reinforcement learning approach for ramp metering is not explicitly detailed in the provided abstract.",
+        "text": "The main contribution of the deep reinforcement learning approach for ramp metering is not explicitly detailed in the provided abstract.",
+        "claim_type": "factual"
+      },
+      {
+        "canonical_id": "claim_002_0671cf",
+        "claim_hash": "0671cf0e49",
+        "normalized_text": "however, based on the title and context, it appears that their work aims to improve traffic flow management at road intersections by applying advanced machine learning techniques, specifically deep reinforcement learning, to optimize traffic signal control.",
+        "text": "However, based on the title and context, it appears that their work aims to improve traffic flow management at road intersections by applying advanced machine learning techniques, specifically deep reinforcement learning, to optimize traffic signal control.",
+        "claim_type": "factual"
+      },
+      {
+        "canonical_id": "claim_003_655e22",
+        "claim_hash": "655e221fd1",
+        "normalized_text": "this suggests their main contribution could be developing a more sophisticated algorithm for ramp metering that can dynamically adjust traffic lights in real-time to reduce congestion and improve traffic efficiency.",
+        "text": "This suggests their main contribution could be developing a more sophisticated algorithm for ramp metering that can dynamically adjust traffic lights in real-time to reduce congestion and improve traffic efficiency.",
+        "claim_type": "comparative"
+      }
+    ]
+  },
+  "intermediate_artifacts": {
+    "claim_types": [
+      "factual",
+      "factual",
+      "comparative"
+    ],
+    "canonical_ids": [
+      "claim_001_8891b5",
+      "claim_002_0671cf",
+      "claim_003_655e22"
+    ]
+  },
+  "runtime_ms": 56.53290000191191,
+  "error_messages": [],
+  "invariant_violations": [],
+  "provenance": {
+    "run_id": "a37d2f82-81a0-434f-b9c6-e991e6e6fc94",
+    "timestamp": "2026-07-22T18:13:22Z",
+    "git_commit": "4930f7e",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "reranker_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "llm_model": "qwen2.5:3b-instruct",
+    "config_hash": "623805eaf4ed",
+    "dataset_version": "v1.0"
+  }
+}

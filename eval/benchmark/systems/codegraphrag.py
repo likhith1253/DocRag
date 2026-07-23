@@ -78,7 +78,20 @@ class CodeGraphRAGSystem(BaseSystem):
         v_manager = self._v_manager
         kg_manager = self._kg_manager
 
-        chunks = v_manager.search(question, top_k=vector_top_k)
+        from storage.registry import RepositoryRegistry, RepoStatus
+        registry = RepositoryRegistry()
+        ready_repos = [r for r in registry.list_repositories() if r.status == RepoStatus.READY]
+        if ready_repos:
+            all_retrieved = []
+            for r in ready_repos:
+                from storage.vector_store import VectorStoreManager
+                vm = VectorStoreManager(collection_name=r.vector_collection)
+                c_list, _ = vm.search(question, top_k=vector_top_k)
+                all_retrieved.extend(c_list)
+            all_retrieved.sort(key=lambda x: x.get("score", -999.0), reverse=True)
+            chunks = all_retrieved[:vector_top_k]
+        else:
+            chunks, _ = v_manager.search(question, top_k=vector_top_k)
 
         if retrieval_conf.get("use_graph", True) and chunks:
             all_chunks = v_manager.get_all_chunks()

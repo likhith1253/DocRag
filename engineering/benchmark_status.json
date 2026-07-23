@@ -1,0 +1,194 @@
+{
+  "Q1": {
+    "question_id": "Q1",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "status": "PASSED",
+    "attempts": 2,
+    "accepted": true,
+    "latency_ms": 3412.5,
+    "last_evaluation": "2026-07-22T18:45:00Z",
+    "remaining_issues": [],
+    "root_cause_category": "INGESTION_PARSER & ROUTER",
+    "artifact_folder": "eval/results/run_q1_postfix"
+  },
+  "Q2": {
+    "question_id": "Q2",
+    "question": "How does the paper address ramp metering using reinforcement learning?",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "status": "PASSED",
+    "attempts": 1,
+    "accepted": true,
+    "latency_ms": 2890.1,
+    "last_evaluation": "2026-07-22T18:45:25Z",
+    "remaining_issues": [],
+    "root_cause_category": "NONE",
+    "artifact_folder": "eval/results/run_q2"
+  },
+  "Q3": {
+    "question_id": "Q3",
+    "question": "What are the experimental results for traffic flow in the ramp metering study?",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "status": "PASSED",
+    "attempts": 1,
+    "accepted": true,
+    "latency_ms": 4210.0,
+    "last_evaluation": "2026-07-23T08:12:00Z",
+    "remaining_issues": [],
+    "root_cause_category": "NONE",
+    "artifact_folder": "eval/artifacts/Q3"
+  },
+  "Q4": {
+    "question_id": "Q4",
+    "question": "What approach is used for automatic compliance checking in privacy documents?",
+    "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "status": "PASSED",
+    "attempts": 1,
+    "accepted": true,
+    "latency_ms": 3014.4,
+    "last_evaluation": "2026-07-23T08:22:21Z",
+    "remaining_issues": [],
+    "root_cause_category": "NONE",
+    "artifact_folder": "eval/artifacts/Q4"
+  },
+  "Q5": {
+    "question_id": "Q5",
+    "question": "What datasets were used to evaluate privacy document compliance?",
+    "paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "status": "PASSED",
+    "attempts": 1,
+    "accepted": true,
+    "latency_ms": 47370.2,
+    "last_evaluation": "2026-07-23T08:23:10Z",
+    "remaining_issues": [],
+    "root_cause_category": "NONE",
+    "artifact_folder": "eval/artifacts/Q5"
+  },
+  "Q6": {
+    "question_id": "Q6",
+    "question": "What is the DynamicK recommendation approach for personalized decisions?",
+    "paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+    "status": "PASSED",
+    "attempts": 1,
+    "accepted": true,
+    "latency_ms": 15420.0,
+    "last_evaluation": "2026-07-23T08:24:39Z",
+    "remaining_issues": [],
+    "root_cause_category": "NONE",
+    "artifact_folder": "eval/artifacts/Q6"
+  },
+  "Q7": {
+    "question_id": "Q7",
+    "question": "What are the key hyperparameters and algorithmic details in DynamicK?",
+    "paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+    "status": "PASSED",
+    "attempts": 1,
+    "accepted": true,
+    "latency_ms": 69134.8,
+    "last_evaluation": "2026-07-23T08:25:46Z",
+    "remaining_issues": [],
+    "root_cause_category": "NONE",
+    "artifact_folder": "eval/artifacts/Q7"
+  },
+  "Q8": {
+    "question_id": "Q8",
+    "question": "Why do fuzzy commitments offer insufficient protection according to this paper?",
+    "paper": "Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+    "status": "PASSED",
+    "attempts": 1,
+    "accepted": true,
+    "latency_ms": 73891.2,
+    "last_evaluation": "2026-07-23T08:26:49Z",
+    "remaining_issues": [],
+    "root_cause_category": "NONE",
+    "artifact_folder": "eval/artifacts/Q8"
+  },
+  "Q9": {
+    "question_id": "Q9",
+    "question": "How does portfolio-based algorithm selection relate to generalization performance?",
+    "paper": "Generalization_in_portfoliobased_algorithm_selecti.pdf",
+    "status": "PASSED",
+    "attempts": 1,
+    "accepted": true,
+    "latency_ms": 56738.0,
+    "last_evaluation": "2026-07-23T08:27:48Z",
+    "remaining_issues": [],
+    "root_cause_category": "NONE",
+    "artifact_folder": "eval/artifacts/Q9"
+  },
+  "Q10": {
+    "question_id": "Q10",
+    "question": "How does the paper address contradictions in NLP tasks?",
+    "paper": "I_like_fish_especially_dolphins_Addressing_Contrad.pdf",
+    "status": "FAILED",
+    "attempts": 1,
+    "accepted": false,
+    "latency_ms": 1865.87,
+    "last_evaluation": "2026-07-23T08:17:31Z",
+    "remaining_issues": [
+      "Low retrieval grounding"
+    ],
+    "root_cause_category": "RETRIEVAL",
+    "artifact_folder": "eval/artifacts/Q10"
+  },
+  "Q11": {
+    "question_id": "Q11",
+    "question": "What is the approach for modelling human routines and social practices?",
+    "paper": "Modelling_Human_Routines_Conceptualising_Social_Pr.pdf",
+    "status": "FAILED",
+    "attempts": 1,
+    "accepted": false,
+    "latency_ms": 1758.4,
+    "last_evaluation": "2026-07-23T08:17:33Z",
+    "remaining_issues": [
+      "Low retrieval grounding"
+    ],
+    "root_cause_category": "RETRIEVAL",
+    "artifact_folder": "eval/artifacts/Q11"
+  },
+  "Q12": {
+    "question_id": "Q12",
+    "question": "What are the main FPGA acceleration techniques for deep learning?",
+    "paper": "Overview_of_FPGA_deep_learning_acceleration_based_.pdf",
+    "status": "FAILED",
+    "attempts": 1,
+    "accepted": false,
+    "latency_ms": 2189.71,
+    "last_evaluation": "2026-07-23T08:17:35Z",
+    "remaining_issues": [
+      "Low retrieval grounding"
+    ],
+    "root_cause_category": "RETRIEVAL",
+    "artifact_folder": "eval/artifacts/Q12"
+  },
+  "Q13": {
+    "question_id": "Q13",
+    "question": "What algorithms are proposed for AI-based power grid voltage control?",
+    "paper": "Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+    "status": "FAILED",
+    "attempts": 1,
+    "accepted": false,
+    "latency_ms": 1964.29,
+    "last_evaluation": "2026-07-23T08:17:37Z",
+    "remaining_issues": [
+      "Low retrieval grounding"
+    ],
+    "root_cause_category": "RETRIEVAL",
+    "artifact_folder": "eval/artifacts/Q13"
+  },
+  "Q14": {
+    "question_id": "Q14",
+    "question": "What are skeleton-based approaches in machine vision for action recognition?",
+    "paper": "Skeletonbased_Approaches_based_on_Machine_Vision_A.pdf",
+    "status": "FAILED",
+    "attempts": 1,
+    "accepted": false,
+    "latency_ms": 1879.97,
+    "last_evaluation": "2026-07-23T08:17:39Z",
+    "remaining_issues": [
+      "Low retrieval grounding"
+    ],
+    "root_cause_category": "RETRIEVAL",
+    "artifact_folder": "eval/artifacts/Q14"
+  }
+}

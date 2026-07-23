@@ -21,7 +21,8 @@ CANNOT_FIND_RESPONSE = (
 )
 
 # Maximum characters per excerpt to avoid overflowing the context window
-_MAX_EXCERPT_CHARS = 1200
+# Increased from 2000 to 4000 to preserve variable-value pairs and technical details
+_MAX_EXCERPT_CHARS = 4000
 
 
 def _format_citation(metadata: Dict[str, Any]) -> str:
@@ -62,25 +63,25 @@ def _build_context_block(chunks: List[Dict[str, Any]]) -> str:
 
 def _build_grounding_prompt(question: str, context_block: str) -> str:
     """
-    Construct the grounding-enforced prompt.
-    The instruction set is designed to prevent the LLM from using outside knowledge.
+    Construct the grounding-enforced prompt with strict instruction.
     """
     return (
-        "You are a research assistant with access ONLY to the document excerpts below.\n"
-        "Rules you MUST follow:\n"
-        "  1. Answer SOLELY from the excerpts provided. Do NOT use any outside knowledge.\n"
-        "  2. If the answer is not present in the excerpts, respond EXACTLY with:\n"
-        f'     "{CANNOT_FIND_RESPONSE}"\n'
-        "  3. For every factual statement in your answer, include an inline citation.\n"
-        "  4. Citation format: [Paper: <title>, Section: <section>, Page: <N>]\n"
-        "  5. Do NOT speculate, infer, or guess facts not stated in the excerpts.\n"
-        "  6. Do NOT mention models, datasets, or papers not referenced in the excerpts.\n\n"
+        "You are a research assistant answering questions about academic papers.\n\n"
+        "CRITICAL RULES:\n"
+        "1. You MUST answer ONLY using information from the provided excerpts below.\n"
+        "2. Do NOT use any outside knowledge, general facts, or assumptions.\n"
+        "3. Do NOT invent details, methods, results, or any information.\n"
+        "4. Extract and quote specific facts, numbers, methods, and results from excerpts.\n"
+        "5. If information is NOT in the excerpts, respond EXACTLY:\n"
+        f'   \"{CANNOT_FIND_RESPONSE}\"\n'
+        "6. Include citation for every factual claim using format: [Excerpt N]\n"
+        "7. Be concise and direct. Quote key phrases from excerpts.\n\n"
         "Document Excerpts:\n"
-        "─────────────────────────────────────────────\n"
+        "═" * 80 + "\n"
         f"{context_block}\n"
-        "─────────────────────────────────────────────\n\n"
+        "═" * 80 + "\n\n"
         f"Question: {question}\n\n"
-        "Answer (cite every claim using the excerpt numbers and citation format above):"
+        "Answer strictly from the excerpts above. Do not use outside knowledge:"
     )
 
 

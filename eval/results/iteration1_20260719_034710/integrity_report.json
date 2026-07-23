@@ -1,0 +1,21 @@
+{
+  "passed": false,
+  "failures": [
+    "NaN VALUE in per_system.json[CodeGraphRAG] at key path: bleu"
+  ],
+  "warnings": [],
+  "checks_passed": [
+    "Directory exists: D:\\DocRag\\eval\\results\\iteration1_20260719_034710\\raw",
+    "Directory exists: D:\\DocRag\\eval\\results\\iteration1_20260719_034710\\metrics",
+    "manifest.json present",
+    "metrics/per_system.json present and non-empty",
+    "metrics/comparison.json present and non-empty",
+    "Raw file exists: CodeGraphRAG.jsonl (152 records)",
+    "recall_at_5 verified for CodeGraphRAG (diff=0.00e+00)",
+    "token_f1 verified for CodeGraphRAG (diff=2.29e-07)",
+    "Checksum verified: CodeGraphRAG.jsonl"
+  ],
+  "n_failures": 1,
+  "n_warnings": 0,
+  "n_checks_passed": 9
+}

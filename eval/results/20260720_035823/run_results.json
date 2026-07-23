@@ -1,0 +1,18 @@
+[
+  {
+    "id": "Q1",
+    "paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "expected": "The paper proposes a deep Q-learning approach for adaptive ramp metering that learns optimal signal timings to regulate vehicle flows from on-ramps to highways. The approach improves traffic flow efficiency and reduces congestion by dynamically adjusting metering rates based on traffic state.",
+    "answer": "I cannot find this information in the uploaded documents.",
+    "metrics": {
+      "exact_match": false,
+      "semantic_similarity": 0.1543,
+      "grounding_score_percent": 50.0,
+      "concept_coverage_percent": 0.0,
+      "verdict": "Incorrect",
+      "grounding_label": "Hallucinated",
+      "latency": 13.5356
+    }
+  }
+]

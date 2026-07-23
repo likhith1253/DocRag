@@ -1,0 +1,118 @@
+{
+  "question_id": "Q1",
+  "phase": "verification",
+  "timestamp": "2026-07-22T15:12:53.828492",
+  "data": {
+    "claim_verification": [
+      {
+        "claim_index": 0,
+        "claim_text": "The main contribution of the deep reinforcement learning approach for ramp metering is its ability to extract useful information from traffic videos for better regulation of vehicle flows at on-ramps.",
+        "claim_type": "comparative",
+        "grounding_status": "SUPPORTED",
+        "confidence": 0.0,
+        "reason": "Cross-evidence aggregation (3 sources): The combined evidence from the three sources supports the claim that deep reinforcement learning (DRL) for ramp metering is effective in extracting useful information from traffic videos, leading to better regulation of vehicle flows at on-ramps. Source 1 mentions that traffic cameras can provide more detailed traffic information compared to point detectors. Source 2 explicitly states that the proposed DRL method extracts useful information from video data and improves performance in real-world case studies by reducing travel times and queue lengths. Finally, Source 3 further emphasizes the better performance of the DRL method compared to traditional methods and its ability to alleviate the negative impacts of ‘capacity drop’ due to massive merging behaviors.",
+        "verification_error": "",
+        "evidence_count": 5,
+        "top_evidence": [
+          {
+            "verification_status": "PARTIALLY_SUPPORTED",
+            "verification_confidence": 50.0,
+            "verification_reason": "The evidence mentions traffic video frames as inputs and the use of deep reinforcement learning (DRL) to learn optimal control strategies from visual inputs, which supports part of the claim. However, it does not explicitly state that the main contribution is 'extracting useful information from traffic videos for better regulation of vehicle flows at on-ramps'.",
+            "supporting_sentence": "",
+            "page": 1,
+            "section": "Abstract"
+          },
+          {
+            "verification_status": "PARTIALLY_SUPPORTED",
+            "verification_confidence": 60.0,
+            "verification_reason": "The evidence supports the claim that the deep reinforcement learning approach for ramp metering can extract useful information from traffic videos, but does not explicitly state its main contribution as 'extracting useful information for better regulation of vehicle flows at on-ramps'. It only mentions that it is able to do so.",
+            "supporting_sentence": "ramp, and 3) higher traffic flows downstream of the merging area. The results suggest that the proposed method is able to extract useful information from the video data for better ramp metering controls.",
+            "page": 1,
+            "section": "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-"
+          },
+          {
+            "verification_status": "PARTIALLY_SUPPORTED",
+            "verification_confidence": 60.0,
+            "verification_reason": "The evidence supports the claim that the deep reinforcement learning approach for ramp metering has the ability to extract useful information from traffic videos, as it states 'extract useful information from video data for better ramp metering controls'. However, the main contribution is not explicitly about 'better regulation of vehicle flows at on-ramps', which is an additional part of the claim.",
+            "supporting_sentence": "",
+            "page": 13,
+            "section": "Conclusion and Future Research"
+          }
+        ]
+      },
+      {
+        "claim_index": 1,
+        "claim_text": "This approach uses algorithms and reinforcement learning techniques, such as Deep Q-learning, to improve the existing methods of real-time signal timing updates based on predefined traffic measures collected by point detectors.",
+        "claim_type": "factual",
+        "grounding_status": "SUPPORTED",
+        "confidence": 50.0,
+        "reason": "Cross-evidence aggregation (3 sources): The combined evidence across multiple sources supports the claim that this approach uses algorithms and reinforcement learning techniques, such as Deep Q-learning, to improve existing methods of real-time signal timing updates based on predefined traffic measures collected by point detectors. The context provided in SOURCE 1 and SOURCE 2 indicates a shift towards using more comprehensive data from cameras in addition to traditional point detectors for optimizing ramp metering. Moreover, the method described in SOURCE 3 uses reinforcement learning techniques like Deep Q-learning to achieve better ramp metering controls. The claim is supported by these sources.",
+        "verification_error": "",
+        "evidence_count": 5,
+        "top_evidence": [
+          {
+            "verification_status": "PARTIALLY_SUPPORTED",
+            "verification_confidence": 45.0,
+            "verification_reason": "The evidence mentions reinforcement learning (DRL) and traffic video frames as inputs, but does not explicitly state or support the claim about using Deep Q-learning specifically for improving real-time signal timing.",
+            "supporting_sentence": "",
+            "page": 1,
+            "section": "Abstract"
+          },
+          {
+            "verification_status": "NOT_FOUND",
+            "verification_confidence": 100.0,
+            "verification_reason": "Replay Buffer, Target Network, and Q-Network are not mentioned in the evidence.",
+            "supporting_sentence": "",
+            "page": 2,
+            "section": "Related Works"
+          },
+          {
+            "verification_status": "NOT_FOUND",
+            "verification_confidence": 100.0,
+            "verification_reason": "The evidence does not contain enough information to support or contradict the claim.",
+            "supporting_sentence": "",
+            "page": 1,
+            "section": "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-"
+          }
+        ]
+      },
+      {
+        "claim_index": 2,
+        "claim_text": "Unlike traditional approaches that use only point detectors, this deep reinforcement learning-based method utilizes traffic camera data, which has been increasing in number.",
+        "claim_type": "factual",
+        "grounding_status": "SUPPORTED",
+        "confidence": 75.0,
+        "reason": "Cross-evidence aggregation (3 sources): The combined multi-source context supports the claim that this deep reinforcement learning-based method utilizes traffic camera data for better ramp metering. The sources indicate that traditional methods use only point detectors, whereas the DRL method employs video data from traffic cameras which can provide more detailed information over a larger area.",
+        "verification_error": "",
+        "evidence_count": 5,
+        "top_evidence": [
+          {
+            "verification_status": "NOT_FOUND",
+            "verification_confidence": 100.0,
+            "verification_reason": "Replay buffers and asynchronous training are not mentioned in the provided evidence.",
+            "supporting_sentence": "",
+            "page": 1,
+            "section": "Abstract"
+          },
+          {
+            "verification_status": "NOT_FOUND",
+            "verification_confidence": 100.0,
+            "verification_reason": "Replay buffers and asynchronous training are not mentioned in the evidence.",
+            "supporting_sentence": "",
+            "page": 1,
+            "section": "method results in 1) lower travel times in the mainline, 2) shorter vehicle queues at the on-"
+          },
+          {
+            "verification_status": "PARTIALLY_SUPPORTED",
+            "verification_confidence": 50.0,
+            "verification_reason": "The evidence mentions using traffic video data (resembling traffic camera data) for learning optimal strategies, but does not explicitly state that it uses only point detectors or compares its effectiveness to traditional approaches using only point detectors.",
+            "supporting_sentence": "",
+            "page": 13,
+            "section": "Conclusion and Future Research"
+          }
+        ]
+      }
+    ],
+    "num_claims": 3
+  }
+}

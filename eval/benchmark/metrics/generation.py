@@ -278,7 +278,7 @@ def bleu(predicted: str, expected: str, max_n: int = 4) -> float:
         smoothing = SmoothingFunction().method1
         return float(sentence_bleu(reference, hypothesis, weights=weights, smoothing_function=smoothing))
     except ImportError:
-        return float("nan")
+        return 0.0
     except Exception:
         return 0.0
 

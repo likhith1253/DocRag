@@ -1,6 +1,19 @@
+"""
+IndexingProgressTracker — enhanced for parallel ingestion pipeline.
+
+New fields added (non-breaking):
+  elapsed_seconds   — wall-clock time since indexing started
+  failed_files      — count of PDFs that failed to parse
+  retried_files     — count of PDFs retried after initial failure
+  papers_per_minute — throughput derived from embedding rate
+  parse_workers     — number of parallel parse threads configured
+  current_file      — name of the PDF currently being parsed (for UI)
+"""
+
 import time
 import threading
 from typing import Dict, Any, Optional
+
 
 class IndexingProgressTracker:
     def __init__(self, repo_id: str):
@@ -18,6 +31,14 @@ class IndexingProgressTracker:
         self.heartbeat = time.time()
         self.start_time = time.time()
         self.embedding_start_time = None
+
+        # --- NEW performance / diagnostic fields ---
+        self.failed_files: int = 0        # PDFs that failed to parse
+        self.retried_files: int = 0       # PDFs that were retried
+        self.parse_workers: int = 1       # parallel workers configured
+        self.current_file: str = ""       # file being parsed right now
+        # (papers_per_minute is derived; no separate stored field needed)
+
         self.lock = threading.Lock()
 
     def update(self, **kwargs):
@@ -42,13 +63,12 @@ class IndexingProgressTracker:
             return
 
         now = time.time()
-        
-        # Calculate rate if embedding started
+
+        # Calculate embedding rate / ETA
         if self.embedding_start_time and self.embeddings_completed > 0:
             elapsed = now - self.embedding_start_time
             if elapsed > 0.1:
                 self.embedding_rate = self.embeddings_completed / elapsed
-                # Estimate ETA
                 remaining = self.chunks_total - self.embeddings_completed
                 if self.embedding_rate > 0:
                     self.eta_seconds = remaining / self.embedding_rate
@@ -61,20 +81,21 @@ class IndexingProgressTracker:
             self.embedding_rate = 0.0
             self.eta_seconds = -1.0
 
+        # Stage → percentage mapping
         if self.stage == "discovering":
             self.percentage = 5.0
         elif self.stage == "parsing":
-            ratio = (self.files_processed / max(1, self.files_total))
+            ratio = self.files_processed / max(1, self.files_total)
             self.percentage = 10.0 + ratio * 35.0
         elif self.stage == "kg_construction":
             self.percentage = 45.0
         elif self.stage == "metadata_generation":
             self.percentage = 50.0
         elif self.stage == "indexing_tier1":
-            ratio = (self.embeddings_completed / max(1, self.chunks_total))
+            ratio = self.embeddings_completed / max(1, self.chunks_total)
             self.percentage = 55.0 + ratio * 20.0
         elif self.stage == "indexing_tier2":
-            ratio = (self.embeddings_completed / max(1, self.chunks_total))
+            ratio = self.embeddings_completed / max(1, self.chunks_total)
             self.percentage = 75.0 + ratio * 24.0
         elif self.stage == "completed":
             self.percentage = 100.0
@@ -85,6 +106,15 @@ class IndexingProgressTracker:
 
     def to_dict(self) -> dict:
         with self.lock:
+            now = time.time()
+            elapsed = now - self.start_time
+
+            # papers/min: files successfully processed per elapsed minute
+            if elapsed > 0 and self.files_processed > 0:
+                papers_per_minute = self.files_processed / (elapsed / 60.0)
+            else:
+                papers_per_minute = 0.0
+
             return {
                 "stage": self.stage,
                 "percentage": round(self.percentage, 2),
@@ -95,8 +125,16 @@ class IndexingProgressTracker:
                 "embeddings_completed": self.embeddings_completed,
                 "embedding_rate": round(self.embedding_rate, 2),
                 "eta_seconds": round(self.eta_seconds, 2) if self.eta_seconds >= 0 else -1.0,
-                "status": self.status
+                "status": self.status,
+                # --- new fields ---
+                "elapsed_seconds": round(elapsed, 1),
+                "failed_files": self.failed_files,
+                "retried_files": self.retried_files,
+                "papers_per_minute": round(papers_per_minute, 2),
+                "parse_workers": self.parse_workers,
+                "current_file": self.current_file,
             }
+
 
 class ProgressRegistry:
     _progress: Dict[str, IndexingProgressTracker] = {}
@@ -120,13 +158,17 @@ class ProgressRegistry:
             now = time.time()
             for repo_id, tracker in list(cls._progress.items()):
                 with tracker.lock:
-                    if tracker.status in ["INDEXING", "UPDATING", "INDEXING_TIER0", "INDEXING_TIER1", "INDEXING_TIER2"]:
-                        # 300-second timeout for heartbeat inactivity under heavy CPU load
+                    active_statuses = {
+                        "INDEXING", "UPDATING",
+                        "INDEXING_TIER0", "INDEXING_TIER1", "INDEXING_TIER2",
+                    }
+                    if tracker.status in active_statuses:
+                        # 300-second timeout for heartbeat inactivity under heavy CPU
                         if now - tracker.heartbeat > 300.0:
                             tracker.status = "FAILED"
                             tracker.stage = "failed"
                             tracker.eta_seconds = -1.0
-                            print(f"[Heartbeat] Timeout detected for {repo_id}. Marking as FAILED.")
+                            print(f"[Heartbeat] Timeout for {repo_id}. Marking FAILED.")
                             try:
                                 registry.update_status(repo_id, "FAILED")
                             except Exception as e:

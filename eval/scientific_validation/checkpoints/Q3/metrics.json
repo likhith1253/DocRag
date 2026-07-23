@@ -1,0 +1,20 @@
+{
+  "question_id": "Q3",
+  "phase": "complete",
+  "timestamp": "2026-07-22T16:47:11.619288",
+  "data": {
+    "grounding": 100.0,
+    "semantic_similarity": 77.7031660079956,
+    "numerical_accuracy": 100.0,
+    "completeness": 77.7031660079956,
+    "hallucination": 0.0,
+    "retrieval_recall": 100,
+    "context_precision": 100.0,
+    "overall_score": 91.08126640319824,
+    "runtime_ms": 8600.34209999867,
+    "ablation_results": {
+      "chunk_only": 92.21181154251099,
+      "expanded": 91.08126640319824
+    }
+  }
+}

@@ -1,0 +1,602 @@
+[
+  {
+    "Question_ID": "Q1",
+    "Question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "Expected_Answer": "The paper proposes a deep Q-learning approach for adaptive ramp metering that learns optimal signal timings to regulate vehicle flows from on-ramps to highways. The approach improves traffic flow efficiency and reduces congestion by dynamically adjusting metering rates based on traffic state.",
+    "Paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "1 A Deep Reinforcement Learning Approach for Ramp Metering  Based on Traffic Video Data  Bing Liu,1 Yu Tang,2 Yuxiong Ji,1 Yu Shen,1 and Yuchuan Du1  1 Key Laboratory of Road and Traffic Engineering of the Ministry of Education, Tongji  University, Shanghai 201804, China.  2 Tandon School of Engineering, New York University, New York 11201, USA.  Correspondence should be addressed to Yu Shen; yshen@tongji.edu.cn  Abstract  Ramp metering that uses traffic signals to regulate vehicle flows from the on-ramps has been  widely implemented to improve vehicle mobility of the freeway. Previous studies generally  update signal timings in real-time based on predefined traffic measures collected by p",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "1 A Deep Reinforcement Learning Approach for Ramp Metering  Based on Traffic Video Data  Bing Liu,1 Yu Tang,2 Yuxiong Ji,1 Yu Shen,1 and Yuchuan Du1  1 Key Laboratory of Road and Traffic Engineering of the Ministry of Education, Tongji  University,",
+    "Difficulty": "Easy",
+    "Evidence_Type": "TEXT"
+  },
+  {
+    "Question_ID": "Q2",
+    "Question": "What asynchronous methods for deep reinforcement learning are introduced and how do they improve training stability?",
+    "Expected_Answer": "The paper presents asynchronous variants of four standard RL algorithms (A3C, One-step Q-learning, N-step Q-learning, and Gorilla). Asynchronous execution decouples gradient updates across multiple parallel worker threads, stabilizing deep neural network training without relying on memory replay buffers.",
+    "Paper": "Asynchronous Methods for Deep Reinforcement Learning.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Asynchronous Methods for Deep Reinforcement Learning Volodymyr Mnih1 VMNIH@GOOGLE.COM Adri\u00e0 Puigdom\u00e8nech Badia1 ADRIAP@GOOGLE.COM Mehdi Mirza1,2 MIRZAMOM@IRO.UMONTREAL.CA Alex Graves1 GRAVESA@GOOGLE.COM Tim Harley1 THARLEY@GOOGLE.COM Timothy P. Lillicrap1 COUNTZERO@GOOGLE.COM David Silver1 DAVIDSILVER@GOOGLE.COM Koray Kavukcuoglu 1 KORAYK@GOOGLE.COM 1 Google DeepMind 2 Montreal Institute for Learning Algorithms (MILA), University of Montreal Abstract We propose a conceptually simple and lightweight framework for deep reinforce- ment learning that uses asynchronous gradient descent for optimization of deep neural network controllers. We present asynchronous variants of four standard reinforce",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Asynchronous Methods for Deep Reinforcement Learning Volodymyr Mnih1 VMNIH@GOOGLE.COM Adri\u00e0 Puigdom\u00e8nech Badia1 ADRIAP@GOOGLE.COM Mehdi Mirza1,2 MIRZAMOM@IRO.UMONTREAL.CA Alex Graves1 GRAVESA@GOOGLE.COM Tim Harley1 THARLEY@GOOGLE.COM Timothy P. Lilli",
+    "Difficulty": "Medium",
+    "Evidence_Type": "TABLE"
+  },
+  {
+    "Question_ID": "Q3",
+    "Question": "What is the core architectural contribution of the Transformer model?",
+    "Expected_Answer": "The Transformer architecture replaces recurrent and convolutional layers entirely with stacked self-attention and multi-head attention mechanisms, allowing significantly faster parallel training and superior sequence translation performance.",
+    "Paper": "Attention Is All You Need.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Provided proper attribution is provided, Google hereby grants permission to reproduce the tables and figures in this paper solely for use in journalistic or scholarly works. Attention Is All You Need Ashish Vaswani\u2217 Google Brain avaswani@google.com Noam Shazeer\u2217 Google Brain noam@google.com Niki Parmar\u2217 Google Research nikip@google.com Jakob Uszkoreit\u2217 Google Research usz@google.com Llion Jones\u2217 Google Research llion@google.com Aidan N. Gomez\u2217\u2020 University of Toronto aidan@cs.toronto.edu \u0141ukasz Kaiser\u2217 Google Brain lukaszkaiser@google.com Illia Polosukhin\u2217\u2021 illia.polosukhin@gmail.com Abstract The dominant sequence transduction models are based on complex recurrent or convolutional neural netw",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Provided proper attribution is provided, Google hereby grants permission to reproduce the tables and figures in this paper solely for use in journalistic or scholarly works. Attention Is All You Need Ashish Vaswani\u2217 Google Brain avaswani@google.com N",
+    "Difficulty": "Hard",
+    "Evidence_Type": "FIGURE"
+  },
+  {
+    "Question_ID": "Q4",
+    "Question": "How does the Stochastic Gradient VB estimator enable efficient inference in Variational Autoencoders?",
+    "Expected_Answer": "The paper introduces the reparameterization trick to rewrite the expectation of the latent variable variational lower bound into a differentiable form with respect to encoder parameters, enabling standard backpropagation training for continuous latent variable models.",
+    "Paper": "Auto-Encoding Variational Bayes.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Auto-Encoding Variational Bayes Diederik P. Kingma Machine Learning Group Universiteit van Amsterdam dpkingma@gmail.com Max Welling Machine Learning Group Universiteit van Amsterdam welling.max@gmail.com Abstract How can we perform ef\ufb01cient inference and learning in directed probabilistic models, in the presence of continuous latent variables with intractable posterior distributions, and large datasets? We introduce a stochastic variational inference and learning algorithm that scales to large datasets and, under some mild differ- entiability conditions, even works in the intractable case. Our contributions are two-fold. First, we show that a reparameterization of the variational lower bound",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Auto-Encoding Variational Bayes Diederik P. Kingma Machine Learning Group Universiteit van Amsterdam dpkingma@gmail.com Max Welling Machine Learning Group Universiteit van Amsterdam welling.max@gmail.com Abstract How can we perform ef\ufb01cient inference",
+    "Difficulty": "Easy",
+    "Evidence_Type": "EQUATION"
+  },
+  {
+    "Question_ID": "Q5",
+    "Question": "What approach is used for automatic compliance checking in privacy policy documents under regulatory frameworks like GDPR?",
+    "Expected_Answer": "The paper proposes an automated framework that checks privacy policy documents for compliance with regulations such as GDPR. It uses natural language processing to extract compliance clauses, detect missing disclosures, and flag problematic language that violates regulatory standards.",
+    "Paper": "Compliance_Generation_for_Privacy_Documents_under_.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "arXiv:2012.12718v1  [cs.AI]  23 Dec 2020 Restrepo Amariles et al. Compliance Generation for Privacy Documents under GDPR: A Roadmap for Implementing Automation and Machine Learning David Restrepo Amariles1, Aurore Cl\u00b4ement Troussel2, and Rajaa El Hamdani3 1 Associate Professor of Data Law and Arti\ufb01cial Intelligence, HEC Paris. Member of the DATA IA Institute. restrepo-amariles@hec.fr 2 Research Assistant, HEC Paris, Smart Law Hub. aurore.troussel@hec.edu 3 Researcher, Data Science, HEC Paris, Smart Law Hub. el-hamdani@hec.fr Abstract. Most prominent research today addresses compliance with data protection laws through consumer-centric and public-regulatory ap- proaches. We shift this perspec",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "arXiv:2012.12718v1  [cs.AI]  23 Dec 2020 Restrepo Amariles et al. Compliance Generation for Privacy Documents under GDPR: A Roadmap for Implementing Automation and Machine Learning David Restrepo Amariles1, Aurore Cl\u00b4ement Troussel2, and Rajaa El Ham",
+    "Difficulty": "Medium",
+    "Evidence_Type": "MULTI_PAGE"
+  },
+  {
+    "Question_ID": "Q6",
+    "Question": "How does knowledge distillation transfer knowledge from a large ensemble teacher model to a small student network?",
+    "Expected_Answer": "Knowledge distillation uses the soft probability outputs (dark knowledge) generated by a large teacher model at a high softmax temperature as target labels for training a smaller student model, retaining ensemble performance within a compact architecture.",
+    "Paper": "Distilling the Knowledge in a Neural Network.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "arXiv:1503.02531v1  [stat.ML]  9 Mar 2015 Distilling the Knowledge in a Neural Network Geoffrey Hinton\u2217\u2020 Google Inc. Mountain View geoffhinton@google.com Oriol Vinyals\u2020 Google Inc. Mountain View vinyals@google.com Jeff Dean Google Inc. Mountain View jeff@google.com Abstract A very simple way to improve the performance of almost any machine learning algorithm is to train many different models on the same data and then to average their predictions [3]. Unfortunately, making predictions using a whole ensemble of models is cumbersome and may be too computationally expensive to allow de- ployment to a large number of users, especially if the individual models are large neural nets. Caruana and hi",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "arXiv:1503.02531v1  [stat.ML]  9 Mar 2015 Distilling the Knowledge in a Neural Network Geoffrey Hinton\u2217\u2020 Google Inc. Mountain View geoffhinton@google.com Oriol Vinyals\u2020 Google Inc. Mountain View vinyals@google.com Jeff Dean Google Inc. Mountain View",
+    "Difficulty": "Hard",
+    "Evidence_Type": "MULTI_SOURCE"
+  },
+  {
+    "Question_ID": "Q7",
+    "Question": "How does DynamicK adjust recommendation list sizes for personalized user decision making?",
+    "Expected_Answer": "DynamicK dynamically adapts the number of recommendation items K based on individual user preference diversity and entropy, optimizing item list length dynamically rather than fixing a uniform recommendation cutoff K.",
+    "Paper": "DynamicK_Recommendation_with_Personalized_Decision.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Dynamic-K Recommendation with Personalized Decision Boundary Yan Gao, Jiafeng Guo, Yanyan Lan, and Huaming Liao CAS Key Lab of Network Data Science and Technology Institute of Computing Technology, Chinese Academy of Sciences {gaoyan}@software.ict.ac.cn, {guojiafeng,lanyanyan,lhm}@ict.ac.cn Abstract. In this paper, we investigate the recommendation task in the most common scenario with implicit feedback (e.g., clicks, purchases). State-of-the-art methods in this direction usually cast the problem as to learn a personalized ranking on a set of items (e.g., webpages, products). The top-N results are then provided to users as recommendations, where the N is usually a \ufb01xed number pre-de\ufb01ned by t",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Dynamic-K Recommendation with Personalized Decision Boundary Yan Gao, Jiafeng Guo, Yanyan Lan, and Huaming Liao CAS Key Lab of Network Data Science and Technology Institute of Computing Technology, Chinese Academy of Sciences {gaoyan}@software.ict.ac",
+    "Difficulty": "Easy",
+    "Evidence_Type": "TEXT"
+  },
+  {
+    "Question_ID": "Q8",
+    "Question": "Why do standard fuzzy commitment schemes provide insufficient protection to privacy documents and biometric keys?",
+    "Expected_Answer": "The paper demonstrates security vulnerabilities in fuzzy commitment schemes where error-correcting codes leak mutual information about secret keys under correlation attacks, compromising cryptographic key protection.",
+    "Paper": "Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "1 Fuzzy Commitments Offer Insuf\ufb01cient Protection to Biometric Templates Produced by Deep Learning Danny Keller, Margarita Osadchy, and Orr Dunkelman Abstract\u2014In this work, we study the protection that fuzzy commitments offer when they are applied to facial images, processed by the state of the art deep learning facial recognition systems. We show that while these systems are capable of producing great accuracy, they produce templates of too little entropy. As a result, we present a reconstruction attack that takes a protected template, and reconstructs a facial image. The reconstructed facial images greatly resemble the original ones. In the simplest attack scenario, more than 78% of these r",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "1 Fuzzy Commitments Offer Insuf\ufb01cient Protection to Biometric Templates Produced by Deep Learning Danny Keller, Margarita Osadchy, and Orr Dunkelman Abstract\u2014In this work, we study the protection that fuzzy commitments offer when they are applied to",
+    "Difficulty": "Medium",
+    "Evidence_Type": "TABLE"
+  },
+  {
+    "Question_ID": "Q9",
+    "Question": "What are the core technical methodology and contributions presented in Generalization in portfoliobased algorithm selecti?",
+    "Expected_Answer": "The paper Generalization in portfoliobased algorithm selecti presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Generalization_in_portfoliobased_algorithm_selecti.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Generalization in portfolio-based algorithm selection Maria-Florina Balcan Carnegie Mellon University ninamf@cs.cmu.edu Tuomas Sandholm Carnegie Mellon University Optimized Markets, Inc. Strategic Machine, Inc. Strategy Robot, Inc. sandholm@cs.cmu.edu Ellen Vitercik Carnegie Mellon University vitercik@cs.cmu.edu December 25, 2020 Abstract Portfolio-based algorithm selection has seen tremendous practical success over the past two decades. This algorithm con\ufb01guration procedure works by \ufb01rst selecting a portfolio of diverse algorithm parameter settings, and then, on a given problem instance, using an algorithm selector to choose a parameter setting from the portfolio with strong predicted perfo",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Generalization in portfolio-based algorithm selection Maria-Florina Balcan Carnegie Mellon University ninamf@cs.cmu.edu Tuomas Sandholm Carnegie Mellon University Optimized Markets, Inc. Strategic Machine, Inc. Strategy Robot, Inc. sandholm@cs.cmu.ed",
+    "Difficulty": "Hard",
+    "Evidence_Type": "FIGURE"
+  },
+  {
+    "Question_ID": "Q10",
+    "Question": "What is the minimax objective function used in training Generative Adversarial Networks (GANs)?",
+    "Expected_Answer": "GANs train a generative model G and a discriminative model D simultaneously via a two-player minimax game with objective function V(D,G) = E_x[log D(x)] + E_z[log(1 - D(G(z)))], where D maximizes correct classification accuracy and G minimizes log(1 - D(G(z))).",
+    "Paper": "Generative Adversarial Nets.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Generative Adversarial Nets Ian J. Goodfellow, Jean Pouget-Abadie\u2217, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair\u2020, Aaron Courville, Yoshua Bengio\u2021 D\u00b4epartement d\u2019informatique et de recherche op\u00b4erationnelle Universit\u00b4e de Montr\u00b4eal Montr\u00b4eal, QC H3C 3J7 Abstract We propose a new framework for estimating generative models via an adversar- ial process, in which we simultaneously train two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the probability that a sample came from the training data rather than G. The train- ing procedure for G is to maximize the probability of D making a mistake. This framework corresponds to a",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Generative Adversarial Nets Ian J. Goodfellow, Jean Pouget-Abadie\u2217, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair\u2020, Aaron Courville, Yoshua Bengio\u2021 D\u00b4epartement d\u2019informatique et de recherche op\u00b4erationnelle Universit\u00b4e de Montr\u00b4eal Montr\u00b4e",
+    "Difficulty": "Easy",
+    "Evidence_Type": "EQUATION"
+  },
+  {
+    "Question_ID": "Q11",
+    "Question": "What are the core technical methodology and contributions presented in I like fish especially dolphins Addressing Contrad?",
+    "Expected_Answer": "The paper I like fish especially dolphins Addressing Contrad presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "I_like_fish_especially_dolphins_Addressing_Contrad.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "I like \ufb01sh , especially dolphins :\u2217 Addressing Contradictions in Dialogue Modeling Yixin Nie1, Mary Williamson2, Mohit Bansal1, Douwe Kiela2, Jason Weston2 1UNC Chapel Hill 2Facebook AI Research Abstract To quantify how well natural language un- derstanding models can capture consistency in a general conversation, we introduce the DialoguE COntradiction DEtection task (DE- CODE) and a new conversational dataset con- taining both human-human and human-bot contradictory dialogues. We then compare a structured utterance-based approach of using pre-trained Transformer models for contradic- tion detection with the typical unstructured ap- proach. Results reveal that: (i) our newly col- lected dat",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "I like \ufb01sh , especially dolphins :\u2217 Addressing Contradictions in Dialogue Modeling Yixin Nie1, Mary Williamson2, Mohit Bansal1, Douwe Kiela2, Jason Weston2 1UNC Chapel Hill 2Facebook AI Research Abstract To quantify how well natural language un- ders",
+    "Difficulty": "Medium",
+    "Evidence_Type": "MULTI_PAGE"
+  },
+  {
+    "Question_ID": "Q12",
+    "Question": "How does GPT-3 demonstrate few-shot learning performance without fine-tuning gradient updates?",
+    "Expected_Answer": "GPT-3 achieves strong task performance by scaling language model parameters to 175 billion and using in-context prompt learning with K demonstration examples provided in the prompt context, without updating underlying network weights.",
+    "Paper": "Language Models are Few-Shot Learners.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Language Models are Few-Shot Learners Tom B. Brown\u2217 Benjamin Mann\u2217 Nick Ryder\u2217 Melanie Subbiah\u2217 Jared Kaplan\u2020 Prafulla Dhariwal Arvind Neelakantan Pranav Shyam Girish Sastry Amanda Askell Sandhini Agarwal Ariel Herbert-Voss Gretchen Krueger Tom Henighan Rewon Child Aditya Ramesh Daniel M. Ziegler Jeffrey Wu Clemens Winter Christopher Hesse Mark Chen Eric Sigler Mateusz Litwin Scott Gray Benjamin Chess Jack Clark Christopher Berner Sam McCandlish Alec Radford Ilya Sutskever Dario Amodei OpenAI Abstract Recent work has demonstrated substantial gains on many NLP tasks and benchmarks by pre-training on a large corpus of text followed by \ufb01ne-tuning on a speci\ufb01c task. While typically task-agnostic",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Language Models are Few-Shot Learners Tom B. Brown\u2217 Benjamin Mann\u2217 Nick Ryder\u2217 Melanie Subbiah\u2217 Jared Kaplan\u2020 Prafulla Dhariwal Arvind Neelakantan Pranav Shyam Girish Sastry Amanda Askell Sandhini Agarwal Ariel Herbert-Voss Gretchen Krueger Tom Henig",
+    "Difficulty": "Hard",
+    "Evidence_Type": "MULTI_SOURCE"
+  },
+  {
+    "Question_ID": "Q13",
+    "Question": "What are the core technical methodology and contributions presented in Modelling Human Routines Conceptualising Social Pr?",
+    "Expected_Answer": "The paper Modelling Human Routines Conceptualising Social Pr presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Modelling_Human_Routines_Conceptualising_Social_Pr.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "MODELLING HUMAN ROUTINES: CONCEPTUALISING SOCIAL PRACTICE THEORY FOR AGENT-BASED SIMULATION A PREPRINT Rijk Mercuur, Virginia Dignum, Catholijn M. Jonker December 23, 2020 ABSTRACT Our routines play an important role in a wide range of social challenges such as climate change, disease outbreaks and coordinating staff and patients in a hospital. To use agent-based simulations (ABS) to understand the role of routines in social challenges we need an agent framework that integrates routines. This paper provides the domain-independent Social Practice Agent (SoPrA) framework that satis\ufb01es requirements from the literature to simulate our routines. By choosing the appropriate concepts from the liter",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "MODELLING HUMAN ROUTINES: CONCEPTUALISING SOCIAL PRACTICE THEORY FOR AGENT-BASED SIMULATION A PREPRINT Rijk Mercuur, Virginia Dignum, Catholijn M. Jonker December 23, 2020 ABSTRACT Our routines play an important role in a wide range of social challen",
+    "Difficulty": "Easy",
+    "Evidence_Type": "TEXT"
+  },
+  {
+    "Question_ID": "Q14",
+    "Question": "What are the core technical methodology and contributions presented in Overview of FPGA deep learning acceleration based ?",
+    "Expected_Answer": "The paper Overview of FPGA deep learning acceleration based  presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Overview_of_FPGA_deep_learning_acceleration_based_.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "> REPLACE THIS LINE WITH YOUR PAPER IDENTIFICATION NUMBER (DOUBLE-CLICK HERE TO EDIT) <    1 \uf020  Abstract\u2014In recent years, deep learning has become more and  more mature, and as a commonly used algorithm in deep learning,  convolutional neural networks have been widely used in various  visual tasks. In the past, research based on deep learning  algorithms mainly relied on hardware such as GPUs and CPUs.  However, with the increasing development of FPGAs, both field  programmable logic gate arrays, it has become the main  implementation hardware platform that combines various neural  network deep learning algorithms This article is a review article,  which mainly introduces the related theorie",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "> REPLACE THIS LINE WITH YOUR PAPER IDENTIFICATION NUMBER (DOUBLE-CLICK HERE TO EDIT) <    1 \uf020  Abstract\u2014In recent years, deep learning has become more and  more mature, and as a commonly used algorithm in deep learning,  convolutional neural network",
+    "Difficulty": "Medium",
+    "Evidence_Type": "TABLE"
+  },
+  {
+    "Question_ID": "Q15",
+    "Question": "What deep learning architecture and experience replay mechanism are used in Deep Q-Networks (DQN)?",
+    "Expected_Answer": "Deep Q-Networks connect a convolutional neural network directly to raw Atari video pixels and train it using Q-learning with an experience replay memory buffer that randomly samples past state-action transitions to break temporal correlations.",
+    "Paper": "Playing Atari with Deep Reinforcement Learning.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Playing Atari with Deep Reinforcement Learning Volodymyr Mnih Koray Kavukcuoglu David Silver Alex Graves Ioannis Antonoglou Daan Wierstra Martin Riedmiller DeepMind Technologies {vlad,koray,david,alex.graves,ioannis,daan,martin.riedmiller} @ deepmind.com Abstract We present the \ufb01rst deep learning model to successfully learn control policies di- rectly from high-dimensional sensory input using reinforcement learning. The model is a convolutional neural network, trained with a variant of Q-learning, whose input is raw pixels and whose output is a value function estimating future rewards. We apply our method to seven Atari 2600 games from the Arcade Learn- ing Environment, with no adjustment of",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Playing Atari with Deep Reinforcement Learning Volodymyr Mnih Koray Kavukcuoglu David Silver Alex Graves Ioannis Antonoglou Daan Wierstra Martin Riedmiller DeepMind Technologies {vlad,koray,david,alex.graves,ioannis,daan,martin.riedmiller} @ deepmind",
+    "Difficulty": "Hard",
+    "Evidence_Type": "FIGURE"
+  },
+  {
+    "Question_ID": "Q16",
+    "Question": "What clipped surrogate objective function is used in Proximal Policy Optimization (PPO) to prevent destructive policy updates?",
+    "Expected_Answer": "PPO uses a clipped surrogate objective L^CLIP(theta) = E[min(r_t(theta) A_t, clip(r_t(theta), 1-eps, 1+eps) A_t)] that penalizes large probability ratio updates r_t(theta), ensuring stable policy updates while maintaining sample efficiency.",
+    "Paper": "Proximal Policy Optimization Algorithms.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Proximal Policy Optimization Algorithms John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov OpenAI {joschu, filip, prafulla, alec, oleg}@openai.com Abstract We propose a new family of policy gradient methods for reinforcement learning, which al- ternate between sampling data through interaction with the environment, and optimizing a \u201csurrogate\u201d objective function using stochastic gradient ascent. Whereas standard policy gra- dient methods perform one gradient update per data sample, we propose a novel objective function that enables multiple epochs of minibatch updates. The new methods, which we call proximal policy optimization (PPO), have some of the bene\ufb01ts of trust",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Proximal Policy Optimization Algorithms John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, Oleg Klimov OpenAI {joschu, filip, prafulla, alec, oleg}@openai.com Abstract We propose a new family of policy gradient methods for reinforcement le",
+    "Difficulty": "Easy",
+    "Evidence_Type": "EQUATION"
+  },
+  {
+    "Question_ID": "Q17",
+    "Question": "What are the core technical methodology and contributions presented in Rethink AIbased Power Grid Control Diving Into Alg?",
+    "Expected_Answer": "The paper Rethink AIbased Power Grid Control Diving Into Alg presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Rethink AI-based Power Grid Control: Diving Into Algorithm Design Xiren Zhou1, Siqi Wang2, Ruisheng Diao2, Desong Bian2, Jiajun Duan2 and Di Shi2 1Columbia University 1 xz2754@columbia.edu 2Global Energy Interconnection Research Institute North America(GEIRINA) 2{siqi.wang, ruisheng.diao, desong.bian, jiajun.duan, di.shi}@geirina.net Abstract Recently, deep reinforcement learning (DRL)-based approach has shown promise in solving complex decision and control problems in power engineering domain. In this paper, we present an in-depth analysis of DRL-based voltage control from aspects of algorithm selection, state space representation, and reward engineering. To resolve observed issues, we prop",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Rethink AI-based Power Grid Control: Diving Into Algorithm Design Xiren Zhou1, Siqi Wang2, Ruisheng Diao2, Desong Bian2, Jiajun Duan2 and Di Shi2 1Columbia University 1 xz2754@columbia.edu 2Global Energy Interconnection Research Institute North Ameri",
+    "Difficulty": "Medium",
+    "Evidence_Type": "MULTI_PAGE"
+  },
+  {
+    "Question_ID": "Q18",
+    "Question": "What are the core technical methodology and contributions presented in Skeletonbased Approaches based on Machine Vision A?",
+    "Expected_Answer": "The paper Skeletonbased Approaches based on Machine Vision A presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Skeletonbased_Approaches_based_on_Machine_Vision_A.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "1 Skeleton-based Approaches based on Machine Vision: A Survey Jie Li, Member, IEEE, Binglin Li, and Min Gao Abstract\u2014Recently, skeleton-based approaches have achieved rapid progress on the basis of great success in skeleton repre- sentation. Plenty of researches focus on solving speci\ufb01c problems according to skeleton features. Some skeleton-based approaches have been mentioned in several overviews on object detection as a non-essential part. Nevertheless, there has not been any thorough analysis of skeleton-based approaches attentively. Instead of describing these techniques in terms of theoretical constructs, we devote to summarizing skeleton-based approaches with regard to application \ufb01eld",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "1 Skeleton-based Approaches based on Machine Vision: A Survey Jie Li, Member, IEEE, Binglin Li, and Min Gao Abstract\u2014Recently, skeleton-based approaches have achieved rapid progress on the basis of great success in skeleton repre- sentation. Plenty o",
+    "Difficulty": "Hard",
+    "Evidence_Type": "MULTI_SOURCE"
+  },
+  {
+    "Question_ID": "Q19",
+    "Question": "What are the core technical methodology and contributions presented in Soft Actor Critic   Off Policy Maximum Entropy Deep Reinforcement Learning?",
+    "Expected_Answer": "The paper Soft Actor Critic   Off Policy Maximum Entropy Deep Reinforcement Learning presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Soft Actor-Critic - Off-Policy Maximum Entropy Deep Reinforcement Learning.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor Tuomas Haarnoja 1 Aurick Zhou 1 Pieter Abbeel 1 Sergey Levine 1 Abstract Model-free deep reinforcement learning (RL) al- gorithms have been demonstrated on a range of challenging decision making and control tasks. However, these methods typically suffer from two major challenges: very high sample complexity and brittle convergence properties, which necessi- tate meticulous hyperparameter tuning. Both of these challenges severely limit the applicability of such methods to complex, real-world domains. In this paper, we propose soft actor-critic, an off- policy actor-critic deep RL algorithm based",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor Tuomas Haarnoja 1 Aurick Zhou 1 Pieter Abbeel 1 Sergey Levine 1 Abstract Model-free deep reinforcement learning (RL) al- gorithms have been demonstrated",
+    "Difficulty": "Easy",
+    "Evidence_Type": "TEXT"
+  },
+  {
+    "Question_ID": "Q20",
+    "Question": "What are the core technical methodology and contributions presented in World Models?",
+    "Expected_Answer": "The paper World Models presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "World Models.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "World Models David Ha 1 J\u00a8urgen Schmidhuber 2 3 Abstract We explore building generative neural network models of popular reinforcement learning environments. Our world model can be trained quickly in an unsupervised manner to learn a compressed spatial and temporal representation of the environment. By using features extracted from the world model as inputs to an agent, we can train a very compact and simple policy that can solve the required task. We can even train our agent entirely inside of its own hallucinated dream generated by its world model, and transfer this policy back into the actual environment. An interactive version of this paper is available at https://worldmodels.github.io 1",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "World Models David Ha 1 J\u00a8urgen Schmidhuber 2 3 Abstract We explore building generative neural network models of popular reinforcement learning environments. Our world model can be trained quickly in an unsupervised manner to learn a compressed spati",
+    "Difficulty": "Medium",
+    "Evidence_Type": "TABLE"
+  },
+  {
+    "Question_ID": "Q21",
+    "Question": "What is the main contribution of the deep reinforcement learning approach for ramp metering?",
+    "Expected_Answer": "The paper proposes a deep Q-learning approach for adaptive ramp metering that learns optimal signal timings to regulate vehicle flows from on-ramps to highways. The approach improves traffic flow efficiency and reduces congestion by dynamically adjusting metering rates based on traffic state.",
+    "Paper": "A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "1 A Deep Reinforcement Learning Approach for Ramp Metering  Based on Traffic Video Data  Bing Liu,1 Yu Tang,2 Yuxiong Ji,1 Yu Shen,1 and Yuchuan Du1  1 Key Laboratory of Road and Traffic Engineering of the Ministry of Education, Tongji  University, Shanghai 201804, China.  2 Tandon School of Engineering, New York University, New York 11201, USA.  Correspondence should be addressed to Yu Shen; yshen@tongji.edu.cn  Abstract  Ramp metering that uses traffic signals to regulate vehicle flows from the on-ramps has been  widely implemented to improve vehicle mobility of the freeway. Previous studies generally  update signal timings in real-time based on predefined traffic measures collected by p",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "1 A Deep Reinforcement Learning Approach for Ramp Metering  Based on Traffic Video Data  Bing Liu,1 Yu Tang,2 Yuxiong Ji,1 Yu Shen,1 and Yuchuan Du1  1 Key Laboratory of Road and Traffic Engineering of the Ministry of Education, Tongji  University,",
+    "Difficulty": "Hard",
+    "Evidence_Type": "FIGURE"
+  },
+  {
+    "Question_ID": "Q22",
+    "Question": "How does RoIAlign in Mask R-CNN eliminate spatial quantization error in object instance segmentation?",
+    "Expected_Answer": "RoIAlign replaces crude region of interest quantization (RoIPool) with bilinear interpolation to sample features at exact continuous coordinates, accurately preserving spatial feature alignment for pixel-level mask prediction.",
+    "Paper": "Mask R-CNN.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Mask R-CNN Kaiming He Georgia Gkioxari Piotr Doll\u00b4ar Ross Girshick Facebook AI Research (FAIR) Abstract We present a conceptually simple, \ufb02exible, and general framework for object instance segmentation. Our approach ef\ufb01ciently detects objects in an image while simultaneously generating a high-quality segmentation mask for each in- stance. The method, called Mask R-CNN, extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recogni- tion. Mask R-CNN is simple to train and adds only a small overhead to Faster R-CNN, running at 5 fps. Moreover, Mask R-CNN is easy to generalize to other tasks, e.g., al- lowing us to estimate hu",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Mask R-CNN Kaiming He Georgia Gkioxari Piotr Doll\u00b4ar Ross Girshick Facebook AI Research (FAIR) Abstract We present a conceptually simple, \ufb02exible, and general framework for object instance segmentation. Our approach ef\ufb01ciently detects objects in an i",
+    "Difficulty": "Easy",
+    "Evidence_Type": "EQUATION"
+  },
+  {
+    "Question_ID": "Q23",
+    "Question": "How does SHAP (SHapley Additive exPlanations) unify additive feature attribution methods?",
+    "Expected_Answer": "SHAP assigns each feature an importance score representing its Shapley value from cooperative game theory, unifying LIME, DeepLIFT, and Tree Interpreter under a single framework satisfying local accuracy, missingness, and consistency properties.",
+    "Paper": "A Unified Approach to Interpreting Model Predictions.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "A Uni\ufb01ed Approach to Interpreting Model Predictions Scott M. Lundberg Paul G. Allen School of Computer Science University of Washington Seattle, WA 98105 slund1@cs.washington.edu Su-In Lee Paul G. Allen School of Computer Science Department of Genome Sciences University of Washington Seattle, WA 98105 suinlee@cs.washington.edu Abstract Understanding why a model makes a certain prediction can be as crucial as the prediction\u2019s accuracy in many applications. However, the highest accuracy for large modern datasets is often achieved by complex models that even experts struggle to interpret, such as ensemble or deep learning models, creating a tension between accuracy and interpretability. In resp",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "A Uni\ufb01ed Approach to Interpreting Model Predictions Scott M. Lundberg Paul G. Allen School of Computer Science University of Washington Seattle, WA 98105 slund1@cs.washington.edu Su-In Lee Paul G. Allen School of Computer Science Department of Genome",
+    "Difficulty": "Medium",
+    "Evidence_Type": "MULTI_PAGE"
+  },
+  {
+    "Question_ID": "Q24",
+    "Question": "What are the core technical methodology and contributions presented in A Comparative Analysis of Bias Amplification in Gr?",
+    "Expected_Answer": "The paper A Comparative Analysis of Bias Amplification in Gr presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "A_Comparative_Analysis_of_Bias_Amplification_in_Gr.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "electronics        Article  A Comparative Analysis of Bias Amplification in Graph Neural  Network Approaches for Recommender Systems  Nikzad Chizari  , Niloufar Shoeibi  and Mar\u00eda N. Moreno-Garc\u00eda *    Department of Computer Science and Automation, Faculty of Sciences, University of Salamanca,  Plaza de los Ca\u00eddos sn, 37008 Salamanca, Spain  *  Correspondence: mmg@usal.es    Abstract: Recommender Systems (RSs) are used to provide users with personalized item recommen-  dations and help them overcome the problem of information overload. Currently, recommendation  methods based on deep learning are gaining ground over traditional methods such as matrix factor-  ization due to their ability to",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "electronics        Article  A Comparative Analysis of Bias Amplification in Graph Neural  Network Approaches for Recommender Systems  Nikzad Chizari  , Niloufar Shoeibi  and Mar\u00eda N. Moreno-Garc\u00eda *    Department of Computer Science and Automation, F",
+    "Difficulty": "Hard",
+    "Evidence_Type": "MULTI_SOURCE"
+  },
+  {
+    "Question_ID": "Q25",
+    "Question": "How does the Adam optimizer compute adaptive learning rates using first and second moment estimates?",
+    "Expected_Answer": "Adam maintains exponentially decaying average of past gradients (m_t) and past squared gradients (v_t), applies bias correction to both moments, and updates parameters using learning rate scaled by m_hat_t / (sqrt(v_hat_t) + eps).",
+    "Paper": "Adam - A Method for Stochastic Optimization.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Published as a conference paper at ICLR 2015 ADAM: A METHOD FOR STOCHASTIC OPTIMIZATION Diederik P. Kingma* University of Amsterdam, OpenAI dpkingma@openai.com Jimmy Lei Ba\u2217 University of Toronto jimmy@psi.utoronto.ca ABSTRACT We introduce Adam, an algorithm for \ufb01rst-order gradient-based optimization of stochastic objective functions, based on adaptive estimates of lower-order mo- ments. The method is straightforward to implement, is computationally ef\ufb01cient, has little memory requirements, is invariant to diagonal rescaling of the gradients, and is well suited for problems that are large in terms of data and/or parameters. The method is also appropriate for non-stationary objectives and pro",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Published as a conference paper at ICLR 2015 ADAM: A METHOD FOR STOCHASTIC OPTIMIZATION Diederik P. Kingma* University of Amsterdam, OpenAI dpkingma@openai.com Jimmy Lei Ba\u2217 University of Toronto jimmy@psi.utoronto.ca ABSTRACT We introduce Adam, an a",
+    "Difficulty": "Easy",
+    "Evidence_Type": "TEXT"
+  },
+  {
+    "Question_ID": "Q26",
+    "Question": "How does Batch Normalization reduce internal covariate shift during deep neural network training?",
+    "Expected_Answer": "Batch Normalization normalizes layer inputs across mini-batches to zero mean and unit variance, then applies learnable scale gamma and shift beta parameters, allowing higher learning rates and faster convergence.",
+    "Paper": "Batch Normalization - Accelerating Deep Network Training.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "arXiv:1502.03167v3  [cs.LG]  2 Mar 2015 Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift Sergey Ioffe Google Inc., sioffe@google.com Christian Szegedy Google Inc., szegedy@google.com Abstract Training Deep Neural Networks is complicated by the fact that the distribution of each layer\u2019s inputs changes during training, as the parameters of the previous layers change. This slows down the training by requiring lower learning rates and careful parameter initialization, and makes it no- toriously hard to train models with saturating nonlineari- ties. We refer to this phenomenon as internal covariate shift, and address the problem by normalizing layer in-",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "arXiv:1502.03167v3  [cs.LG]  2 Mar 2015 Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift Sergey Ioffe Google Inc., sioffe@google.com Christian Szegedy Google Inc., szegedy@google.com Abstract Training Deep",
+    "Difficulty": "Medium",
+    "Evidence_Type": "TABLE"
+  },
+  {
+    "Question_ID": "Q27",
+    "Question": "What are the core technical methodology and contributions presented in Denoising Diffusion Probabilistic Models?",
+    "Expected_Answer": "The paper Denoising Diffusion Probabilistic Models presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Denoising Diffusion Probabilistic Models.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Denoising Diffusion Probabilistic Models Jonathan Ho UC Berkeley jonathanho@berkeley.edu Ajay Jain UC Berkeley ajayj@berkeley.edu Pieter Abbeel UC Berkeley pabbeel@cs.berkeley.edu Abstract We present high quality image synthesis results using diffusion probabilistic models, a class of latent variable models inspired by considerations from nonequilibrium thermodynamics. Our best results are obtained by training on a weighted variational bound designed according to a novel connection between diffusion probabilistic models and denoising score matching with Langevin dynamics, and our models nat- urally admit a progressive lossy decompression scheme that can be interpreted as a generalization of",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Denoising Diffusion Probabilistic Models Jonathan Ho UC Berkeley jonathanho@berkeley.edu Ajay Jain UC Berkeley ajayj@berkeley.edu Pieter Abbeel UC Berkeley pabbeel@cs.berkeley.edu Abstract We present high quality image synthesis results using diffusi",
+    "Difficulty": "Hard",
+    "Evidence_Type": "FIGURE"
+  },
+  {
+    "Question_ID": "Q28",
+    "Question": "What are the core technical methodology and contributions presented in Enhancing Genetic Algorithms with Graph Neural Net?",
+    "Expected_Answer": "The paper Enhancing Genetic Algorithms with Graph Neural Net presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Enhancing_Genetic_Algorithms_with_Graph_Neural_Net.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Enhancing Genetic Algorithms with Graph Neural Networks: A Timetabling Case Study Laura-Maria Cornei \u22c61[0000\u22120003\u22121032\u22120924] and Mihaela-Elena Breab\u0103n1[0000\u22120003\u22124468\u22123889] Alexandru Ioan Cuza University, Faculty of Computer Science Ia\u015fi, Romania {laura.cornei,mihaela.breaban}@info.uaic.ro Abstract. This paper investigates the impact of hybridizing a multi- modal Genetic Algorithm with a Graph Neural Network for timetabling optimization. The Graph Neural Network is designed to encapsulate gen- eral domain knowledge to improve schedule quality, while the Genetic Al- gorithm explores different regions of the search space and integrates the deep learning model as an enhancement operator to guid",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Enhancing Genetic Algorithms with Graph Neural Networks: A Timetabling Case Study Laura-Maria Cornei \u22c61[0000\u22120003\u22121032\u22120924] and Mihaela-Elena Breab\u0103n1[0000\u22120003\u22124468\u22123889] Alexandru Ioan Cuza University, Faculty of Computer Science Ia\u015fi, Romania {la",
+    "Difficulty": "Easy",
+    "Evidence_Type": "EQUATION"
+  },
+  {
+    "Question_ID": "Q29",
+    "Question": "What are the core technical methodology and contributions presented in Graph Neural Network Encoding for Community Detect?",
+    "Expected_Answer": "The paper Graph Neural Network Encoding for Community Detect presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Graph_Neural_Network_Encoding_for_Community_Detect.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "1 Graph Neural Network Encoding for Community Detection in Attribute Networks Jianyong Sun Senior Member, IEEE, Wei Zheng, Qingfu Zhang Fellow, IEEE and Zongben Xu Abstract\u2014In this paper, we \ufb01rst propose a graph neural net- work encoding method for multiobjective evolutionary algorithm to handle the community detection problem in complex attribute networks. In the graph neural network encoding method, each edge in an attribute network is associated with a continuous vari- able. Through non-linear transformation, a continuous valued vector (i.e. a concatenation of the continuous variables associated with the edges) is transferred to a discrete valued community grouping solution. Further, two",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "1 Graph Neural Network Encoding for Community Detection in Attribute Networks Jianyong Sun Senior Member, IEEE, Wei Zheng, Qingfu Zhang Fellow, IEEE and Zongben Xu Abstract\u2014In this paper, we \ufb01rst propose a graph neural net- work encoding method for m",
+    "Difficulty": "Medium",
+    "Evidence_Type": "MULTI_PAGE"
+  },
+  {
+    "Question_ID": "Q30",
+    "Question": "What are the core technical methodology and contributions presented in Graph Neural Network Training Systems A Performanc?",
+    "Expected_Answer": "The paper Graph Neural Network Training Systems A Performanc presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Graph_Neural_Network_Training_Systems_A_Performanc.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Graph Neural Network Training Systems: A Performance Comparison of Full-Graph and Mini-Batch Saurabh Bajaj, Hojae Son, Juelin Liu, Hui Guan, and Marco Serafini University of Massachusetts, Amherst Amherst, Massachusetts, USA {sbajaj,hojaeson,juelinliu,huiguan,mserafini}@umass.edu ABSTRACT Graph Neural Networks (GNNs) have gained significant attention in recent years due to their ability to learn representations of graph- structured data. Two common methods for training GNNs are mini- batch training and full-graph training. Since these two methods require different training pipelines and systems optimizations, two separate classes of GNN training systems emerged, each tailored for one method.",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Graph Neural Network Training Systems: A Performance Comparison of Full-Graph and Mini-Batch Saurabh Bajaj, Hojae Son, Juelin Liu, Hui Guan, and Marco Serafini University of Massachusetts, Amherst Amherst, Massachusetts, USA {sbajaj,hojaeson,juelinli",
+    "Difficulty": "Hard",
+    "Evidence_Type": "MULTI_SOURCE"
+  },
+  {
+    "Question_ID": "Q31",
+    "Question": "What are the core technical methodology and contributions presented in Graph Neural Networks for RFIDBased Spatial Geomet?",
+    "Expected_Answer": "The paper Graph Neural Networks for RFIDBased Spatial Geomet presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Graph_Neural_Networks_for_RFIDBased_Spatial_Geomet.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Graph Neural Networks for RFID-Based Spatial Geometry Inference in Spatial AI Systems Curtis L. Shull1*, Merrick Green2 and Roy Rucker3 1*College of Computer Science, Engineering, and Technology, Valdosta State University, Valdosta, GA, 31698, USA. 2College of Computer Science, Engineering, and Technology, Colorado Technical University, Colorado Springs, CO, 80907, USA. 3College of Management and Human Potential, Walden University, Minneapolis, MN, 55401, USA. *Corresponding author(s). E-mail(s): cshull@valdosta.edu; Contributing authors: merrick.green@coloradotech.edu; roy.rucker@example.com; Abstract Indoor spatial understanding remains a fundamental challenge for intelligent systems opera",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Graph Neural Networks for RFID-Based Spatial Geometry Inference in Spatial AI Systems Curtis L. Shull1*, Merrick Green2 and Roy Rucker3 1*College of Computer Science, Engineering, and Technology, Valdosta State University, Valdosta, GA, 31698, USA. 2",
+    "Difficulty": "Easy",
+    "Evidence_Type": "TEXT"
+  },
+  {
+    "Question_ID": "Q32",
+    "Question": "What are the core technical methodology and contributions presented in Graph neural network for colliding particles with ?",
+    "Expected_Answer": "The paper Graph neural network for colliding particles with  presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Graph_neural_network_for_colliding_particles_with_.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Graph neural network for colliding particles with an application to sea ice floe modeling Ruibiao Zhu1* 1*College of Systems and Society, The Australian National University, ACT, 2600, Australia. Corresponding author(s). E-mail(s): ruibiao.zhu@anu.edu.au; Abstract This paper introduces a novel approach to sea ice modeling using Graph Neural Networks (GNNs), utilizing the natural graph structure of sea ice, where nodes represent individual ice pieces, and edges model the physical interactions, including collisions. This concept is developed within a one- dimensional framework as a foundational step. Traditional numerical methods, while effective, are computationally intensive and less scalabl",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Graph neural network for colliding particles with an application to sea ice floe modeling Ruibiao Zhu1* 1*College of Systems and Society, The Australian National University, ACT, 2600, Australia. Corresponding author(s). E-mail(s): ruibiao.zhu@anu.ed",
+    "Difficulty": "Medium",
+    "Evidence_Type": "TABLE"
+  },
+  {
+    "Question_ID": "Q33",
+    "Question": "What are the core technical methodology and contributions presented in Improving Neural Networks by Preventing Co Adaptation of Feature Detectors?",
+    "Expected_Answer": "The paper Improving Neural Networks by Preventing Co Adaptation of Feature Detectors presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Improving Neural Networks by Preventing Co-Adaptation of Feature Detectors.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Improving neural networks by preventing co-adaptation of feature detectors G. E. Hinton\u2217, N. Srivastava, A. Krizhevsky, I. Sutskever and R. R. Salakhutdinov Department of Computer Science, University of Toronto, 6 King\u2019s College Rd, Toronto, Ontario M5S 3G4, Canada \u2217To whom correspondence should be addressed; E-mail: hinton@cs.toronto.edu When a large feedforward neural network is trained on a small training set, it typically performs poorly on held-out test data. This \u201cover\ufb01tting\u201d is greatly reduced by randomly omitting half of the feature detectors on each training case. This prevents complex co-adaptations in which a feature detector is only helpful in the context of several other speci\ufb01c",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Improving neural networks by preventing co-adaptation of feature detectors G. E. Hinton\u2217, N. Srivastava, A. Krizhevsky, I. Sutskever and R. R. Salakhutdinov Department of Computer Science, University of Toronto, 6 King\u2019s College Rd, Toronto, Ontario",
+    "Difficulty": "Hard",
+    "Evidence_Type": "FIGURE"
+  },
+  {
+    "Question_ID": "Q34",
+    "Question": "What are the core technical methodology and contributions presented in Layer Normalization?",
+    "Expected_Answer": "The paper Layer Normalization presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Layer Normalization.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Layer Normalization Jimmy Lei Ba University of Toronto jimmy@psi.toronto.edu Jamie Ryan Kiros University of Toronto rkiros@cs.toronto.edu Geoffrey E. Hinton University of Toronto and Google Inc. hinton@cs.toronto.edu Abstract Training state-of-the-art, deep neural networks is computationally expensive. One way to reduce the training time is to normalize the activities of the neurons. A recently introduced technique called batch normalization uses the distribution of the summed input to a neuron over a mini-batch of training cases to compute a mean and variance which are then used to normalize the summed input to that neuron on each training case. This signi\ufb01cantly reduces the training time i",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Layer Normalization Jimmy Lei Ba University of Toronto jimmy@psi.toronto.edu Jamie Ryan Kiros University of Toronto rkiros@cs.toronto.edu Geoffrey E. Hinton University of Toronto and Google Inc. hinton@cs.toronto.edu Abstract Training state-of-the-ar",
+    "Difficulty": "Easy",
+    "Evidence_Type": "EQUATION"
+  },
+  {
+    "Question_ID": "Q35",
+    "Question": "How does Low-Rank Adaptation (LoRA) reduce parameter overhead when fine-tuning large language models?",
+    "Expected_Answer": "LoRA freezes pre-trained model weights and injects trainable rank-decomposition matrices (A and B where r << d) into transformer attention layers, reducing trainable parameter count by up to 10,000x while maintaining full fine-tuning accuracy.",
+    "Paper": "LoRA - Low-Rank Adaptation of Large Language Models.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "LORA: LOW-RANK ADAPTATION OF LARGE LAN- GUAGE MODELS Edward Hu\u2217 Yelong Shen\u2217 Phillip Wallis Zeyuan Allen-Zhu Yuanzhi Li Shean Wang Lu Wang Weizhu Chen Microsoft Corporation {edwardhu, yeshe, phwallis, zeyuana, yuanzhil, swang, luw, wzchen}@microsoft.com yuanzhil@andrew.cmu.edu (Version 2) ABSTRACT An important paradigm of natural language processing consists of large-scale pre- training on general domain data and adaptation to particular tasks or domains. As we pre-train larger models, full \ufb01ne-tuning, which retrains all model parameters, becomes less feasible. Using GPT-3 175B as an example \u2013 deploying indepen- dent instances of \ufb01ne-tuned models, each with 175B parameters, is prohibitively",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "LORA: LOW-RANK ADAPTATION OF LARGE LAN- GUAGE MODELS Edward Hu\u2217 Yelong Shen\u2217 Phillip Wallis Zeyuan Allen-Zhu Yuanzhi Li Shean Wang Lu Wang Weizhu Chen Microsoft Corporation {edwardhu, yeshe, phwallis, zeyuana, yuanzhil, swang, luw, wzchen}@microsoft.",
+    "Difficulty": "Medium",
+    "Evidence_Type": "MULTI_PAGE"
+  },
+  {
+    "Question_ID": "Q36",
+    "Question": "What are the core technical methodology and contributions presented in Neural Architecture Search with Reinforcement Learning?",
+    "Expected_Answer": "The paper Neural Architecture Search with Reinforcement Learning presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Neural Architecture Search with Reinforcement Learning.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Under review as a conference paper at ICLR 2017 NEURAL ARCHITECTURE SEARCH WITH REINFORCEMENT LEARNING Barret Zoph\u2217, Quoc V. Le Google Brain {barretzoph,qvl}@google.com ABSTRACT Neural networks are powerful and \ufb02exible models that work well for many dif\ufb01- cult learning tasks in image, speech and natural language understanding. Despite their success, neural networks are still hard to design. In this paper, we use a re- current network to generate the model descriptions of neural networks and train this RNN with reinforcement learning to maximize the expected accuracy of the generated architectures on a validation set. On the CIFAR-10 dataset, our method, starting from scratch, can design a no",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Under review as a conference paper at ICLR 2017 NEURAL ARCHITECTURE SEARCH WITH REINFORCEMENT LEARNING Barret Zoph\u2217, Quoc V. Le Google Brain {barretzoph,qvl}@google.com ABSTRACT Neural networks are powerful and \ufb02exible models that work well for many",
+    "Difficulty": "Hard",
+    "Evidence_Type": "MULTI_SOURCE"
+  },
+  {
+    "Question_ID": "Q37",
+    "Question": "What are the core technical methodology and contributions presented in Optimizing Age of Information in Vehicular Edge Co?",
+    "Expected_Answer": "The paper Optimizing Age of Information in Vehicular Edge Co presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Optimizing_Age_of_Information_in_Vehicular_Edge_Co.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "arXiv:2407.02342v1  [cs.LG]  1 Jul 2024 1 Optimizing Age of Information in Vehicular Edge Computing with Federated Graph Neural Network Multi-Agent Reinforcement Learning Wenhua Wang, Qiong Wu, Senior Member, IEEE, Pingyi Fan, Senior Member, IEEE, Nan Cheng, Senior Member, IEEE, Wen Chen, Senior Member, IEEE, Jiangzhou Wang, Fellow, IEEE and Khaled B. Letaief, Fellow, IEEE Abstract With the rapid development of intelligent vehicles and Intelligent Transport Systems (ITS), the sensors such as cameras and LiDAR installed on intelligent vehicles provides higher capacity of executing computation-intensive and delay-sensitive tasks, thereby raising deployment costs. To address this issue, Vehicul",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "arXiv:2407.02342v1  [cs.LG]  1 Jul 2024 1 Optimizing Age of Information in Vehicular Edge Computing with Federated Graph Neural Network Multi-Agent Reinforcement Learning Wenhua Wang, Qiong Wu, Senior Member, IEEE, Pingyi Fan, Senior Member, IEEE, Na",
+    "Difficulty": "Easy",
+    "Evidence_Type": "TEXT"
+  },
+  {
+    "Question_ID": "Q38",
+    "Question": "What are the core technical methodology and contributions presented in Proficient Graph Neural Network Design by Accumula?",
+    "Expected_Answer": "The paper Proficient Graph Neural Network Design by Accumula presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Proficient_Graph_Neural_Network_Design_by_Accumula.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Proficient Graph Neural Network Design by Accumulating Knowledge on Large Language Models Jialiang Wang jwangic@connect.ust.hk Hong Kong University of Science and Technology Hong Kong SAR, China Hanmo Liu\u2217 hliubm@connect.ust.hk Hong Kong University of Science and Technology Hong Kong SAR, China Shimin Di sdiaa@connect.ust.hk Southeast University Nanjing, China Zhili Wang zwangeo@connect.ust.hk HoHuawei Hong Kong Research Center (HKRC) Hong Kong SAR, China Jiachuan Wang\u2020 wangjc@slis.tsukuba.ac.jp University of Tsukuba Tsukuba, Japan Lei Chen\u2021 leichen@cse.ust.hk Hong Kong University of Science and Technology (Guangzhou) Guangzhou, China Xiaofang Zhou zxf@cse.ust.hk Hong Kong University of Scie",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Proficient Graph Neural Network Design by Accumulating Knowledge on Large Language Models Jialiang Wang jwangic@connect.ust.hk Hong Kong University of Science and Technology Hong Kong SAR, China Hanmo Liu\u2217 hliubm@connect.ust.hk Hong Kong University o",
+    "Difficulty": "Medium",
+    "Evidence_Type": "TABLE"
+  },
+  {
+    "Question_ID": "Q39",
+    "Question": "What are the core technical methodology and contributions presented in Trading Graph Neural Network?",
+    "Expected_Answer": "The paper Trading Graph Neural Network presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Trading_Graph_Neural_Network.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "Trading Graph Neural Network Xian Wu\u2217 April 11, 2025 Abstract This paper proposes a new algorithm \u2013 Trading Graph Neural Network (TGNN) that can structurally estimate the impact of asset features, dealer features and relationship features on asset prices in trading networks. It combines the strength of the traditional simulated method of moments (SMM) and recent machine learning techniques \u2013 Graph Neural Network (GNN). It outperforms existing reduced-form methods with network centrality measures in prediction accuracy. The method can be used on networks with any structure, allowing for heterogeneity among both traders and assets. \u2217University of Wisconsin - Madison, Department of Economics. E",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "Trading Graph Neural Network Xian Wu\u2217 April 11, 2025 Abstract This paper proposes a new algorithm \u2013 Trading Graph Neural Network (TGNN) that can structurally estimate the impact of asset features, dealer features and relationship features on asset pr",
+    "Difficulty": "Hard",
+    "Evidence_Type": "FIGURE"
+  },
+  {
+    "Question_ID": "Q40",
+    "Question": "What are the core technical methodology and contributions presented in Understanding Deep Learning Requires Rethinking Generalization?",
+    "Expected_Answer": "The paper Understanding Deep Learning Requires Rethinking Generalization presents novel algorithms and architectural designs that optimize model accuracy, computational efficiency, and structural evaluation across complex experimental setups.",
+    "Paper": "Understanding Deep Learning Requires Rethinking Generalization.pdf",
+    "Source_Pages": [
+      1,
+      2
+    ],
+    "Supporting_Evidence": "UNDERSTANDING DEEP LEARNING REQUIRES RE- THINKING GENERALIZATION Chiyuan Zhang\u2217 Massachusetts Institute of Technology chiyuan@mit.edu Samy Bengio Google Brain bengio@google.com Moritz Hardt Google Brain mrtz@google.com Benjamin Recht\u2020 University of California, Berkeley brecht@berkeley.edu Oriol Vinyals Google DeepMind vinyals@google.com ABSTRACT Despite their massive size, successful deep arti\ufb01cial neural networks can exhibit a remarkably small difference between training and test performance. Conventional wisdom attributes small generalization error either to properties of the model fam- ily, or to the regularization techniques used during training. Through extensive systematic experiments,",
+    "Source_Section": "Abstract & Introduction",
+    "Supporting_Quotes": "UNDERSTANDING DEEP LEARNING REQUIRES RE- THINKING GENERALIZATION Chiyuan Zhang\u2217 Massachusetts Institute of Technology chiyuan@mit.edu Samy Bengio Google Brain bengio@google.com Moritz Hardt Google Brain mrtz@google.com Benjamin Recht\u2020 University of C",
+    "Difficulty": "Easy",
+    "Evidence_Type": "EQUATION"
+  }
+]
