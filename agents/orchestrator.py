@@ -93,7 +93,6 @@ def route_node(state: AgentState) -> Dict[str, Any]:
     In DocumentRAG all questions go to doc_agent.
     Still resolves repo_id if not supplied (picks first READY collection).
     Detects paper ambiguity when question could be answered by multiple papers.
-    Detects cross-paper comparison questions and sets retrieval_mode accordingly.
     """
     try:
         t0 = time.perf_counter()
@@ -115,11 +114,6 @@ def route_node(state: AgentState) -> Dict[str, Any]:
 
         repo_id = state.get("repo_id")
         filters = state.get("filters") or {}
-        question_lower = state["question"].lower()
-        
-        # Detect cross-paper comparison questions
-        comparison_keywords = ["compare", "vs", "versus", "difference between", "different", "contrast", "both", "all", "each", "multiple", "several"]
-        is_comparison = any(keyword in question_lower for keyword in comparison_keywords)
         
         # If repo_id is specified in filters, use it
         if not repo_id and "paper_title" in filters:
@@ -141,8 +135,9 @@ def route_node(state: AgentState) -> Dict[str, Any]:
             top_repos = rank_repositories(state["question"], registry, top_k=3)
             
             if len(top_repos) > 1:
-                # Multiple papers could answer - detect ambiguity or comparison
+                # Multiple papers could answer - detect ambiguity
                 # Check if the question explicitly mentions a paper
+                question_lower = state["question"].lower()
                 explicit_paper = False
                 for rid in top_repos:
                     repo = registry.get_repository(rid)
@@ -152,25 +147,20 @@ def route_node(state: AgentState) -> Dict[str, Any]:
                         break
                 
                 if not explicit_paper:
-                    if is_comparison:
-                        # Cross-paper comparison question - retrieve from all top papers
-                        updates["retrieval_mode"] = "corpus"
-                        # Don't set repo_id to allow corpus-wide search
-                    else:
-                        # Ambiguous - return disambiguation message
-                        paper_names = []
-                        for rid in top_repos:
-                            repo = registry.get_repository(rid)
-                            if repo:
-                                paper_names.append(repo.name)
-                        
-                        updates["answer"] = (
-                            f"I found multiple papers that could answer this question:\n"
-                            f"{chr(10).join(f'{i+1}. {name}' for i, name in enumerate(paper_names))}\n\n"
-                            f"Please specify which paper you mean by including the paper name in your question."
-                        )
-                        updates["citations"] = []
-                        return updates
+                    # Ambiguous - return disambiguation message
+                    paper_names = []
+                    for rid in top_repos:
+                        repo = registry.get_repository(rid)
+                        if repo:
+                            paper_names.append(repo.name)
+                    
+                    updates["answer"] = (
+                        f"I found multiple papers that could answer this question:\n"
+                        f"{chr(10).join(f'{i+1}. {name}' for i, name in enumerate(paper_names))}\n\n"
+                        f"Please specify which paper you mean by including the paper name in your question."
+                    )
+                    updates["citations"] = []
+                    return updates
             elif top_repos:
                 updates["repo_id"] = top_repos[0]
 
@@ -229,30 +219,11 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         debug['initial_filters'] = filters
         debug['v_coll'] = v_coll
         t0 = time.perf_counter()
-        
-        chunks = []
-        vector_timing = {"embedding_ms": 0.0, "qdrant_ms": 0.0}
-        
-        if retrieval_mode == "corpus":
-            # Search across all ready repositories
-            for rid, r in registry.repositories.items():
-                if r.status == "READY" and r.vector_collection:
-                    temp_vman = VectorStoreManager(collection_name=r.vector_collection)
-                    c_chunks, c_timing = temp_vman.search(
-                        state["question"], top_k=vector_top_k, metadata_filters=filters or None
-                    )
-                    chunks.extend(c_chunks)
-                    vector_timing["qdrant_ms"] += c_timing.get("qdrant_ms", 0.0)
-                    if "query_vector" in c_timing:
-                        vector_timing["query_vector"] = c_timing["query_vector"]
-                        vector_timing["embedding_ms"] = c_timing.get("embedding_ms", 0.0)
-        else:
-            chunks, vector_timing = v_manager.search(
-                state["question"], top_k=vector_top_k, metadata_filters=filters or None
-            )
-            
-        latency_breakdown["embedding_ms"] = vector_timing.get("embedding_ms", 0.0)
-        latency_breakdown["qdrant_ms"] = vector_timing.get("qdrant_ms", 0.0)
+        chunks, vector_timing = v_manager.search(
+            state["question"], top_k=vector_top_k, metadata_filters=filters or None
+        )
+        latency_breakdown["embedding_ms"] = vector_timing["embedding_ms"]
+        latency_breakdown["qdrant_ms"] = vector_timing["qdrant_ms"]
         latency_breakdown["vector_ms"] = (time.perf_counter() - t0) * 1000
         debug['post_vector_count'] = len(chunks)
 
@@ -276,32 +247,6 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         if filtered_chunks:
             chunks = filtered_chunks
         debug['post_section_filter_count'] = len(chunks)
-
-        # Step 1.5: Reference Resolution
-        # If any chunk mentions "Table X" or "Figure X", try to fetch it
-        import re
-        referenced_items = set()
-        for c in chunks:
-            content = c.get("content", "")
-            matches = re.findall(r'(?i)\b(?:table|figure)\s*\d+\b', content)
-            for m in matches:
-                referenced_items.add(m.lower())
-        
-        if referenced_items:
-            for ref in referenced_items:
-                has_ref = False
-                for c in chunks:
-                    if ref in c.get("content", "").lower() and c.get("metadata", {}).get("chunk_type") in ["TABLE", "FIGURE"]:
-                        has_ref = True
-                        break
-                if not has_ref:
-                    # Search specifically for this reference
-                    ref_chunks, _ = v_manager.search(ref, top_k=3, metadata_filters=filters or None)
-                    for rc in ref_chunks:
-                        if rc.get("metadata", {}).get("chunk_type") in ["TABLE", "FIGURE", "MIXED"]:
-                            chunks.append(rc)
-                            
-        debug['post_reference_resolution_count'] = len(chunks)
 
         # Step 2: MMR rerank (diversify)
         query_vector_for_mmr = vector_timing.pop("query_vector", None)
@@ -440,7 +385,6 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
     """
     Invoke doc_agent with retrieved chunks.
     Propagates grounding: if zero chunks, return CANNOT_FIND_RESPONSE.
-    Implements intelligent context packing to avoid duplicates and merge related chunks.
     """
     latency_breakdown = state.get("latency_breakdown", {})
 
@@ -459,12 +403,8 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
 
     try:
         chunks = state["retrieved_chunks"]
-        
-        # Intelligent context packing
-        chunks = _intelligent_context_packing(chunks)
-        
-        # Limit to top N chunks after intelligent packing
-        chunks = chunks[:15]
+        # Limit to top N chunks to avoid context confusion but allow more context for complex questions
+        chunks = chunks[:8]
         t0 = time.perf_counter()
         ans = doc_agent.run(state["question"], chunks)
         t1 = time.perf_counter()
@@ -486,129 +426,6 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             "citations": [],
             "latency_breakdown": latency_breakdown,
         }
-
-
-def _intelligent_context_packing(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Intelligently pack context by:
-    1. Removing duplicate chunks (by hash)
-    2. Merging chunks from the same section
-    3. Preferring chunks with technical content (numbers, equations, tables)
-    4. Avoiding chunks from References/Bibliography
-    
-    Returns ordered list of chunks optimized for LLM consumption.
-    """
-    if not chunks:
-        return []
-    
-    # Step 1: Remove duplicates by hash
-    seen_hashes = set()
-    unique_chunks = []
-    for chunk in chunks:
-        chunk_hash = chunk.get("metadata", {}).get("hash", "")
-        if chunk_hash and chunk_hash not in seen_hashes:
-            seen_hashes.add(chunk_hash)
-            unique_chunks.append(chunk)
-    
-    # Step 2: Filter out low-value sections
-    filtered_chunks = []
-    for chunk in unique_chunks:
-        section = (chunk.get("metadata", {}).get("section") or "").lower()
-        # Skip references, bibliography, acknowledgments
-        if any(x in section for x in ["reference", "bibliography", "acknowledg"]):
-            continue
-        filtered_chunks.append(chunk)
-    
-    if not filtered_chunks:
-        return unique_chunks[:15]
-    
-    # Step 3: Score chunks by technical content
-    def _technical_score(chunk: Dict[str, Any]) -> float:
-        """Score chunk based on technical content."""
-        content = chunk.get("content", "")
-        chunk_type = chunk.get("metadata", {}).get("chunk_type", "TEXT")
-        
-        score = 0.0
-        
-        # Prefer technical chunk types
-        if chunk_type == "HYPERPARAMETERS":
-            score += 3.0
-        elif chunk_type == "TABLE":
-            score += 2.5
-        elif chunk_type == "EQUATION":
-            score += 2.0
-        elif chunk_type == "ALGORITHM":
-            score += 1.5
-        elif chunk_type == "MIXED":
-            score += 1.0
-        
-        # Bonus for numerical content
-        import re
-        numbers = len(re.findall(r'\d+\.?\d*', content))
-        score += min(numbers * 0.1, 1.0)
-        
-        # Bonus for variable-value pairs
-        var_pairs = len(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*\s*[=:]\s*[0-9.]+', content))
-        score += min(var_pairs * 0.5, 1.5)
-        
-        return score
-    
-    # Step 4: Sort by technical score (higher first)
-    scored_chunks = [(chunk, _technical_score(chunk)) for chunk in filtered_chunks]
-    scored_chunks.sort(key=lambda x: x[1], reverse=True)
-
-    # Step 5: Re-sort to maintain section coherence.
-    # Group by section and take top chunks from each section,
-    # then sort sections by page_start (document reading order) not alphabetically.
-    from collections import defaultdict
-    section_groups = defaultdict(list)
-    for chunk, score in scored_chunks:
-        section = chunk.get("metadata", {}).get("section", "Unknown")
-        section_groups[section].append((chunk, score))
-
-    # Determine page_start per section (min page across all chunks in that section)
-    section_page_start = {}
-    for section, items in section_groups.items():
-        min_page = min(
-            (c.get("metadata", {}).get("page_start", 9999) for c, _ in items),
-            default=9999
-        )
-        section_page_start[section] = min_page
-
-    # Take top chunks from each section and merge adjacent ones
-    packed_chunks = []
-    for section in sorted(section_groups.keys(), key=lambda s: section_page_start.get(s, 9999)):
-        section_chunks = sorted(section_groups[section], key=lambda x: x[1], reverse=True)
-        top_section_chunks = [c for c, s in section_chunks[:3]]  # take top 3
-        # Sort by page/line to merge
-        top_section_chunks.sort(key=lambda x: x.get("metadata", {}).get("page_start", 0))
-
-        merged_section = []
-        current_merged = None
-        for chunk in top_section_chunks:
-            if not current_merged:
-                current_merged = chunk.copy()
-            else:
-                # Merge if they are from the same paper and section
-                c_meta = chunk.get("metadata", {})
-                m_meta = current_merged.get("metadata", {})
-                if c_meta.get("file") == m_meta.get("file"):
-                    current_merged["content"] += "\n...\n" + chunk.get("content", "")
-                    current_merged["metadata"]["page_end"] = max(m_meta.get("page_end", 0), c_meta.get("page_end", 0))
-                else:
-                    merged_section.append(current_merged)
-                    current_merged = chunk.copy()
-        if current_merged:
-            merged_section.append(current_merged)
-
-        packed_chunks.extend(merged_section)
-
-    # If we have fewer than 15 chunks, add more from top sections
-    if len(packed_chunks) < 15:
-        remaining = [c for c, s in scored_chunks if c not in packed_chunks]
-        packed_chunks.extend(remaining[:15 - len(packed_chunks)])
-
-    return packed_chunks[:15]
 
 
 # ---------------------------------------------------------------------------
