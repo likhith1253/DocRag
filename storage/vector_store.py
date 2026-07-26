@@ -297,37 +297,58 @@ class VectorStoreManager:
             retrieved.append(entry)
         
         # If metadata_filters were provided but returned zero results, attempt a best-effort
-        # filename basename match by querying without filters and post-filtering. This
-        # handles cases where stored metadata.file contains a path (e.g. 'papers/AI/...')
-        # while callers pass only the filename (e.g. 'A_Deep_...pdf').
-        if not retrieved and metadata_filters and 'file' in metadata_filters:
+        # normalized filename / paper_title match by querying without filters and post-filtering.
+        if not retrieved and metadata_filters:
             try:
-                raw_results = self.client.query_points(
-                    collection_name=self.collection_name,
-                    query=query_vector,
-                    query_filter=None,
-                    limit=top_k,
-                    with_vectors=True
+                target_val = (
+                    metadata_filters.get('file')
+                    or metadata_filters.get('paper_title')
+                    or metadata_filters.get('paper')
                 )
-                from ntpath import basename
-                for point in raw_results.points:
-                    meta = point.payload.get('metadata', {})
-                    f = meta.get('file') or meta.get('paper') or meta.get('paper_title') or ''
-                    if f and basename(f) == metadata_filters['file']:
-                        entry = {
-                            "content": point.payload["content"],
-                            "metadata": meta,
-                            "score": point.score,
-                            "id": point.id
-                        }
-                        pv = point.vector
-                        if isinstance(pv, list) and pv:
-                            entry["vector"] = pv
-                        elif isinstance(pv, dict):
-                            first = next(iter(pv.values()), None)
-                            if first:
-                                entry["vector"] = first
-                        retrieved.append(entry)
+                if target_val:
+                    from ntpath import basename
+                    def _norm(s):
+                        if not s:
+                            return ""
+                        s = basename(str(s))
+                        if s.lower().endswith('.pdf'):
+                            s = s[:-4]
+                        return s.replace('_', ' ').strip().lower()
+
+                    target_norm = _norm(target_val)
+                    raw_results = self.client.query_points(
+                        collection_name=self.collection_name,
+                        query=query_vector,
+                        query_filter=None,
+                        limit=top_k,
+                        with_vectors=True
+                    )
+                    for point in raw_results.points:
+                        meta = point.payload.get('metadata', {})
+                        f_file = meta.get('file') or ''
+                        f_title = meta.get('paper_title') or ''
+                        f_paper = meta.get('paper') or ''
+                        if (target_norm and (
+                            _norm(f_file) == target_norm or
+                            _norm(f_title) == target_norm or
+                            _norm(f_paper) == target_norm
+                        )):
+                            entry = {
+                                "content": point.payload["content"],
+                                "metadata": meta,
+                                "score": float(point.score),
+                                "raw_vector_score": float(point.score),
+                                "rerank_score": float(point.score),
+                                "id": point.id
+                            }
+                            pv = point.vector
+                            if isinstance(pv, list) and pv:
+                                entry["vector"] = pv
+                            elif isinstance(pv, dict):
+                                first = next(iter(pv.values()), None)
+                                if first:
+                                    entry["vector"] = first
+                            retrieved.append(entry)
             except Exception:
                 pass
 
