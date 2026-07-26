@@ -13,4 +13,5 @@ embedding_cache.db
 metadata_storage/
 snapshot_storage/
 papers/
+test_qdrant_storage/
 
