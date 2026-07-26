@@ -1,4 +1,5 @@
 import os
+import time
 import torch
 import yaml
 from pathlib import Path
@@ -90,6 +91,7 @@ class HFTransformersBackend(LLMBackend):
         """
         Generate text response using HuggingFace Transformers model.
         """
+        t_tok_start = time.perf_counter()
         messages = [{"role": "user", "content": prompt}]
         try:
             text_input = self.tokenizer.apply_chat_template(
@@ -103,6 +105,8 @@ class HFTransformersBackend(LLMBackend):
         inputs = self.tokenizer(text_input, return_tensors="pt")
         inputs = {k: v.to(self.device) if hasattr(v, "to") else v for k, v in inputs.items()}
         input_length = inputs["input_ids"].shape[1]
+        t_tok_end = time.perf_counter()
+        print(f"      ├─ Tokenizer Encoding ............ {(t_tok_end - t_tok_start)*1000:.2f} ms (Prompt length: {input_length} tokens)", flush=True)
 
         # Configurable generation parameters
         max_new_tokens = int(self._gen_config.get("num_predict", 1024))
@@ -122,11 +126,36 @@ class HFTransformersBackend(LLMBackend):
         else:
             gen_kwargs["do_sample"] = False
 
-        with torch.inference_mode():
-            output_ids = self.model.generate(**inputs, **gen_kwargs)
+        t_gen_start = time.perf_counter()
+        print(f"      ├─ Starting PyTorch model.generate() on {self.device}...", flush=True)
 
+        import threading
+        stop_heartbeat = threading.Event()
+        def _heartbeat():
+            elapsed_sec = 0
+            while not stop_heartbeat.wait(2.0):
+                elapsed_sec += 2
+                print(f"      │  [LLM Progress] Generating tokens on {self.device}... elapsed: {elapsed_sec}s", flush=True)
+
+        ticker = threading.Thread(target=_heartbeat, daemon=True)
+        ticker.start()
+        try:
+            with torch.inference_mode():
+                output_ids = self.model.generate(**inputs, **gen_kwargs)
+        finally:
+            stop_heartbeat.set()
+            ticker.join(timeout=1.0)
+
+        t_gen_end = time.perf_counter()
+        gen_ms = (t_gen_end - t_gen_start) * 1000
+        generated_token_count = len(output_ids[0]) - input_length
+        print(f"      ├─ PyTorch Model Inference ....... {gen_ms/1000:.2f} sec ({gen_ms:.2f} ms) — generated {generated_token_count} tokens", flush=True)
+
+        t_dec_start = time.perf_counter()
         generated_ids = output_ids[0][input_length:]
         response = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+        t_dec_end = time.perf_counter()
+        print(f"      └─ Tokenizer Decoding ............ {(t_dec_end - t_dec_start)*1000:.2f} ms", flush=True)
 
         return response.strip()
 

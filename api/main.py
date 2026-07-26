@@ -25,10 +25,37 @@ from api.dependencies import get_registry
 
 import agents.orchestrator as orchestrator
 
+from fastapi.middleware.cors import CORSMiddleware
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("\n[STARTUP] Warm-up: Pre-loading LLM backend model in background...", flush=True)
+    def _warmup():
+        try:
+            from llm.backend_factory import get_backend
+            get_backend()
+            print("[STARTUP] LLM backend model loaded successfully!", flush=True)
+        except Exception as e:
+            print(f"[STARTUP WARN] LLM backend pre-load error: {e}", flush=True)
+
+    threading.Thread(target=_warmup, daemon=True).start()
+    yield
+
 app = FastAPI(
     title="DocumentRAG API",
     description="Local research paper question-answering system.",
     version="2.0.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(repository_router)
@@ -60,6 +87,14 @@ def health():
 
 @app.post("/query")
 def query(payload: QueryPayload):
+    req_start = time.perf_counter()
+    now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"\n==================================================", flush=True)
+    print(f"[{now_str}] [REQUEST RECEIVED]", flush=True)
+    print(f"Question: {payload.question}", flush=True)
+    print(f"Collection ID / Repo ID: {payload.collection_id or payload.repo_id}", flush=True)
+    print(f"==================================================", flush=True)
+
     question = payload.question
     if not question or not question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
@@ -67,25 +102,32 @@ def query(payload: QueryPayload):
     # Accept either collection_id or repo_id
     repo_id = payload.collection_id or payload.repo_id
 
+    t_lookup_start = time.perf_counter()
     from storage.registry import RepositoryRegistry
     from api.dependencies import registry_instance
     if repo_id and not registry_instance.get_repository(repo_id):
         raise HTTPException(status_code=404, detail=f"Collection '{repo_id}' not found.")
+    t_lookup_end = time.perf_counter()
+    print(f"Repository Lookup & Validation .... {(t_lookup_end - t_lookup_start)*1000:.2f} ms", flush=True)
 
     try:
+        t_orch_start = time.perf_counter()
         ans, latency_breakdown = orchestrator.answer(
             question,
             repo_id=repo_id,
             filters=payload.filters,
         )
+        t_orch_end = time.perf_counter()
+        print(f"Orchestrator Execution ........... {(t_orch_end - t_orch_start)*1000:.2f} ms", flush=True)
 
+        t_meta_start = time.perf_counter()
         # Read last log entry to extract metadata
         log_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "logs", "query_logs.jsonl"
         )
         agent = "doc_agent"
-        latency = 0.0
+        latency = (t_orch_end - t_orch_start)
         sources: list = []
         citations: list = []
         chunks: list = []
@@ -98,7 +140,6 @@ def query(payload: QueryPayload):
                     last_entry = json.loads(lines[-1])
                     if last_entry.get("question") == question:
                         agent = last_entry.get("agent", "doc_agent")
-                        latency = last_entry.get("latency", 0.0)
                         citations = last_entry.get("citations", [])
                         seen_files: set = set()
                         for c in last_entry.get("retrieved_chunks", []):
@@ -109,8 +150,10 @@ def query(payload: QueryPayload):
                         chunks = last_entry.get("retrieved_chunks", [])
             except Exception:
                 pass
+        t_meta_end = time.perf_counter()
+        print(f"Citation & Metadata Assembly ..... {(t_meta_end - t_meta_start)*1000:.2f} ms", flush=True)
 
-        return {
+        response_dict = {
             "answer": ans,
             "agent": agent,
             "latency": latency,
@@ -119,7 +162,20 @@ def query(payload: QueryPayload):
             "citations": citations,
             "chunks": chunks,
         }
+
+        t_ser_start = time.perf_counter()
+        _ = json.dumps(response_dict, default=str)
+        t_ser_end = time.perf_counter()
+        print(f"Response Serialization .......... {(t_ser_end - t_ser_start)*1000:.2f} ms", flush=True)
+
+        req_total_ms = (time.perf_counter() - req_start) * 1000
+        print(f"==================================================", flush=True)
+        print(f"[REQUEST COMPLETE] Total Time: {req_total_ms/1000:.2f} sec ({req_total_ms:.2f} ms)", flush=True)
+        print(f"==================================================\n", flush=True)
+
+        return response_dict
     except Exception as e:
+        print(f"[REQUEST ERROR] {e}", flush=True)
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
 
 

@@ -29,7 +29,22 @@ st.set_page_config(
     layout="wide",
 )
 
-API_URL = "http://localhost:8000"
+def _get_api_url():
+    if "API_URL" in os.environ:
+        return os.environ["API_URL"].rstrip("/")
+    try:
+        import yaml
+        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml")
+        if os.path.exists(config_path):
+            with open(config_path, "r", encoding="utf-8") as f:
+                cfg = yaml.safe_load(f)
+            port = cfg.get("ports", {}).get("api", 9001)
+            return f"http://localhost:{port}"
+    except Exception:
+        pass
+    return "http://localhost:9001"
+
+API_URL = _get_api_url()
 
 # ---------------------------------------------------------------------------
 # Minimal CSS fixes — spacing, overflow, stable layout
@@ -63,9 +78,9 @@ with st.sidebar:
     st.header("⚙️ System")
     try:
         health = requests.get(f"{API_URL}/health", timeout=2).json()
-        st.success(f"API: {health.get('status', 'ok').upper()}")
+        st.success(f"API: {health.get('status', 'ok').upper()} (`{API_URL}`)")
     except Exception:
-        st.error("API offline — start: `uvicorn api.main:app --port 8000`")
+        st.error(f"API offline at `{API_URL}` — start: `uvicorn api.main:app --port 9001`")
 
     st.divider()
     st.header("🧹 Cache")
@@ -403,7 +418,7 @@ if ask_btn:
                     payload["collection_id"] = selected_repo_id
 
                 res = requests.post(
-                    f"{API_URL}/query", json=payload, timeout=120
+                    f"{API_URL}/query", json=payload, timeout=300
                 )
                 if res.status_code == 200:
                     data = res.json()

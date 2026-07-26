@@ -226,6 +226,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         latency_breakdown["qdrant_ms"] = vector_timing["qdrant_ms"]
         latency_breakdown["vector_ms"] = (time.perf_counter() - t0) * 1000
         debug['post_vector_count'] = len(chunks)
+        print(f"  ├─ Vector Retrieval (Dense Search) ....... {latency_breakdown['vector_ms']:.2f} ms (Embed: {latency_breakdown['embedding_ms']:.2f} ms, Qdrant: {latency_breakdown['qdrant_ms']:.2f} ms)", flush=True)
 
         # Deduplicate chunks by content hash
         seen_hashes = set()
@@ -255,11 +256,12 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             chunks = mmr_rerank(
                 state["question"],
                 chunks,
-            top_k=min(40, len(chunks)),
+                top_k=min(40, len(chunks)),
                 query_vector=query_vector_for_mmr,
             )
         latency_breakdown["mmr_ms"] = (time.perf_counter() - t0) * 1000
         debug['post_mmr_count'] = len(chunks) if chunks else 0
+        print(f"  ├─ MMR Reranking (Diversity) ............. {latency_breakdown['mmr_ms']:.2f} ms", flush=True)
 
         # Step 3: Cross-encoder rerank (precision)
         t0 = time.perf_counter()
@@ -269,6 +271,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             )
         latency_breakdown["reranker_ms"] = (time.perf_counter() - t0) * 1000
         debug['post_crossencoder_count'] = len(chunks) if chunks else 0
+        print(f"  ├─ Cross-Encoder Reranking (Precision) ... {latency_breakdown['reranker_ms']:.2f} ms", flush=True)
 
         if not chunks:
             debug['fallback_attempted'] = True
