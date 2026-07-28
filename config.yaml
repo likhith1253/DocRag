@@ -3,13 +3,14 @@ chunking:
   overlap_tokens: 128
   strategy: section_aware
 device: auto
-doc_agent_model: qwen2.5:3b-instruct
+doc_agent_model: Qwen/Qwen2.5-3B-Instruct
+hf_model: Qwen/Qwen2.5-3B-Instruct
 embedding_model: intfloat/e5-base-v2
 generation:
   num_predict: 512
 indexing:
   background_batch_size: 64
-llm_backend: ollama
+llm_backend: transformers
 ports:
   api: 9001
   ui: 8501

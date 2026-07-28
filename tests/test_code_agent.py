@@ -3,12 +3,11 @@ from unittest.mock import patch, MagicMock
 from agents.code_agent import run
 
 class TestCodeAgent(unittest.TestCase):
-    @patch('llm.ollama_backend.requests.post')
-    def test_run_returns_text(self, mock_post):
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"response": "The load_repository function streams files."}
-        mock_post.return_value = mock_response
+    @patch('llm.backend_factory.get_backend')
+    def test_run_returns_text(self, mock_get_backend):
+        mock_backend = MagicMock()
+        mock_backend.generate.return_value = "The load_repository function streams files."
+        mock_get_backend.return_value = mock_backend
         
         chunks = [
             {

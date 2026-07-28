@@ -13,6 +13,13 @@ class TestLLMBackends(unittest.TestCase):
         if "LLM_BACKEND" in os.environ:
             del os.environ["LLM_BACKEND"]
 
+    def test_default_backend_factory_selection(self):
+        from llm.backend_factory import get_backend
+        from llm.transformers_backend import HFTransformersBackend
+        
+        backend = get_backend()
+        self.assertIsInstance(backend, HFTransformersBackend)
+
     def test_ollama_backend_factory_selection(self):
         os.environ["LLM_BACKEND"] = "ollama"
         from llm.backend_factory import get_backend
@@ -26,20 +33,8 @@ class TestLLMBackends(unittest.TestCase):
         from llm.backend_factory import get_backend
         from llm.transformers_backend import HFTransformersBackend
         
-        # Mock AutoModelForCausalLM and AutoTokenizer to avoid downloading heavy weights in unit test
-        with patch("transformers.AutoTokenizer.from_pretrained") as mock_tok, \
-             patch("transformers.AutoModelForCausalLM.from_pretrained") as mock_model:
-            
-            mock_tok_inst = MagicMock()
-            mock_tok_inst.pad_token_id = 0
-            mock_tok_inst.eos_token_id = 2
-            mock_tok.return_value = mock_tok_inst
-            
-            mock_model_inst = MagicMock()
-            mock_model.return_value = mock_model_inst
-
-            backend = get_backend()
-            self.assertIsInstance(backend, HFTransformersBackend)
+        backend = get_backend()
+        self.assertIsInstance(backend, HFTransformersBackend)
 
     def test_ollama_backend_generation(self):
         from llm.ollama_backend import OllamaBackend
@@ -74,7 +69,7 @@ class TestLLMBackends(unittest.TestCase):
             mock_model.return_value = mock_model_inst
 
             backend = HFTransformersBackend(model_name="Qwen/Qwen2.5-3B-Instruct")
-            out = backend.generate("Hello", "qwen2.5:3b-instruct")
+            out = backend.generate("Hello", "Qwen/Qwen2.5-3B-Instruct")
             self.assertEqual(out, "Test Transformers Response")
 
 if __name__ == "__main__":

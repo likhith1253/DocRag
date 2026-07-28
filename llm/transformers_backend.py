@@ -20,9 +20,9 @@ class HFTransformersBackend(LLMBackend):
         if not model_name:
             model_name = os.environ.get("HF_MODEL") or os.environ.get("LLM_MODEL")
         if not model_name:
-            cfg_model = self._gen_config.get("hf_model") or self._gen_config.get("model")
+            cfg_model = self._gen_config.get("hf_model") or self._gen_config.get("model") or self._gen_config.get("doc_agent_model")
             if cfg_model and "/" in str(cfg_model):
-                model_name = cfg_model
+                model_name = str(cfg_model)
         if not model_name:
             model_name = "Qwen/Qwen2.5-3B-Instruct"
             
@@ -39,6 +39,15 @@ class HFTransformersBackend(LLMBackend):
             self.gpu_name = "N/A"
             self.dtype = torch.float32
             self.dtype_str = "float32"
+
+        # Lazy loading attributes for singleton model & tokenizer
+        self.tokenizer = None
+        self.model = None
+
+    def _ensure_loaded(self):
+        """Lazy load tokenizer and model on first generation call."""
+        if self.model is not None and self.tokenizer is not None:
+            return
 
         # Startup logging
         print("=" * 40)
@@ -82,7 +91,7 @@ class HFTransformersBackend(LLMBackend):
             try:
                 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                     cfg = yaml.safe_load(f)
-                return cfg.get("generation", {}) if cfg else {}
+                return cfg if cfg else {}
             except Exception:
                 return {}
         return {}
@@ -91,6 +100,8 @@ class HFTransformersBackend(LLMBackend):
         """
         Generate text response using HuggingFace Transformers model.
         """
+        self._ensure_loaded()
+
         t_tok_start = time.perf_counter()
         messages = [{"role": "user", "content": prompt}]
         try:
@@ -109,9 +120,10 @@ class HFTransformersBackend(LLMBackend):
         print(f"      ├─ Tokenizer Encoding ............ {(t_tok_end - t_tok_start)*1000:.2f} ms (Prompt length: {input_length} tokens)", flush=True)
 
         # Configurable generation parameters
-        max_new_tokens = int(self._gen_config.get("num_predict", 1024))
-        temperature = float(self._gen_config.get("temperature", 0.7))
-        top_p = float(self._gen_config.get("top_p", 0.9))
+        gen_section = self._gen_config.get("generation", {})
+        max_new_tokens = int(gen_section.get("num_predict", 1024))
+        temperature = float(gen_section.get("temperature", 0.7))
+        top_p = float(gen_section.get("top_p", 0.9))
 
         gen_kwargs = {
             "max_new_tokens": max_new_tokens,
@@ -163,6 +175,8 @@ class HFTransformersBackend(LLMBackend):
         """
         Stream generated text using TextIteratorStreamer.
         """
+        self._ensure_loaded()
+
         from transformers import TextIteratorStreamer
         from threading import Thread
 
@@ -179,9 +193,10 @@ class HFTransformersBackend(LLMBackend):
         inputs = self.tokenizer(text_input, return_tensors="pt")
         inputs = {k: v.to(self.device) if hasattr(v, "to") else v for k, v in inputs.items()}
 
-        max_new_tokens = int(self._gen_config.get("num_predict", 1024))
-        temperature = float(self._gen_config.get("temperature", 0.7))
-        top_p = float(self._gen_config.get("top_p", 0.9))
+        gen_section = self._gen_config.get("generation", {})
+        max_new_tokens = int(gen_section.get("num_predict", 1024))
+        temperature = float(gen_section.get("temperature", 0.7))
+        top_p = float(gen_section.get("top_p", 0.9))
 
         streamer = TextIteratorStreamer(self.tokenizer, skip_prompt=True, skip_special_tokens=True)
         gen_kwargs = {

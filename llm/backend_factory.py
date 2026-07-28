@@ -33,7 +33,7 @@ def get_backend(backend_name: str = None) -> LLMBackend:
     1. Parameter 'backend_name' if provided
     2. Environment variable 'LLM_BACKEND'
     3. Configuration file 'config.yaml' (llm_backend)
-    4. Default: 'ollama'
+    4. Default: 'transformers'
     """
     global _backend_instance
     if _backend_instance is not None:
@@ -43,7 +43,7 @@ def get_backend(backend_name: str = None) -> LLMBackend:
         backend_name = os.environ.get("LLM_BACKEND")
     if not backend_name:
         config = _load_config()
-        backend_name = config.get("llm_backend", "ollama")
+        backend_name = config.get("llm_backend", "transformers")
         
     backend_name = backend_name.lower().strip()
     
