@@ -72,6 +72,7 @@ def _build_grounding_prompt(question: str, context_block: str) -> str:
     """
     Construct the grounding-enforced prompt with strict instruction.
     """
+    sep = "=" * 80
     return (
         "You are a research assistant answering questions about academic papers.\n\n"
         "CRITICAL RULES:\n"
@@ -80,15 +81,15 @@ def _build_grounding_prompt(question: str, context_block: str) -> str:
         "3. Do NOT invent details, methods, results, or any information.\n"
         "4. Extract and quote specific facts, numbers, methods, and results from excerpts.\n"
         "5. If information is NOT in the excerpts, respond EXACTLY:\n"
-        f'   \"{CANNOT_FIND_RESPONSE}\"\n'
+        f'   "{CANNOT_FIND_RESPONSE}"\n'
         "6. Include citation for every factual claim using format: [Excerpt N]\n"
         "7. Be concise and direct. Quote key phrases from excerpts.\n\n"
         "Document Excerpts:\n"
-        "═" * 80 + "\n"
-        f"{context_block}\n"
-        "═" * 80 + "\n\n"
-        f"Question: {question}\n\n"
-        "Answer strictly from the excerpts above. Do not use outside knowledge:"
+        + sep + "\n"
+        + f"{context_block}\n"
+        + sep + "\n\n"
+        + f"Question: {question}\n\n"
+        + "Answer strictly from the excerpts above. Do not use outside knowledge:"
     )
 
 
