@@ -46,7 +46,7 @@ def _build_collection_description(repo, model_name: str) -> str:
 
         parts = []
         if paper_titles:
-            parts.append("Papers: " + "; ".join(sorted(paper_titles)[:5]))
+            parts.append("Papers: " + "; ".join(sorted(paper_titles)))
         if abstract_snippets:
             parts.append("Content: " + " | ".join(abstract_snippets))
         if section_headings and not abstract_snippets:

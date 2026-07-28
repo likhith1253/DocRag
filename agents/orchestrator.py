@@ -310,9 +310,10 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 # If that failed, brute-force search each registered collection
                 # registry helper already imported at module level
                 registry = get_registry()
+                from storage.registry import QUERYABLE_REPO_STATUSES
                 for rid, repo in registry.repositories.items():
                     try:
-                        if not repo.vector_collection:
+                        if repo.status not in QUERYABLE_REPO_STATUSES or not repo.vector_collection:
                             continue
                         vman = VectorStoreManager(collection_name=repo.vector_collection)
                         c_chunks, c_timing = vman.search(state['question'], top_k=min(vector_top_k,50), metadata_filters=None)
