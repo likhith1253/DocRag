@@ -52,11 +52,13 @@ def generate(prompt: str, model_key: str, chunk_count: int = None) -> str:
 
     gen_cfg = config.get("generation", {})
 
+    disable_cache = os.environ.get("DISABLE_PROMPT_CACHE", "").lower() in ("true", "1", "yes")
     start_total = time.perf_counter()
-    cache_hit = key in cache
+    cache_hit = (key in cache) and not disable_cache
     if cache_hit:
         result = cache[key]
         backend_ms = 0.0
+        print(f"      ├─ [LLM Cache Hit] Returning prompt response from prompt cache", flush=True)
     else:
         from llm.backend_factory import get_backend
         backend = get_backend()

@@ -508,7 +508,7 @@ def answer(
     memory_diff = max(0.0, end_mem - start_mem)
 
     _write_log(query, chunks, citations, agent, latency, memory_diff, ans, latency_breakdown)
-    return ans, latency_breakdown
+    return ans, latency_breakdown, chunks, citations
 
 
 def _write_log(
@@ -580,35 +580,18 @@ class Orchestrator:
                     "latency_breakdown": {},
                 }
 
-        ans_str, latency_breakdown = answer(query, repo_id, filters)
+        ans_str, latency_breakdown, chunks, citations = answer(query, repo_id, filters)
 
-        # Read sources from log
-        log_path = LOGS_PATH
-        agent = "doc_agent"
-        latency = 0.0
+        agent = "doc_agent" if ans_str != CANNOT_FIND_RESPONSE else "doc_agent"
+        latency = latency_breakdown.get("total_ms", 0.0) / 1000.0
         memory = 0.0
+        seen_files = set()
         sources = []
-        citations = []
-
-        if os.path.exists(log_path):
-            try:
-                with open(log_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                if lines:
-                    last_entry = json.loads(lines[-1])
-                    if last_entry.get("question") == query:
-                        agent = last_entry.get("agent", "doc_agent")
-                        latency = last_entry.get("latency", 0.0)
-                        memory = last_entry.get("memory", 0.0)
-                        citations = last_entry.get("citations", [])
-                        seen_files = set()
-                        for c in last_entry.get("retrieved_chunks", []):
-                            fp = c.get("metadata", {}).get("file")
-                            if fp and fp not in seen_files:
-                                sources.append(fp)
-                                seen_files.add(fp)
-            except Exception:
-                pass
+        for c in chunks:
+            fp = c.get("metadata", {}).get("file")
+            if fp and fp not in seen_files:
+                sources.append(fp)
+                seen_files.add(fp)
 
         if repo_id and agent != "error":
             cache.set_cached_answer(query, repo_id, ans_str, sources)

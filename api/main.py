@@ -112,7 +112,7 @@ def query(payload: QueryPayload):
 
     try:
         t_orch_start = time.perf_counter()
-        ans, latency_breakdown = orchestrator.answer(
+        ans, latency_breakdown, chunks, citations = orchestrator.answer(
             question,
             repo_id=repo_id,
             filters=payload.filters,
@@ -121,35 +121,16 @@ def query(payload: QueryPayload):
         print(f"Orchestrator Execution ........... {(t_orch_end - t_orch_start)*1000:.2f} ms", flush=True)
 
         t_meta_start = time.perf_counter()
-        # Read last log entry to extract metadata
-        log_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "logs", "query_logs.jsonl"
-        )
         agent = "doc_agent"
         latency = (t_orch_end - t_orch_start)
+        seen_files: set = set()
         sources: list = []
-        citations: list = []
-        chunks: list = []
+        for c in chunks:
+            fp = c.get("metadata", {}).get("file")
+            if fp and fp not in seen_files:
+                sources.append(fp)
+                seen_files.add(fp)
 
-        if os.path.exists(log_path):
-            try:
-                with open(log_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                if lines:
-                    last_entry = json.loads(lines[-1])
-                    if last_entry.get("question") == question:
-                        agent = last_entry.get("agent", "doc_agent")
-                        citations = last_entry.get("citations", [])
-                        seen_files: set = set()
-                        for c in last_entry.get("retrieved_chunks", []):
-                            fp = c.get("metadata", {}).get("file")
-                            if fp and fp not in seen_files:
-                                sources.append(fp)
-                                seen_files.add(fp)
-                        chunks = last_entry.get("retrieved_chunks", [])
-            except Exception:
-                pass
         t_meta_end = time.perf_counter()
         print(f"Citation & Metadata Assembly ..... {(t_meta_end - t_meta_start)*1000:.2f} ms", flush=True)
 

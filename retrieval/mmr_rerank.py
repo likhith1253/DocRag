@@ -21,7 +21,7 @@ def mmr_rerank(
     """
     if not chunks:
         return []
-    if len(chunks) <= top_k:
+    if len(chunks) <= 1:
         return chunks
 
     from storage.vector_store import _get_encoder, _get_config
