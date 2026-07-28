@@ -1,7 +1,14 @@
 import os
+import sys
 import yaml
 import uuid
 import threading
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    except Exception:
+        pass
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from sentence_transformers import SentenceTransformer
@@ -252,6 +259,16 @@ class VectorStoreManager:
         query_vector = query_vector_np.tolist()
         t_embed_end = time.perf_counter()
         
+        # Stage 2: EMBEDDING logging
+        embed_time_ms = (t_embed_end - t_embed_start) * 1000
+        print("=" * 60, flush=True)
+        print("STAGE 2: EMBEDDING", flush=True)
+        print("=" * 60, flush=True)
+        print(f"Embedding model: {self.embedding_model_name}", flush=True)
+        print(f"Embedding dimension: {self.vector_size}", flush=True)
+        print(f"Embedding time: {embed_time_ms:.2f} ms", flush=True)
+        print(f"Embedding vector shape: {query_vector_np.shape}", flush=True)
+
         t_qdrant_start = time.perf_counter()
         query_filter = None
         if metadata_filters:
@@ -351,6 +368,39 @@ class VectorStoreManager:
                             retrieved.append(entry)
             except Exception:
                 pass
+
+        # Stage 3: VECTOR SEARCH logging
+        print("=" * 60, flush=True)
+        print("STAGE 3: VECTOR SEARCH", flush=True)
+        print("=" * 60, flush=True)
+        print(f"Number of chunks returned: {len(retrieved)}", flush=True)
+        print("", flush=True)
+        for i, r in enumerate(retrieved[:10], start=1):
+            doc_name = r.get("metadata", {}).get("file") or r.get("metadata", {}).get("paper_title") or "Unknown"
+            chunk_id = r.get("id") or r.get("metadata", {}).get("hash") or f"chunk_{i}"
+            score = r.get("score", 0.0)
+            chars = len(r.get("content", ""))
+            meta = r.get("metadata", {})
+            print(f"[Vector Result {i}]", flush=True)
+            print(f"Score: {score}", flush=True)
+            print(f"Document: {doc_name}", flush=True)
+            print(f"Chunk ID: {chunk_id}", flush=True)
+            print(f"Characters: {chars}", flush=True)
+            print(f"Metadata: {meta}", flush=True)
+            print("", flush=True)
+
+        if retrieved:
+            scores = [r.get("score", 0.0) for r in retrieved]
+            lowest = min(scores)
+            highest = max(scores)
+            avg = sum(scores) / len(scores)
+            print(f"Lowest score: {lowest}", flush=True)
+            print(f"Highest score: {highest}", flush=True)
+            print(f"Average score: {avg}", flush=True)
+        else:
+            print("Lowest score: N/A", flush=True)
+            print("Highest score: N/A", flush=True)
+            print("Average score: N/A", flush=True)
 
         timing = {
             "embedding_ms": (t_embed_end - t_embed_start) * 1000,

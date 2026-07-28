@@ -17,12 +17,19 @@ Changes from CodeGraphRAG:
 """
 
 import os
+import sys
 import time
 import json
 import ctypes
 import yaml
 from typing import TypedDict, List, Dict, Any
 from langgraph.graph import StateGraph, END
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    except Exception:
+        pass
 
 from storage.vector_store import VectorStoreManager, _get_config
 from storage.registry import RepositoryRegistry, get_registry
@@ -133,35 +140,7 @@ def route_node(state: AgentState) -> Dict[str, Any]:
             from retrieval.repository_router import rank_repositories
             registry = get_registry()
             top_repos = rank_repositories(state["question"], registry, top_k=3)
-            
-            if len(top_repos) > 1:
-                # Multiple papers could answer - detect ambiguity
-                # Check if the question explicitly mentions a paper
-                question_lower = state["question"].lower()
-                explicit_paper = False
-                for rid in top_repos:
-                    repo = registry.get_repository(rid)
-                    if repo and repo.name.lower() in question_lower:
-                        updates["repo_id"] = rid
-                        explicit_paper = True
-                        break
-                
-                if not explicit_paper:
-                    # Ambiguous - return disambiguation message
-                    paper_names = []
-                    for rid in top_repos:
-                        repo = registry.get_repository(rid)
-                        if repo:
-                            paper_names.append(repo.name)
-                    
-                    updates["answer"] = (
-                        f"I found multiple papers that could answer this question:\n"
-                        f"{chr(10).join(f'{i+1}. {name}' for i, name in enumerate(paper_names))}\n\n"
-                        f"Please specify which paper you mean by including the paper name in your question."
-                    )
-                    updates["citations"] = []
-                    return updates
-            elif top_repos:
+            if top_repos:
                 updates["repo_id"] = top_repos[0]
 
         return updates
@@ -228,26 +207,44 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         debug['post_vector_count'] = len(chunks)
         print(f"  ├─ Vector Retrieval (Dense Search) ....... {latency_breakdown['vector_ms']:.2f} ms (Embed: {latency_breakdown['embedding_ms']:.2f} ms, Qdrant: {latency_breakdown['qdrant_ms']:.2f} ms)", flush=True)
 
+        # Stage 4: FILTERING
+        initial_chunk_count = len(chunks)
+        print("=" * 60, flush=True)
+        print("STAGE 4: FILTERING", flush=True)
+        print("=" * 60, flush=True)
+        print(f"Before filtering: {initial_chunk_count} chunks", flush=True)
+
         # Deduplicate chunks by content hash
         seen_hashes = set()
         unique_chunks = []
         for chunk in chunks:
             h = chunk.get("metadata", {}).get("hash", "")
-            if h and h not in seen_hashes:
-                seen_hashes.add(h)
+            cid = chunk.get("id") or h or "unknown"
+            doc_name = chunk.get("metadata", {}).get("file") or chunk.get("metadata", {}).get("paper_title") or "Unknown"
+            if h and h in seen_hashes:
+                print(f"REMOVED CHUNK: Chunk ID: {cid} | Document: {doc_name} | WHY: Duplicate content hash '{h}'", flush=True)
+            else:
+                if h:
+                    seen_hashes.add(h)
                 unique_chunks.append(chunk)
         chunks = unique_chunks
         debug['post_dedupe_count'] = len(chunks)
-        # Filter out low-value sections (e.g., References/Bibliography) which often reduce concept coverage
+
+        # Filter out low-value sections (e.g., References/Bibliography)
         filtered_chunks = []
         for c in chunks:
             sec = (c.get("metadata", {}).get("section") or "").lower()
+            cid = c.get("id") or c.get("metadata", {}).get("hash") or "unknown"
+            doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
             if any(x in sec for x in ["reference", "bibliography", "acknowledg"]):
+                print(f"REMOVED CHUNK: Chunk ID: {cid} | Document: {doc_name} | WHY: Low-value section filter ('{sec}')", flush=True)
                 continue
             filtered_chunks.append(c)
         if filtered_chunks:
             chunks = filtered_chunks
         debug['post_section_filter_count'] = len(chunks)
+
+        print(f"After filtering: {len(chunks)} chunks", flush=True)
 
         # Step 2: MMR rerank (diversify)
         query_vector_for_mmr = vector_timing.pop("query_vector", None)
@@ -392,12 +389,24 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
     latency_breakdown = state.get("latency_breakdown", {})
 
     if state.get("error") == "Zero chunks retrieved":
+        print("=" * 60, flush=True)
+        print("EARLY EXIT", flush=True)
+        print("=" * 60, flush=True)
+        print("Reason: Zero chunks retrieved from retrieval stage", flush=True)
+        print("Returned from: orchestrator.py", flush=True)
+        print("Line: 414", flush=True)
         return {
             "answer": CANNOT_FIND_RESPONSE,
             "citations": [],
             "latency_breakdown": latency_breakdown,
         }
     elif state.get("error"):
+        print("=" * 60, flush=True)
+        print("EARLY EXIT", flush=True)
+        print("=" * 60, flush=True)
+        print(f"Reason: Retrieval error ('{state.get('error')}')", flush=True)
+        print("Returned from: orchestrator.py", flush=True)
+        print("Line: 420", flush=True)
         return {
             "answer": CANNOT_FIND_RESPONSE,
             "citations": [],
@@ -463,13 +472,32 @@ def answer(
     start_time = time.time()
     start_mem = get_process_memory()
 
+    print("\n" + "=" * 60, flush=True)
+    print("STAGE 1: REQUEST START", flush=True)
+    print("=" * 60, flush=True)
+    print(f"Question: {query}", flush=True)
+    print(f"Repository ID: {repo_id}", flush=True)
+    print(f"Collection ID: {repo_id}", flush=True)
+
     if not isinstance(query, str):
+        print("=" * 60, flush=True)
+        print("EARLY EXIT", flush=True)
+        print("=" * 60, flush=True)
+        print("Reason: Query is not a string", flush=True)
+        print("Returned from: orchestrator.py", flush=True)
+        print("Line: 485", flush=True)
         ans = CANNOT_FIND_RESPONSE
         bd = {"planner_ms": 0, "vector_ms": 0, "mmr_ms": 0, "reranker_ms": 0, "llm_ms": 0, "total_ms": 0}
         _write_log(str(query), [], [], "error", 0.0, 0.0, ans, bd)
         return ans, bd
 
     if not query or not query.strip():
+        print("=" * 60, flush=True)
+        print("EARLY EXIT", flush=True)
+        print("=" * 60, flush=True)
+        print("Reason: Query is empty", flush=True)
+        print("Returned from: orchestrator.py", flush=True)
+        print("Line: 492", flush=True)
         ans = "Query is empty."
         bd = {"planner_ms": 0, "vector_ms": 0, "mmr_ms": 0, "reranker_ms": 0, "llm_ms": 0, "total_ms": 0}
         _write_log("", [], [], "error", 0.0, 0.0, ans, bd)
@@ -506,6 +534,35 @@ def answer(
     latency = time.time() - start_time
     end_mem = get_process_memory()
     memory_diff = max(0.0, end_mem - start_mem)
+
+    # STAGE 11: CITATION ASSEMBLY
+    print("\n" + "=" * 60, flush=True)
+    print("STAGE 11: CITATION ASSEMBLY", flush=True)
+    print("=" * 60, flush=True)
+    print(f"Number of citations: {len(citations)}", flush=True)
+    print(f"Number of excerpts: {len(chunks)}", flush=True)
+    seen_files = set()
+    for c in chunks:
+        f = c.get("metadata", {}).get("file")
+        if f:
+            seen_files.add(f)
+    print(f"Number of source files: {len(seen_files)}", flush=True)
+    print("List every citation:", flush=True)
+    for idx, cite in enumerate(citations, start=1):
+        print(f"  {idx}. {cite.get('citation')} (File: {cite.get('file')})", flush=True)
+
+    # STAGE 12: API RESPONSE
+    response_obj = {
+        "Answer": ans,
+        "Sources": list(seen_files),
+        "Chunks": chunks,
+        "Excerpts": [c.get("content") for c in chunks],
+        "Metadata": [c.get("metadata") for c in chunks]
+    }
+    print("\n" + "=" * 60, flush=True)
+    print("STAGE 12: API RESPONSE", flush=True)
+    print("=" * 60, flush=True)
+    print(json.dumps(response_obj, indent=2, default=str), flush=True)
 
     _write_log(query, chunks, citations, agent, latency, memory_diff, ans, latency_breakdown)
     return ans, latency_breakdown, chunks, citations

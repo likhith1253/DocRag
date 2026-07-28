@@ -102,6 +102,11 @@ class HFTransformersBackend(LLMBackend):
         """
         self._ensure_loaded()
 
+        print("=" * 60, flush=True)
+        print("STAGE 9: LLM INVOCATION (Inside HFTransformersBackend)", flush=True)
+        print("=" * 60, flush=True)
+        print("Tokenizer encoding started", flush=True)
+
         t_tok_start = time.perf_counter()
         messages = [{"role": "user", "content": prompt}]
         try:
@@ -117,7 +122,15 @@ class HFTransformersBackend(LLMBackend):
         inputs = {k: v.to(self.device) if hasattr(v, "to") else v for k, v in inputs.items()}
         input_length = inputs["input_ids"].shape[1]
         t_tok_end = time.perf_counter()
-        print(f"      ├─ Tokenizer Encoding ............ {(t_tok_end - t_tok_start)*1000:.2f} ms (Prompt length: {input_length} tokens)", flush=True)
+
+        cuda_device_str = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "N/A (CPU Mode)"
+        input_tensor_device = str(inputs["input_ids"].device)
+        model_device = str(next(self.model.parameters()).device) if self.model else self.device
+
+        print(f"Prompt tokens: {input_length}", flush=True)
+        print(f"Input tensor device: {input_tensor_device}", flush=True)
+        print(f"Model device: {model_device}", flush=True)
+        print(f"CUDA device: {cuda_device_str}", flush=True)
 
         # Configurable generation parameters
         gen_section = self._gen_config.get("generation", {})
@@ -138,8 +151,8 @@ class HFTransformersBackend(LLMBackend):
         else:
             gen_kwargs["do_sample"] = False
 
+        print("Generation started", flush=True)
         t_gen_start = time.perf_counter()
-        print(f"      ├─ Starting PyTorch model.generate() on {self.device}...", flush=True)
 
         import threading
         stop_heartbeat = threading.Event()
@@ -147,7 +160,7 @@ class HFTransformersBackend(LLMBackend):
             elapsed_sec = 0
             while not stop_heartbeat.wait(2.0):
                 elapsed_sec += 2
-                print(f"      │  [LLM Progress] Generating tokens on {self.device}... elapsed: {elapsed_sec}s", flush=True)
+                print(f"      │  [LLM Progress] Generating tokens... elapsed: {elapsed_sec}s", flush=True)
 
         ticker = threading.Thread(target=_heartbeat, daemon=True)
         ticker.start()
@@ -159,15 +172,19 @@ class HFTransformersBackend(LLMBackend):
             ticker.join(timeout=1.0)
 
         t_gen_end = time.perf_counter()
+        print("Generation finished", flush=True)
         gen_ms = (t_gen_end - t_gen_start) * 1000
         generated_token_count = len(output_ids[0]) - input_length
-        print(f"      ├─ PyTorch Model Inference ....... {gen_ms/1000:.2f} sec ({gen_ms:.2f} ms) — generated {generated_token_count} tokens", flush=True)
 
         t_dec_start = time.perf_counter()
         generated_ids = output_ids[0][input_length:]
         response = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
         t_dec_end = time.perf_counter()
-        print(f"      └─ Tokenizer Decoding ............ {(t_dec_end - t_dec_start)*1000:.2f} ms", flush=True)
+        dec_ms = (t_dec_end - t_dec_start) * 1000
+
+        print(f"Generated token count: {generated_token_count}", flush=True)
+        print(f"Generation time: {gen_ms:.2f} ms ({gen_ms/1000:.2f} sec)", flush=True)
+        print(f"Decode time: {dec_ms:.2f} ms", flush=True)
 
         return response.strip()
 

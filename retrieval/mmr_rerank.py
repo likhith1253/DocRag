@@ -1,4 +1,11 @@
 import os
+import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    except Exception:
+        pass
 import numpy as np
 from typing import List, Dict, Any, Optional
 
@@ -20,8 +27,18 @@ def mmr_rerank(
                   When provided, the query is NOT re-encoded, saving ~150ms on CPU.
     """
     if not chunks:
+        print("=" * 60, flush=True)
+        print("STAGE 5: MMR", flush=True)
+        print("=" * 60, flush=True)
+        print("MMR enabled?: YES", flush=True)
+        print("MMR SKIPPED: Input chunks list is empty (0 chunks)", flush=True)
         return []
     if len(chunks) <= 1:
+        print("=" * 60, flush=True)
+        print("STAGE 5: MMR", flush=True)
+        print("=" * 60, flush=True)
+        print("MMR enabled?: YES", flush=True)
+        print(f"MMR SKIPPED: Input chunks count is {len(chunks)} (<= 1)", flush=True)
         return chunks
 
     from storage.vector_store import _get_encoder, _get_config
@@ -105,4 +122,15 @@ def mmr_rerank(
         selected_indices.append(best_idx)
         unselected_indices.remove(best_idx)
 
-    return [chunks[idx] for idx in selected_indices]
+    res = [chunks[idx] for idx in selected_indices]
+    selected_ids = [chunks[idx].get("id") or chunks[idx].get("metadata", {}).get("hash") or f"idx_{idx}" for idx in selected_indices]
+
+    print("=" * 60, flush=True)
+    print("STAGE 5: MMR", flush=True)
+    print("=" * 60, flush=True)
+    print("MMR enabled?: YES", flush=True)
+    print(f"Input chunks: {len(chunks)}", flush=True)
+    print(f"Output chunks: {len(res)}", flush=True)
+    print(f"Selected chunk IDs: {selected_ids}", flush=True)
+
+    return res

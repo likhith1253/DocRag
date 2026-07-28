@@ -63,6 +63,7 @@ def generate(prompt: str, model_key: str, chunk_count: int = None) -> str:
         from llm.backend_factory import get_backend
         backend = get_backend()
         start_backend = time.perf_counter()
+        print("CALLING HFTransformersBackend.generate()", flush=True)
         result = backend.generate(prompt, model)
         backend_ms = (time.perf_counter() - start_backend) * 1000
 

@@ -1,4 +1,11 @@
 import os
+import sys
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    except Exception:
+        pass
 from sentence_transformers import CrossEncoder
 from typing import List, Dict, Any
 from storage.vector_store import _get_config
@@ -15,6 +22,11 @@ def rerank_cross_encoder(
     Rerank chunks using a Cross-Encoder model with question-type-aware biasing.
     """
     if not chunks:
+        print("=" * 60, flush=True)
+        print("STAGE 6: CROSS ENCODER", flush=True)
+        print("=" * 60, flush=True)
+        print("Cross Encoder enabled?: YES", flush=True)
+        print("Cross Encoder SKIPPED: Input chunks list is empty (0 chunks)", flush=True)
         return []
 
     config = _get_config()
@@ -64,4 +76,18 @@ def rerank_cross_encoder(
         
     # Sort descending
     sorted_chunks = sorted(chunks, key=lambda x: x["score"], reverse=True)
-    return sorted_chunks[:top_k]
+    out_chunks = sorted_chunks[:top_k]
+
+    sorted_order = [c.get("id") or c.get("metadata", {}).get("hash") or "unknown" for c in out_chunks]
+    score_list = [c.get("score") for c in out_chunks]
+
+    print("=" * 60, flush=True)
+    print("STAGE 6: CROSS ENCODER", flush=True)
+    print("=" * 60, flush=True)
+    print("Cross Encoder enabled?: YES", flush=True)
+    print(f"Input chunks: {len(chunks)}", flush=True)
+    print(f"Output chunks: {len(out_chunks)}", flush=True)
+    print(f"Scores: {score_list}", flush=True)
+    print(f"Sorted order: {sorted_order}", flush=True)
+
+    return out_chunks

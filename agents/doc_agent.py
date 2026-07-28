@@ -11,6 +11,13 @@ Grounding contract:
 Citation format: [Paper: <title>, Section: <section>, Page: <page>]
 """
 
+import sys
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    except Exception:
+        pass
+
 from llm.backend import generate
 from typing import List, Dict, Any
 
@@ -98,15 +105,59 @@ def run(question: str, chunks: List[Dict[str, Any]]) -> str:
         Answer string with inline citations, or the canonical CANNOT_FIND_RESPONSE.
     """
     if not chunks:
+        print("=" * 60, flush=True)
+        print("EARLY EXIT", flush=True)
+        print("=" * 60, flush=True)
+        print("Reason: No chunks provided to doc_agent.run", flush=True)
+        print("Returned from: doc_agent.py", flush=True)
+        print("Line: 101", flush=True)
         return CANNOT_FIND_RESPONSE
 
     # Filter out empty chunks
     valid_chunks = [c for c in chunks if c.get("content", "").strip()]
     if not valid_chunks:
+        print("=" * 60, flush=True)
+        print("EARLY EXIT", flush=True)
+        print("=" * 60, flush=True)
+        print("Reason: All chunks were empty after whitespace stripping", flush=True)
+        print("Returned from: doc_agent.py", flush=True)
+        print("Line: 106", flush=True)
         return CANNOT_FIND_RESPONSE
+
+    # STAGE 7: CONTEXT ASSEMBLY
+    print("=" * 60, flush=True)
+    print("STAGE 7: CONTEXT ASSEMBLY", flush=True)
+    print("=" * 60, flush=True)
+    print(f"Number of chunks sent to LLM: {len(valid_chunks)}", flush=True)
+    for i, c in enumerate(valid_chunks, start=1):
+        cid = c.get("id") or c.get("metadata", {}).get("hash") or f"chunk_{i}"
+        doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
+        chars = len(c.get("content", ""))
+        score = c.get("score", 0.0)
+        preview = c.get("content", "")[:300]
+        print(f"\n[Chunk {i}]", flush=True)
+        print(f"Chunk ID: {cid}", flush=True)
+        print(f"Document: {doc_name}", flush=True)
+        print(f"Characters: {chars}", flush=True)
+        print(f"Score: {score}", flush=True)
+        print(f"Context preview:\n{preview}", flush=True)
 
     context_block = _build_context_block(valid_chunks)
     prompt = _build_grounding_prompt(question, context_block)
+
+    # STAGE 8: PROMPT BUILDER
+    prompt_chars = len(prompt)
+    prompt_words = len(prompt.split())
+    approx_tokens = int(prompt_words * 1.33)
+    first_500 = prompt[:500]
+    last_500 = prompt[-500:] if len(prompt) >= 500 else prompt
+
+    print("\n" + "=" * 60, flush=True)
+    print("STAGE 8: PROMPT BUILDER", flush=True)
+    print("=" * 60, flush=True)
+    print(f"Prompt size: {prompt_chars} characters | {prompt_words} words | ~{approx_tokens} tokens", flush=True)
+    print(f"\n--- First 500 characters ---\n{first_500}", flush=True)
+    print(f"\n--- Last 500 characters ---\n{last_500}", flush=True)
 
     result = generate(
         prompt,
@@ -114,8 +165,21 @@ def run(question: str, chunks: List[Dict[str, Any]]) -> str:
         chunk_count=len(valid_chunks),
     )
 
+    # STAGE 10: RESPONSE
+    print("\n" + "=" * 60, flush=True)
+    print("STAGE 10: LLM RESPONSE", flush=True)
+    print("=" * 60, flush=True)
+    raw_out = result[:500] if result else "<EMPTY>"
+    print(f"Raw LLM output (First 500 chars):\n{raw_out}", flush=True)
+
     # Post-processing: if LLM returned empty string, return canonical not-found
     if not result or not result.strip():
+        print("\n" + "=" * 60, flush=True)
+        print("EARLY EXIT", flush=True)
+        print("=" * 60, flush=True)
+        print("Reason: LLM generate() returned empty output", flush=True)
+        print("Returned from: doc_agent.py", flush=True)
+        print("Line: 119", flush=True)
         return CANNOT_FIND_RESPONSE
 
     return result.strip()
