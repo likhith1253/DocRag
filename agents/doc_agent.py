@@ -58,14 +58,66 @@ def _build_context_block(chunks: List[Dict[str, Any]]) -> str:
     Each excerpt includes its citation header so the LLM can reference it.
     """
     parts = []
-    for i, chunk in enumerate(chunks, start=1):
+    seen_chunk_ids = set()
+    unique_chunks = []
+    
+    print("\n" + "=" * 60, flush=True)
+    print("PROMPT BUILDER INSTRUMENTATION: CONTEXT ASSEMBLY", flush=True)
+    print("=" * 60, flush=True)
+    
+    # Verify only selected chunks are inserted and each appears ONCE
+    for idx, chunk in enumerate(chunks, start=1):
+        cid = str(chunk.get("id") or chunk.get("metadata", {}).get("hash") or f"chunk_{idx}")
+        if cid in seen_chunk_ids:
+            print(f"[PROMPT BUILDER WARNING] Duplicate chunk insertion detected! Chunk ID '{cid}' skipped.", flush=True)
+            continue
+        seen_chunk_ids.add(cid)
+        unique_chunks.append(chunk)
+
+    print(f"Input chunks count: {len(chunks)} | Unique selected chunks: {len(unique_chunks)}", flush=True)
+    
+    current_prompt_len = 0
+    expected_char_count = 0
+    
+    for i, chunk in enumerate(unique_chunks, start=1):
         meta = chunk.get("metadata", {})
         citation = _format_citation(meta)
-        content = chunk.get("content", "").strip()
+        content = str(chunk.get("content", "")).strip()
+        
+        # Detect prompt self-concatenation / recursive appends in chunk content
+        if "CRITICAL RULES:" in content or "Document Excerpts:" in content or "Answer strictly from the excerpts" in content:
+            print(f"[PROMPT BUILDER WARNING] Recursive prompt self-concatenation detected in chunk {i}! Stripping prompt boilerplate.", flush=True)
+            if "Document Excerpts:" in content:
+                content = content.split("Document Excerpts:")[0].strip()
+
+        # Enforce maximum excerpt characters
         if len(content) > _MAX_EXCERPT_CHARS:
             content = content[:_MAX_EXCERPT_CHARS] + "\n...[truncated]"
-        parts.append(f"[EXCERPT {i}] {citation}\n{content}")
-    return "\n\n".join(parts)
+
+        appended_text = f"[EXCERPT {i}] {citation}\n{content}"
+        appended_len = len(appended_text)
+        
+        print(f"Current prompt length: {current_prompt_len}", flush=True)
+        print(f"What is being appended: Excerpt {i} ({citation})", flush=True)
+        print(f"Length of appended text: {appended_len}", flush=True)
+        
+        new_prompt_len = current_prompt_len + appended_len + (2 if current_prompt_len > 0 else 0)
+        print(f"New prompt length: {new_prompt_len}\n", flush=True)
+        
+        current_prompt_len = new_prompt_len
+        expected_char_count += appended_len + (2 if i > 1 else 0)
+        parts.append(appended_text)
+
+    context_block = "\n\n".join(parts)
+    actual_char_count = len(context_block)
+    diff = actual_char_count - expected_char_count
+    
+    print(f"Expected character count (Context Block): {expected_char_count}", flush=True)
+    print(f"Actual character count (Context Block): {actual_char_count}", flush=True)
+    print(f"Difference: {diff}", flush=True)
+    print("=" * 60, flush=True)
+    
+    return context_block
 
 
 def _build_grounding_prompt(question: str, context_block: str) -> str:
@@ -73,7 +125,7 @@ def _build_grounding_prompt(question: str, context_block: str) -> str:
     Construct the grounding-enforced prompt with strict instruction.
     """
     sep = "=" * 80
-    return (
+    system_rules = (
         "You are a research assistant answering questions about academic papers.\n\n"
         "CRITICAL RULES:\n"
         "1. You MUST answer ONLY using information from the provided excerpts below.\n"
@@ -85,11 +137,65 @@ def _build_grounding_prompt(question: str, context_block: str) -> str:
         "6. Include citation for every factual claim using format: [Excerpt N]\n"
         "7. Be concise and direct. Quote key phrases from excerpts.\n\n"
         "Document Excerpts:\n"
-        + sep + "\n"
-        + f"{context_block}\n"
-        + sep + "\n\n"
+    )
+    user_suffix = (
+        "\n" + sep + "\n\n"
         + f"Question: {question}\n\n"
         + "Answer strictly from the excerpts above. Do not use outside knowledge:"
+    )
+
+    print("\n" + "=" * 60, flush=True)
+    print("PROMPT BUILDER INSTRUMENTATION: GROUNDING PROMPT ASSEMBLY", flush=True)
+    print("=" * 60, flush=True)
+    
+    current_len = 0
+    
+    # Append 1: System Rules
+    app_len1 = len(system_rules)
+    print(f"Current prompt length: {current_len}", flush=True)
+    print(f"What is being appended: System Rules & Header", flush=True)
+    print(f"Length of appended text: {app_len1}", flush=True)
+    current_len += app_len1
+    print(f"New prompt length: {current_len}\n", flush=True)
+    
+    # Append 2: Separator 1
+    app_len2 = len(sep) + 1
+    print(f"Current prompt length: {current_len}", flush=True)
+    print(f"What is being appended: Top Separator Line", flush=True)
+    print(f"Length of appended text: {app_len2}", flush=True)
+    current_len += app_len2
+    print(f"New prompt length: {current_len}\n", flush=True)
+    
+    # Append 3: Context Block
+    app_len3 = len(context_block)
+    print(f"Current prompt length: {current_len}", flush=True)
+    print(f"What is being appended: Context Block ({app_len3} chars)", flush=True)
+    print(f"Length of appended text: {app_len3}", flush=True)
+    current_len += app_len3
+    print(f"New prompt length: {current_len}\n", flush=True)
+    
+    # Append 4: User Suffix
+    app_len4 = len(user_suffix)
+    print(f"Current prompt length: {current_len}", flush=True)
+    print(f"What is being appended: Bottom Separator & User Question Suffix", flush=True)
+    print(f"Length of appended text: {app_len4}", flush=True)
+    current_len += app_len4
+    print(f"New prompt length: {current_len}\n", flush=True)
+
+    expected_char_count = app_len1 + app_len2 + app_len3 + app_len4
+    actual_char_count = current_len
+    diff = actual_char_count - expected_char_count
+
+    print(f"Expected character count (Final Prompt): {expected_char_count}", flush=True)
+    print(f"Actual character count (Final Prompt): {actual_char_count}", flush=True)
+    print(f"Difference: {diff}", flush=True)
+    print("=" * 60 + "\n", flush=True)
+
+    return (
+        system_rules
+        + sep + "\n"
+        + context_block
+        + user_suffix
     )
 
 
