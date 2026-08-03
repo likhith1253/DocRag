@@ -156,7 +156,8 @@ def query(payload: QueryPayload):
 
         return response_dict
     except Exception as e:
-        print(f"[REQUEST ERROR] {e}", flush=True)
+        from storage.pipeline_logger import log_exception
+        log_exception(e, "api/main.py::query")
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
 
 

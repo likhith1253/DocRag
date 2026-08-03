@@ -330,12 +330,25 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 "latency_breakdown": latency_breakdown,
             }
 
+        from storage.pipeline_logger import save_retrieval_json_artifact, log_exception
+        save_retrieval_json_artifact(
+            request_id=request_id,
+            question=state["question"],
+            top_retrieved_chunks=chunks,
+            scores={"vector_top_k": len(chunks)},
+            metadata={"repo_id": repo_id, "filters": filters},
+            cross_encoder_scores=[{"chunk_id": str(c.get("id") or "unknown"), "score": float(c.get("score", 0.0))} for c in chunks],
+            selected_chunks=chunks
+        )
+
         return {
             "retrieved_chunks": chunks,
             "citations": build_citation_list(chunks),
             "latency_breakdown": latency_breakdown,
         }
     except Exception as e:
+        from storage.pipeline_logger import log_exception
+        log_exception(e, "retrieve_node")
         return {
             "retrieved_chunks": [],
             "citations": [],

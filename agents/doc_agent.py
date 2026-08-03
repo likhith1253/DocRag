@@ -107,141 +107,151 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         Answer string with inline citations, or the canonical CANNOT_FIND_RESPONSE.
     """
     import time
-    from storage.pipeline_logger import log_stage, log_grounding_exit
+    from storage.pipeline_logger import log_stage, log_grounding_exit, save_prompt_artifact, save_model_output_artifact, log_exception
 
-    if not chunks:
-        log_grounding_exit(
-            request_id=request_id,
-            file_path="agents/doc_agent.py",
-            function_name="run",
-            line_number=108,
-            reason="No chunks provided to doc_agent.run",
-            condition="not chunks",
-            evidence={"question": question, "chunks_len": 0}
-        )
-        return CANNOT_FIND_RESPONSE
+    try:
+        if not chunks:
+            log_grounding_exit(
+                request_id=request_id,
+                file_path="agents/doc_agent.py",
+                function_name="run",
+                line_number=108,
+                reason="No chunks provided to doc_agent.run",
+                condition="not chunks",
+                evidence={"question": question, "chunks_len": 0}
+            )
+            return CANNOT_FIND_RESPONSE
 
-    # Filter out empty chunks
-    valid_chunks = [c for c in chunks if c.get("content", "").strip()]
-    if not valid_chunks:
-        log_grounding_exit(
-            request_id=request_id,
-            file_path="agents/doc_agent.py",
-            function_name="run",
-            line_number=119,
-            reason="All chunks were empty after whitespace stripping",
-            condition="not valid_chunks",
-            evidence={"question": question, "input_chunks_len": len(chunks), "valid_chunks_len": 0}
-        )
-        return CANNOT_FIND_RESPONSE
+        # Filter out empty chunks
+        valid_chunks = [c for c in chunks if c.get("content", "").strip()]
+        if not valid_chunks:
+            log_grounding_exit(
+                request_id=request_id,
+                file_path="agents/doc_agent.py",
+                function_name="run",
+                line_number=119,
+                reason="All chunks were empty after whitespace stripping",
+                condition="not valid_chunks",
+                evidence={"question": question, "input_chunks_len": len(chunks), "valid_chunks_len": 0}
+            )
+            return CANNOT_FIND_RESPONSE
 
-    # STAGE 8: CONTEXT ASSEMBLY
-    t_stage8_start = time.perf_counter()
-    context_chunks_log = []
-    for i, c in enumerate(valid_chunks, start=1):
-        cid = str(c.get("id") or c.get("metadata", {}).get("hash") or f"chunk_{i}")
-        doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
-        content_text = c.get("content", "")
-        chars = len(content_text)
-        words = len(content_text.split())
-        score = float(c.get("score", 0.0))
-        sec = c.get("metadata", {}).get("section", "Unknown Section")
-        pg_start = c.get("metadata", {}).get("page_start", "?")
-        pg_end = c.get("metadata", {}).get("page_end", "?")
-        
-        context_chunks_log.append({
-            "rank": i,
-            "chunk_id": cid,
-            "filename": doc_name,
-            "section": sec,
-            "pages": f"{pg_start}–{pg_end}",
-            "score": round(score, 6),
-            "character_count": chars,
-            "word_count": words
-        })
+        # STAGE 8: CONTEXT ASSEMBLY
+        t_stage8_start = time.perf_counter()
+        context_chunks_log = []
+        for i, c in enumerate(valid_chunks, start=1):
+            cid = str(c.get("id") or c.get("metadata", {}).get("hash") or f"chunk_{i}")
+            doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
+            content_text = c.get("content", "")
+            chars = len(content_text)
+            words = len(content_text.split())
+            score = float(c.get("score", 0.0))
+            sec = c.get("metadata", {}).get("section", "Unknown Section")
+            pg_start = c.get("metadata", {}).get("page_start", "?")
+            pg_end = c.get("metadata", {}).get("page_end", "?")
+            
+            context_chunks_log.append({
+                "rank": i,
+                "chunk_id": cid,
+                "filename": doc_name,
+                "section": sec,
+                "pages": f"{pg_start}–{pg_end}",
+                "score": round(score, 6),
+                "character_count": chars,
+                "word_count": words
+            })
 
-    context_block = _build_context_block(valid_chunks)
-    t_stage8_end = time.perf_counter()
-    stage8_ms = (t_stage8_end - t_stage8_start) * 1000
+        context_block = _build_context_block(valid_chunks)
+        t_stage8_end = time.perf_counter()
+        stage8_ms = (t_stage8_end - t_stage8_start) * 1000
 
-    stage8_data = {
-        "valid_chunk_count": len(valid_chunks),
-        "context_block_chars": len(context_block),
-        "context_block_words": len(context_block.split()),
-        "chunks_entering_prompt": context_chunks_log
-    }
-    log_stage(request_id, 8, "Context Assembly", stage8_data, latency_ms=stage8_ms)
-
-    # STAGE 9: PROMPT BUILDER
-    t_stage9_start = time.perf_counter()
-    system_prompt = (
-        "You are a research assistant answering questions about academic papers.\n"
-        "CRITICAL RULES:\n"
-        "1. You MUST answer ONLY using information from the provided excerpts below.\n"
-        "2. Do NOT use any outside knowledge, general facts, or assumptions.\n"
-        "3. Do NOT invent details, methods, results, or any information.\n"
-        "4. Extract and quote specific facts, numbers, methods, and results from excerpts.\n"
-        f'5. If information is NOT in the excerpts, respond EXACTLY: "{CANNOT_FIND_RESPONSE}"\n'
-        "6. Include citation for every factual claim using format: [Excerpt N]\n"
-        "7. Be concise and direct. Quote key phrases from excerpts."
-    )
-    user_prompt = f"Document Excerpts:\n================================================================================\n{context_block}\n================================================================================\n\nQuestion: {question}\n\nAnswer strictly from the excerpts above. Do not use outside knowledge:"
-    full_prompt = _build_grounding_prompt(question, context_block)
-
-    prompt_chars = len(full_prompt)
-    prompt_words = len(full_prompt.split())
-    approx_prompt_tokens = int(prompt_words * 1.33)
-    approx_question_tokens = int(len(question.split()) * 1.33)
-    approx_context_tokens = int(len(context_block.split()) * 1.33)
-
-    t_stage9_end = time.perf_counter()
-    stage9_ms = (t_stage9_end - t_stage9_start) * 1000
-
-    stage9_data = {
-        "system_prompt": system_prompt,
-        "user_prompt": user_prompt,
-        "complete_final_prompt": full_prompt,
-        "prompt_size_chars": prompt_chars,
-        "prompt_word_count": prompt_words,
-        "approx_prompt_token_count": approx_prompt_tokens,
-        "approx_question_token_count": approx_question_tokens,
-        "approx_context_token_count": approx_context_tokens,
-        "truncation_details": {
-            "truncated": False,
-            "reason": "None. Excerpts capped at 4000 chars each; full prompt fits context window."
+        stage8_data = {
+            "valid_chunk_count": len(valid_chunks),
+            "context_block_chars": len(context_block),
+            "context_block_words": len(context_block.split()),
+            "chunks_entering_prompt": context_chunks_log
         }
-    }
-    log_stage(request_id, 9, "Prompt Builder", stage9_data, latency_ms=stage9_ms)
+        log_stage(request_id, 8, "Context Assembly", stage8_data, latency_ms=stage8_ms)
 
-    result = generate(
-        full_prompt,
-        model_key="doc_agent_model",
-        chunk_count=len(valid_chunks),
-        request_id=request_id,
-    )
-
-    # STAGE 11: RAW LLM OUTPUT
-    stage11_data = {
-        "raw_llm_output": result,
-        "output_chars": len(result) if result else 0,
-        "output_words": len(result.split()) if result else 0
-    }
-    log_stage(request_id, 11, "Raw LLM Output", stage11_data, latency_ms=0.0)
-
-    # Post-processing: if LLM returned empty string, return canonical not-found
-    if not result or not result.strip():
-        log_grounding_exit(
-            request_id=request_id,
-            file_path="agents/doc_agent.py",
-            function_name="run",
-            line_number=188,
-            reason="LLM generate() returned empty output",
-            condition="not result or not result.strip()",
-            evidence={"result": result}
+        # STAGE 9: PROMPT BUILDER
+        t_stage9_start = time.perf_counter()
+        system_prompt = (
+            "You are a research assistant answering questions about academic papers.\n"
+            "CRITICAL RULES:\n"
+            "1. You MUST answer ONLY using information from the provided excerpts below.\n"
+            "2. Do NOT use any outside knowledge, general facts, or assumptions.\n"
+            "3. Do NOT invent details, methods, results, or any information.\n"
+            "4. Extract and quote specific facts, numbers, methods, and results from excerpts.\n"
+            f'5. If information is NOT in the excerpts, respond EXACTLY: "{CANNOT_FIND_RESPONSE}"\n'
+            "6. Include citation for every factual claim using format: [Excerpt N]\n"
+            "7. Be concise and direct. Quote key phrases from excerpts."
         )
-        return CANNOT_FIND_RESPONSE
+        user_prompt = f"Document Excerpts:\n================================================================================\n{context_block}\n================================================================================\n\nQuestion: {question}\n\nAnswer strictly from the excerpts above. Do not use outside knowledge:"
+        full_prompt = _build_grounding_prompt(question, context_block)
 
-    return result.strip()
+        # Save FULL PROMPT artifact (Requirement 5)
+        save_prompt_artifact(request_id, full_prompt)
+
+        prompt_chars = len(full_prompt)
+        prompt_words = len(full_prompt.split())
+        approx_prompt_tokens = int(prompt_words * 1.33)
+        approx_question_tokens = int(len(question.split()) * 1.33)
+        approx_context_tokens = int(len(context_block.split()) * 1.33)
+
+        t_stage9_end = time.perf_counter()
+        stage9_ms = (t_stage9_end - t_stage9_start) * 1000
+
+        stage9_data = {
+            "system_prompt": system_prompt,
+            "user_prompt": user_prompt,
+            "complete_final_prompt": full_prompt,
+            "prompt_size_chars": prompt_chars,
+            "prompt_word_count": prompt_words,
+            "approx_prompt_token_count": approx_prompt_tokens,
+            "approx_question_token_count": approx_question_tokens,
+            "approx_context_token_count": approx_context_tokens,
+            "truncation_details": {
+                "truncated": False,
+                "reason": "None. Excerpts capped at 4000 chars each; full prompt fits context window."
+            }
+        }
+        log_stage(request_id, 9, "Prompt Builder", stage9_data, latency_ms=stage9_ms)
+
+        result = generate(
+            full_prompt,
+            model_key="doc_agent_model",
+            chunk_count=len(valid_chunks),
+            request_id=request_id,
+        )
+
+        # Save raw model output artifact before parsing (Requirement 6)
+        save_model_output_artifact(request_id, result)
+
+        # STAGE 11: RAW LLM OUTPUT
+        stage11_data = {
+            "raw_llm_output": result,
+            "output_chars": len(result) if result else 0,
+            "output_words": len(result.split()) if result else 0
+        }
+        log_stage(request_id, 11, "Raw LLM Output", stage11_data, latency_ms=0.0)
+
+        # Post-processing: if LLM returned empty string, return canonical not-found
+        if not result or not result.strip():
+            log_grounding_exit(
+                request_id=request_id,
+                file_path="agents/doc_agent.py",
+                function_name="run",
+                line_number=235,
+                reason="LLM generate() returned empty output",
+                condition="not result or not result.strip()",
+                evidence={"result": result}
+            )
+            return CANNOT_FIND_RESPONSE
+
+        return result.strip()
+    except Exception as e:
+        log_exception(e, "doc_agent.run")
+        return CANNOT_FIND_RESPONSE
 
 
 def build_citation_list(chunks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
