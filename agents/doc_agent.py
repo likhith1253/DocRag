@@ -439,6 +439,13 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         except Exception:
             pass
 
+        # QUESTION 5 ASSERTION: Immediately before calling generate()
+        saved_prompt_text = open(final_prompt_path, "r", encoding="utf-8").read()
+        if full_prompt != saved_prompt_text:
+            raise AssertionError(
+                f"PROMPT MISMATCH: full_prompt (len={len(full_prompt)}) != saved_prompt_text (len={len(saved_prompt_text)})"
+            )
+
         result = generate(
             full_prompt,
             model_key="doc_agent_model",

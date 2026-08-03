@@ -119,6 +119,14 @@ class HFTransformersBackend(LLMBackend):
         input_length = inputs["input_ids"].shape[1]
         t_tok_end = time.perf_counter()
 
+        # QUESTION 8 CHECK: If prompt exceeds model context, STOP immediately and raise RuntimeError
+        max_context_length = getattr(self.model.config, "max_position_embeddings", 32768) if self.model else 32768
+        if input_length > max_context_length:
+            raise RuntimeError(
+                f"PROMPT EXCEEDS MODEL CONTEXT LIMIT: {input_length} tokens > max {max_context_length} tokens! "
+                f"Halting execution immediately without truncation."
+            )
+
         cuda_device_str = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "N/A (CPU Mode)"
         input_tensor_device = str(inputs["input_ids"].device)
         model_device = str(next(self.model.parameters()).device) if self.model else self.device
@@ -188,6 +196,14 @@ class HFTransformersBackend(LLMBackend):
         response = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
         t_dec_end = time.perf_counter()
         dec_ms = (t_dec_end - t_dec_start) * 1000
+
+        # QUESTION 2 REQUIREMENT: Save raw generation to logs/raw_generation.txt
+        raw_gen_path = Path(__file__).parent.parent / "logs" / "raw_generation.txt"
+        try:
+            with open(raw_gen_path, "w", encoding="utf-8") as f:
+                f.write(response)
+        except Exception:
+            pass
 
         stage10_data = {
             "device": self.device,
