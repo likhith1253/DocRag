@@ -15,6 +15,7 @@ def mmr_rerank(
     top_k: int = 5,
     lambda_param: float = None,   # None = read from config (default 0.7)
     query_vector: Optional[np.ndarray] = None,
+    request_id: str = "default",
 ) -> List[Dict[str, Any]]:
     """
     Rerank chunks using Maximal Marginal Relevance (MMR).
@@ -26,19 +27,35 @@ def mmr_rerank(
     query_vector: Optional pre-computed query embedding (numpy array).
                   When provided, the query is NOT re-encoded, saving ~150ms on CPU.
     """
+    import time
+    from storage.pipeline_logger import log_stage
+    t_start = time.perf_counter()
+
     if not chunks:
-        print("=" * 60, flush=True)
-        print("STAGE 5: MMR", flush=True)
-        print("=" * 60, flush=True)
-        print("MMR enabled?: YES", flush=True)
-        print("MMR SKIPPED: Input chunks list is empty (0 chunks)", flush=True)
+        stage5_data = {
+            "mmr_enabled": True,
+            "input_chunks_count": 0,
+            "output_chunks_count": 0,
+            "selected_ids": [],
+            "removed_ids": [],
+            "skipped": True,
+            "reason": "Input chunks list is empty"
+        }
+        log_stage(request_id, 5, "MMR Reranking", stage5_data, latency_ms=0.0)
         return []
+
     if len(chunks) <= 1:
-        print("=" * 60, flush=True)
-        print("STAGE 5: MMR", flush=True)
-        print("=" * 60, flush=True)
-        print("MMR enabled?: YES", flush=True)
-        print(f"MMR SKIPPED: Input chunks count is {len(chunks)} (<= 1)", flush=True)
+        c_id = str(chunks[0].get("id") or chunks[0].get("metadata", {}).get("hash") or "idx_0")
+        stage5_data = {
+            "mmr_enabled": True,
+            "input_chunks_count": len(chunks),
+            "output_chunks_count": len(chunks),
+            "selected_ids": [c_id],
+            "removed_ids": [],
+            "skipped": True,
+            "reason": f"Input count {len(chunks)} <= 1"
+        }
+        log_stage(request_id, 5, "MMR Reranking", stage5_data, latency_ms=0.0)
         return chunks
 
     from storage.vector_store import _get_encoder, _get_config
@@ -130,31 +147,28 @@ def mmr_rerank(
 
     res = [chunks[idx] for idx in selected_indices]
     selected_ids = [
-        chunks[idx].get("id") or chunks[idx].get("metadata", {}).get("hash") or f"idx_{idx}"
+        str(chunks[idx].get("id") or chunks[idx].get("metadata", {}).get("hash") or f"idx_{idx}")
         for idx in selected_indices
     ]
+    removed_ids = [
+        str(chunks[idx].get("id") or chunks[idx].get("metadata", {}).get("hash") or f"idx_{idx}")
+        for idx in unselected_indices
+    ]
 
-    print("=" * 60, flush=True)
-    print("STAGE 5: MMR", flush=True)
-    print("=" * 60, flush=True)
-    print("MMR enabled?: YES", flush=True)
-    print(f"lambda_param: {lambda_param}", flush=True)
-    print(f"Input chunks: {len(chunks)}", flush=True)
-    print(f"Output chunks: {len(res)}", flush=True)
-    print(f"Selected chunk IDs: {selected_ids}", flush=True)
+    t_end = time.perf_counter()
+    latency_ms = (t_end - t_start) * 1000
 
-    # Log dropped chunks so we can diagnose if the target chunk was evicted here
-    if unselected_indices:
-        print(f"Dropped chunks ({len(unselected_indices)} total):", flush=True)
-        for idx in unselected_indices:
-            c = chunks[idx]
-            dropped_id = c.get("id") or c.get("metadata", {}).get("hash", f"idx_{idx}")
-            q_sim = float(sim_to_query[idx])
-            sec = c.get("metadata", {}).get("section", "?")
-            print(
-                f"  DROPPED idx={idx} query_sim={q_sim:.4f} "
-                f"section='{sec}' id={str(dropped_id)[:12]}",
-                flush=True,
-            )
+    stage5_data = {
+        "mmr_enabled": True,
+        "lambda_param": lambda_param,
+        "input_chunks_count": len(chunks),
+        "output_chunks_count": len(res),
+        "selected_ids": selected_ids,
+        "removed_ids": removed_ids,
+        "scores": {
+            "selected_query_similarities": [round(float(sim_to_query[idx]), 4) for idx in selected_indices]
+        }
+    }
+    log_stage(request_id, 5, "MMR Reranking", stage5_data, latency_ms=latency_ms)
 
     return res

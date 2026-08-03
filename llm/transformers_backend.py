@@ -96,16 +96,12 @@ class HFTransformersBackend(LLMBackend):
                 return {}
         return {}
 
-    def generate(self, prompt: str, model: str = None) -> str:
+    def generate(self, prompt: str, model: str = None, request_id: str = "default") -> str:
         """
         Generate text response using HuggingFace Transformers model.
         """
         self._ensure_loaded()
-
-        print("=" * 60, flush=True)
-        print("STAGE 9: LLM INVOCATION (Inside HFTransformersBackend)", flush=True)
-        print("=" * 60, flush=True)
-        print("Tokenizer encoding started", flush=True)
+        from storage.pipeline_logger import log_stage
 
         t_tok_start = time.perf_counter()
         messages = [{"role": "user", "content": prompt}]
@@ -127,16 +123,13 @@ class HFTransformersBackend(LLMBackend):
         input_tensor_device = str(inputs["input_ids"].device)
         model_device = str(next(self.model.parameters()).device) if self.model else self.device
 
-        print(f"Prompt tokens: {input_length}", flush=True)
-        print(f"Input tensor device: {input_tensor_device}", flush=True)
-        print(f"Model device: {model_device}", flush=True)
-        print(f"CUDA device: {cuda_device_str}", flush=True)
-
         # Configurable generation parameters
         gen_section = self._gen_config.get("generation", {})
         max_new_tokens = int(gen_section.get("num_predict", 1024))
-        temperature = float(gen_section.get("temperature", 0.7))
+        temperature = float(gen_section.get("temperature", 0.0))
         top_p = float(gen_section.get("top_p", 0.9))
+        top_k_param = int(gen_section.get("top_k", 50))
+        repetition_penalty = float(gen_section.get("repetition_penalty", 1.0))
 
         gen_kwargs = {
             "max_new_tokens": max_new_tokens,
@@ -151,7 +144,17 @@ class HFTransformersBackend(LLMBackend):
         else:
             gen_kwargs["do_sample"] = False
 
-        print("Generation started", flush=True)
+        if repetition_penalty != 1.0:
+            gen_kwargs["repetition_penalty"] = repetition_penalty
+
+        print(f"\n==================================================", flush=True)
+        print(f"STAGE 10: STAGE 10 INVOCATION (HFTransformersBackend)", flush=True)
+        print(f"==================================================", flush=True)
+        print(f"Device: {self.device} ({cuda_device_str}) | dtype: {self.dtype_str}", flush=True)
+        print(f"Generation Config: max_new_tokens={max_new_tokens}, temp={temperature}, top_p={top_p}, do_sample={gen_kwargs.get('do_sample')}", flush=True)
+        print(f"Input Token Count: {input_length} | Prompt Chars: {len(prompt)}", flush=True)
+        print("BEGIN GENERATION...", flush=True)
+
         t_gen_start = time.perf_counter()
 
         import threading
@@ -172,9 +175,13 @@ class HFTransformersBackend(LLMBackend):
             ticker.join(timeout=1.0)
 
         t_gen_end = time.perf_counter()
-        print("Generation finished", flush=True)
         gen_ms = (t_gen_end - t_gen_start) * 1000
+        gen_sec = gen_ms / 1000.0
         generated_token_count = len(output_ids[0]) - input_length
+        tokens_per_sec = (generated_token_count / gen_sec) if gen_sec > 0 else 0.0
+
+        eos_reached = bool(output_ids[0][-1] == self.tokenizer.eos_token_id)
+        max_tokens_reached = bool(generated_token_count >= max_new_tokens)
 
         t_dec_start = time.perf_counter()
         generated_ids = output_ids[0][input_length:]
@@ -182,9 +189,32 @@ class HFTransformersBackend(LLMBackend):
         t_dec_end = time.perf_counter()
         dec_ms = (t_dec_end - t_dec_start) * 1000
 
-        print(f"Generated token count: {generated_token_count}", flush=True)
-        print(f"Generation time: {gen_ms:.2f} ms ({gen_ms/1000:.2f} sec)", flush=True)
-        print(f"Decode time: {dec_ms:.2f} ms", flush=True)
+        stage10_data = {
+            "device": self.device,
+            "gpu_name": cuda_device_str,
+            "dtype": self.dtype_str,
+            "generation_config": {
+                "max_new_tokens": max_new_tokens,
+                "temperature": temperature,
+                "top_p": top_p,
+                "top_k": top_k_param,
+                "do_sample": gen_kwargs.get("do_sample"),
+                "repetition_penalty": repetition_penalty
+            },
+            "input_token_count": input_length,
+            "prompt_length_chars": len(prompt),
+            "generation_time_ms": round(gen_ms, 2),
+            "generated_token_count": generated_token_count,
+            "tokens_per_sec": round(tokens_per_sec, 2),
+            "eos_reached": eos_reached,
+            "max_new_tokens_reached": max_tokens_reached,
+            "stop_reason": "EOS token reached" if eos_reached else ("max_new_tokens limit reached" if max_tokens_reached else "completed")
+        }
+
+        log_stage(request_id, 10, "HFTransformersBackend.generate", stage10_data, latency_ms=gen_ms)
+
+        print(f"Generation finished in {gen_ms:.2f} ms ({generated_token_count} tokens @ {tokens_per_sec:.2f} tok/s)", flush=True)
+        print(f"Stop Reason: {stage10_data['stop_reason']}", flush=True)
 
         return response.strip()
 

@@ -482,6 +482,34 @@ if ask_btn:
                                 st.text(chunk.get("content", ""))
                                 with st.expander("Metadata"):
                                     st.json(meta)
+
+                    # 🐛 Debug View (14-Stage Pipeline Breakdown)
+                    from storage.pipeline_logger import is_debug_mode, DEBUG_LOG_PATH
+                    if is_debug_mode():
+                        with st.expander("🐛 Pipeline Debug & Stage Diagnostics"):
+                            req_id_resp = data.get("request_id")
+                            st.caption(f"Request ID: `{req_id_resp or 'N/A'}`")
+                            if DEBUG_LOG_PATH.exists():
+                                try:
+                                    import json
+                                    stages_found = []
+                                    with open(DEBUG_LOG_PATH, "r", encoding="utf-8") as df:
+                                        for line in df:
+                                            if line.strip():
+                                                parsed = json.loads(line)
+                                                if req_id_resp and parsed.get("request_id") == req_id_resp:
+                                                    stages_found.append(parsed)
+                                                elif not req_id_resp:
+                                                    stages_found.append(parsed)
+                                    if stages_found:
+                                        st.write(f"Found **{len(stages_found)}** stage logs for this query:")
+                                        for stg in stages_found[-14:]:
+                                            st.markdown(f"### Stage {stg.get('stage')}: {stg.get('stage_name')} ({stg.get('latency_ms', 0)} ms)")
+                                            st.json(stg.get("data", {}))
+                                    else:
+                                        st.info("No debug entries recorded for this request ID yet.")
+                                except Exception as err:
+                                    st.error(f"Failed to read debug log: {err}")
                 else:
                     st.error(
                         f"Query error: {res.json().get('detail', 'Unknown error')}"

@@ -16,17 +16,27 @@ _cross_encoder_cache: Dict[str, CrossEncoder] = {}
 def rerank_cross_encoder(
     query: str,
     chunks: List[Dict[str, Any]],
-    top_k: int = 5
+    top_k: int = 5,
+    request_id: str = "default",
 ) -> List[Dict[str, Any]]:
     """
     Rerank chunks using a Cross-Encoder model with question-type-aware biasing.
     """
+    import time
+    from storage.pipeline_logger import log_stage
+    t_start = time.perf_counter()
+
     if not chunks:
-        print("=" * 60, flush=True)
-        print("STAGE 6: CROSS ENCODER", flush=True)
-        print("=" * 60, flush=True)
-        print("Cross Encoder enabled?: YES", flush=True)
-        print("Cross Encoder SKIPPED: Input chunks list is empty (0 chunks)", flush=True)
+        stage6_data = {
+            "cross_encoder_enabled": True,
+            "input_chunks_count": 0,
+            "output_chunks_count": 0,
+            "selected_chunks": [],
+            "removed_chunks": [],
+            "skipped": True,
+            "reason": "Input chunks list is empty"
+        }
+        log_stage(request_id, 6, "Cross Encoder", stage6_data, latency_ms=0.0)
         return []
 
     config = _get_config()
@@ -77,26 +87,31 @@ def rerank_cross_encoder(
     # Sort descending
     sorted_chunks = sorted(chunks, key=lambda x: x["score"], reverse=True)
     out_chunks = sorted_chunks[:top_k]
+    removed_chunks_list = sorted_chunks[top_k:]
 
-    sorted_order = [c.get("id") or c.get("metadata", {}).get("hash") or "unknown" for c in out_chunks]
-    score_list = [c.get("score") for c in out_chunks]
+    t_end = time.perf_counter()
+    latency_ms = (t_end - t_start) * 1000
 
-    print("=" * 60, flush=True)
-    print("STAGE 6: CROSS ENCODER", flush=True)
-    print("=" * 60, flush=True)
-    print("Cross Encoder enabled?: YES", flush=True)
-    print(f"Input chunks: {len(chunks)}", flush=True)
-    print(f"Output chunks (top_k={top_k}): {len(out_chunks)}", flush=True)
-    # Log ALL ranked chunks so ranks beyond top_k are visible for debugging
+    evaluated_log = []
     for rank, c in enumerate(sorted_chunks, 1):
-        cid = str(c.get("id") or c.get("metadata", {}).get("hash") or "unknown")[:12]
-        sec = c.get("metadata", {}).get("section", "?")
-        ce_s = c.get("rerank_score", 0.0)
-        kept = "✓ KEPT" if rank <= top_k else "✗ DROPPED"
-        print(
-            f"  Rank #{rank:2d} [{kept}] ce_score={ce_s:.4f} "
-            f"section='{sec}' id={cid}",
-            flush=True,
-        )
+        evaluated_log.append({
+            "rank": rank,
+            "chunk_id": str(c.get("id") or c.get("metadata", {}).get("hash") or "unknown"),
+            "section": c.get("metadata", {}).get("section", "?"),
+            "filename": c.get("metadata", {}).get("file", "Unknown"),
+            "ce_score": round(float(c.get("rerank_score", 0.0)), 6),
+            "combined_score": round(float(c.get("score", 0.0)), 6),
+            "status": "KEPT" if rank <= top_k else "DROPPED"
+        })
+
+    stage6_data = {
+        "cross_encoder_enabled": True,
+        "reranker_model": model_name,
+        "question_type_detected": question_type,
+        "input_chunks_count": len(chunks),
+        "output_chunks_count": len(out_chunks),
+        "evaluated_chunks": evaluated_log
+    }
+    log_stage(request_id, 6, "Cross Encoder", stage6_data, latency_ms=latency_ms)
 
     return out_chunks

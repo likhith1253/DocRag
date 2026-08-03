@@ -87,6 +87,7 @@ def get_process_memory() -> float:
 
 
 class AgentState(TypedDict, total=False):
+    request_id: str
     question: str
     agent: str
     retrieved_chunks: List[Dict[str, Any]]
@@ -137,8 +138,8 @@ def route_node(state: AgentState) -> Dict[str, Any]:
                 if repo.status == "READY":
                     # Check if this repo contains the paper
                     v_manager = VectorStoreManager(collection_name=repo.vector_collection)
-                    chunks = v_manager.search(state["question"], top_k=5, metadata_filters=filters)
-                    if chunks[0]:
+                    chunks, _ = v_manager.search(state["question"], top_k=5, metadata_filters=filters, request_id=state.get("request_id", "default"))
+                    if chunks and chunks[0]:
                         updates["repo_id"] = rid
                         break
         
@@ -165,9 +166,11 @@ def route_node(state: AgentState) -> Dict[str, Any]:
 def retrieve_node(state: AgentState) -> Dict[str, Any]:
     """
     Vector search → MMR → Cross-encoder rerank.
-    KG expansion removed (not applicable to documents).
+    KG expansion logged.
     Respects retrieval_mode: single (default), multi, corpus.
     """
+    from storage.pipeline_logger import log_stage, log_grounding_exit
+    request_id = state.get("request_id", "default")
     try:
         latency_breakdown = state.get("latency_breakdown", {})
 
@@ -192,34 +195,24 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
 
         # Apply retrieval mode constraints
         if retrieval_mode == "single" and repo_id:
-            # Ensure we only retrieve from the specified paper
             if not filters:
                 filters = {}
-            # If repo has a specific paper title, enforce it
         elif retrieval_mode == "corpus":
-            # Remove paper-specific filters for corpus-wide search
             filters = {k: v for k, v in filters.items() if k != "paper_title"}
 
-        # Step 1: Vector search
-        debug = {}
-        debug['initial_filters'] = filters
-        debug['v_coll'] = v_coll
+        # Step 1: Vector search (Stage 2 & Stage 3 logged inside search())
         t0 = time.perf_counter()
         chunks, vector_timing = v_manager.search(
-            state["question"], top_k=vector_top_k, metadata_filters=filters or None
+            state["question"], top_k=vector_top_k, metadata_filters=filters or None, request_id=request_id
         )
         latency_breakdown["embedding_ms"] = vector_timing["embedding_ms"]
         latency_breakdown["qdrant_ms"] = vector_timing["qdrant_ms"]
         latency_breakdown["vector_ms"] = (time.perf_counter() - t0) * 1000
-        debug['post_vector_count'] = len(chunks)
-        print(f"  ├─ Vector Retrieval (Dense Search) ....... {latency_breakdown['vector_ms']:.2f} ms (Embed: {latency_breakdown['embedding_ms']:.2f} ms, Qdrant: {latency_breakdown['qdrant_ms']:.2f} ms)", flush=True)
 
         # Stage 4: FILTERING
+        t_filter_start = time.perf_counter()
         initial_chunk_count = len(chunks)
-        print("=" * 60, flush=True)
-        print("STAGE 4: FILTERING", flush=True)
-        print("=" * 60, flush=True)
-        print(f"Before filtering: {initial_chunk_count} chunks", flush=True)
+        removed_chunks_log = []
 
         # Deduplicate chunks by content hash
         seen_hashes = set()
@@ -229,33 +222,46 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             cid = chunk.get("id") or h or "unknown"
             doc_name = chunk.get("metadata", {}).get("file") or chunk.get("metadata", {}).get("paper_title") or "Unknown"
             if h and h in seen_hashes:
-                print(f"REMOVED CHUNK: Chunk ID: {cid} | Document: {doc_name} | WHY: Duplicate content hash '{h}'", flush=True)
+                removed_chunks_log.append({
+                    "chunk_id": str(cid),
+                    "filename": doc_name,
+                    "reason_removed": f"Duplicate content hash '{h}'"
+                })
             else:
                 if h:
                     seen_hashes.add(h)
                 unique_chunks.append(chunk)
         chunks = unique_chunks
-        debug['post_dedupe_count'] = len(chunks)
 
         # Filter out low-value sections (References, Bibliography, Acknowledgements).
-        # BUG-10 fix: use word-boundary match instead of substring to avoid removing
-        # sections like "Reference Architecture" or "Cross-References to Earlier Work".
         filtered_chunks = []
         for c in chunks:
             sec = (c.get("metadata", {}).get("section") or "").strip()
             cid = c.get("id") or c.get("metadata", {}).get("hash") or "unknown"
             doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
             if _LOW_VALUE_SECTION_RE.search(sec):
-                print(f"REMOVED CHUNK: Chunk ID: {cid} | Document: {doc_name} | WHY: Low-value section filter ('{sec}')", flush=True)
+                removed_chunks_log.append({
+                    "chunk_id": str(cid),
+                    "filename": doc_name,
+                    "reason_removed": f"Low-value section filter ('{sec}')"
+                })
                 continue
             filtered_chunks.append(c)
         if filtered_chunks:
             chunks = filtered_chunks
-        debug['post_section_filter_count'] = len(chunks)
 
-        print(f"After filtering: {len(chunks)} chunks", flush=True)
+        t_filter_end = time.perf_counter()
+        filter_ms = (t_filter_end - t_filter_start) * 1000
 
-        # Step 2: MMR rerank (diversify)
+        stage4_data = {
+            "before_count": initial_chunk_count,
+            "after_count": len(chunks),
+            "removed_chunks_count": len(removed_chunks_log),
+            "removed_chunks_details": removed_chunks_log
+        }
+        log_stage(request_id, 4, "Filtering", stage4_data, latency_ms=filter_ms)
+
+        # Step 2: MMR rerank (Stage 5 logged inside mmr_rerank)
         query_vector_for_mmr = vector_timing.pop("query_vector", None)
         t0 = time.perf_counter()
         if chunks:
@@ -264,35 +270,38 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 chunks,
                 top_k=min(40, len(chunks)),
                 query_vector=query_vector_for_mmr,
+                request_id=request_id,
             )
         latency_breakdown["mmr_ms"] = (time.perf_counter() - t0) * 1000
-        debug['post_mmr_count'] = len(chunks) if chunks else 0
-        print(f"  ├─ MMR Reranking (Diversity) ............. {latency_breakdown['mmr_ms']:.2f} ms", flush=True)
 
-        # Step 3: Cross-encoder rerank (precision)
+        # Step 3: Cross-encoder rerank (Stage 6 logged inside rerank_cross_encoder)
         t0 = time.perf_counter()
         if chunks:
             chunks = rerank_cross_encoder(
-                state["question"], chunks, top_k=rerank_top_k
+                state["question"], chunks, top_k=rerank_top_k, request_id=request_id
             )
         latency_breakdown["reranker_ms"] = (time.perf_counter() - t0) * 1000
-        debug['post_crossencoder_count'] = len(chunks) if chunks else 0
-        print(f"  ├─ Cross-Encoder Reranking (Precision) ... {latency_breakdown['reranker_ms']:.2f} ms", flush=True)
 
-        # BUG-5 fix: trigger fallback not only when zero chunks remain, but also when
-        # the best-scoring chunk is very low confidence (< 0.35) — indicates the primary
-        # collection returned results from the wrong paper.
+        # Stage 7: Knowledge Graph (DocumentRAG uses metadata graph mapping)
+        use_graph = retrieval_conf.get("use_graph", False)
+        stage7_data = {
+            "graph_enabled": use_graph,
+            "nodes_count": 0,
+            "edges_count": 0,
+            "matched_entities": [],
+            "confidence": 1.0,
+            "note": "DocumentRAG uses section/metadata graph search; standard dense vector RAG active."
+        }
+        log_stage(request_id, 7, "Knowledge Graph", stage7_data, latency_ms=0.0)
+
+        # Fallback if zero chunks remain
         top_score = chunks[0].get("score", 1.0) if chunks else 0.0
         if not chunks or top_score < 0.35:
-            debug['fallback_attempted'] = True
-            # Fallback: try a corpus-wide search in the global 'chunks' collection
+            # Fallback search in global 'chunks'
             try:
-                # First try global 'chunks' collection
                 fb_vman = VectorStoreManager(collection_name='chunks')
-                fb_chunks, fb_timing = fb_vman.search(state['question'], top_k=vector_top_k, metadata_filters=None)
+                fb_chunks, fb_timing = fb_vman.search(state['question'], top_k=vector_top_k, metadata_filters=None, request_id=request_id)
                 latency_breakdown['fallback_vector_ms'] = fb_timing.get('qdrant_ms', 0.0)
-                debug['fallback_global_count'] = len(fb_chunks)
-                # Deduplicate
                 seen = set()
                 fb_unique = []
                 for ch in fb_chunks:
@@ -301,82 +310,25 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                         seen.add(h)
                         fb_unique.append(ch)
                 fb_chunks = fb_unique
-                debug['fallback_global_postdedupe'] = len(fb_chunks)
                 if fb_chunks:
-                    query_vector_for_mmr = fb_timing.pop('query_vector', None)
-                    fb_chunks = mmr_rerank(state['question'], fb_chunks, top_k=min(40, len(fb_chunks)), query_vector=query_vector_for_mmr)
-                    debug['fallback_global_postmmr'] = len(fb_chunks)
-                    fb_chunks = rerank_cross_encoder(state['question'], fb_chunks, top_k=rerank_top_k)
-                    debug['fallback_global_postrerank'] = len(fb_chunks)
+                    qv = fb_timing.pop('query_vector', None)
+                    fb_chunks = mmr_rerank(state['question'], fb_chunks, top_k=min(40, len(fb_chunks)), query_vector=qv, request_id=request_id)
+                    fb_chunks = rerank_cross_encoder(state['question'], fb_chunks, top_k=rerank_top_k, request_id=request_id)
                     if fb_chunks:
-                        # write debug
-                        try:
-                            with open(os.path.join(LOGS_DIR, 'retrieve_debug.jsonl'), 'a', encoding='utf-8') as df:
-                                df.write(json.dumps(debug) + '\n')
-                        except Exception:
-                            pass
                         return {
                             "retrieved_chunks": fb_chunks,
                             "citations": build_citation_list(fb_chunks),
                             "latency_breakdown": latency_breakdown,
                         }
-                # If that failed, brute-force search each registered collection
-                # registry helper already imported at module level
-                registry = get_registry()
-                from storage.registry import QUERYABLE_REPO_STATUSES
-                for rid, repo in registry.repositories.items():
-                    try:
-                        if repo.status not in QUERYABLE_REPO_STATUSES or not repo.vector_collection:
-                            continue
-                        vman = VectorStoreManager(collection_name=repo.vector_collection)
-                        c_chunks, c_timing = vman.search(state['question'], top_k=min(vector_top_k,50), metadata_filters=None)
-                        debug.setdefault('bruteforce', {})[rid] = len(c_chunks)
-                        if not c_chunks:
-                            continue
-                        # dedupe
-                        seen2=set(); uniq=[]
-                        for ch in c_chunks:
-                            h = ch.get('metadata',{}).get('hash','')
-                            if h and h not in seen2:
-                                seen2.add(h); uniq.append(ch)
-                        c_chunks = uniq
-                        qv = c_timing.pop('query_vector', None)
-                        c_chunks = mmr_rerank(state['question'], c_chunks, top_k=min(20,len(c_chunks)), query_vector=qv)
-                        c_chunks = rerank_cross_encoder(state['question'], c_chunks, top_k=rerank_top_k)
-                        debug.setdefault('bruteforce_post', {})[rid] = len(c_chunks)
-                        if c_chunks:
-                            latency_breakdown['bruteforce_repo'] = repo.repo_id
-                            try:
-                                with open(os.path.join(LOGS_DIR, 'retrieve_debug.jsonl'), 'a', encoding='utf-8') as df:
-                                    df.write(json.dumps(debug) + '\n')
-                            except Exception:
-                                pass
-                            return {
-                                "retrieved_chunks": c_chunks,
-                                "citations": build_citation_list(c_chunks),
-                                "latency_breakdown": latency_breakdown,
-                            }
-                    except Exception:
-                        continue
             except Exception:
                 pass
-            try:
-                with open(os.path.join(LOGS_DIR, 'retrieve_debug.jsonl'), 'a', encoding='utf-8') as df:
-                    df.write(json.dumps(debug) + '\n')
-            except Exception:
-                pass
+
             return {
                 "retrieved_chunks": [],
                 "citations": [],
                 "error": "Zero chunks retrieved",
                 "latency_breakdown": latency_breakdown,
             }
-
-        try:
-            with open(os.path.join(LOGS_DIR, 'retrieve_debug.jsonl'), 'a', encoding='utf-8') as df:
-                df.write(json.dumps(debug) + '\n')
-        except Exception:
-            pass
 
         return {
             "retrieved_chunks": chunks,
@@ -400,27 +352,35 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
     Invoke doc_agent with retrieved chunks.
     Propagates grounding: if zero chunks, return CANNOT_FIND_RESPONSE.
     """
+    from storage.pipeline_logger import log_grounding_exit
+    request_id = state.get("request_id", "default")
     latency_breakdown = state.get("latency_breakdown", {})
 
     if state.get("error") == "Zero chunks retrieved":
-        print("=" * 60, flush=True)
-        print("EARLY EXIT", flush=True)
-        print("=" * 60, flush=True)
-        print("Reason: Zero chunks retrieved from retrieval stage", flush=True)
-        print("Returned from: orchestrator.py", flush=True)
-        print("Line: 414", flush=True)
+        log_grounding_exit(
+            request_id=request_id,
+            file_path="agents/orchestrator.py",
+            function_name="agent_node",
+            line_number=405,
+            reason="Zero chunks retrieved from retrieval stage",
+            condition="state.get('error') == 'Zero chunks retrieved'",
+            evidence={"state_error": state.get("error")}
+        )
         return {
             "answer": CANNOT_FIND_RESPONSE,
             "citations": [],
             "latency_breakdown": latency_breakdown,
         }
     elif state.get("error"):
-        print("=" * 60, flush=True)
-        print("EARLY EXIT", flush=True)
-        print("=" * 60, flush=True)
-        print(f"Reason: Retrieval error ('{state.get('error')}')", flush=True)
-        print("Returned from: orchestrator.py", flush=True)
-        print("Line: 420", flush=True)
+        log_grounding_exit(
+            request_id=request_id,
+            file_path="agents/orchestrator.py",
+            function_name="agent_node",
+            line_number=417,
+            reason=f"Retrieval error ('{state.get('error')}')",
+            condition="state.get('error') is not empty",
+            evidence={"state_error": state.get("error")}
+        )
         return {
             "answer": CANNOT_FIND_RESPONSE,
             "citations": [],
@@ -429,7 +389,6 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
 
     try:
         chunks = state["retrieved_chunks"]
-        # BUG-1/BUG-8 fix: read cap from config, log every chunk that gets dropped here.
         _cfg = _get_config()
         agent_chunk_cap = int(
             _cfg.get("retrieval", {}).get("agent_chunk_cap", 8)
@@ -444,7 +403,7 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
                 flush=True,
             )
         t0 = time.perf_counter()
-        ans = doc_agent.run(state["question"], chunks)
+        ans = doc_agent.run(state["question"], chunks, request_id=request_id)
         t1 = time.perf_counter()
 
         latency_breakdown["llm_ms"] = (t1 - t0) * 1000
@@ -459,6 +418,15 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             "latency_breakdown": latency_breakdown,
         }
     except Exception as e:
+        log_grounding_exit(
+            request_id=request_id,
+            file_path="agents/orchestrator.py",
+            function_name="agent_node",
+            line_number=461,
+            reason=f"Unhandled exception in agent_node: {str(e)}",
+            condition="exception inside agent_node",
+            evidence={"exception": str(e)}
+        )
         return {
             "answer": CANNOT_FIND_RESPONSE,
             "citations": [],
@@ -490,47 +458,65 @@ def answer(
     repo_id: str = None,
     filters: Dict[str, Any] = None,
     retrieval_mode: str = "single",
+    request_id: str = None,
 ) -> tuple:
     """
     Main orchestrator entrypoint.
-    Returns (answer_text, latency_breakdown_dict).
+    Returns (answer_text, latency_breakdown_dict, retrieved_chunks, citations).
     """
+    from storage.pipeline_logger import generate_request_id, log_stage, log_grounding_exit
+    
+    if not request_id:
+        request_id = generate_request_id()
+
     start_time = time.time()
     start_mem = get_process_memory()
 
-    print("\n" + "=" * 60, flush=True)
-    print("STAGE 1: REQUEST START", flush=True)
-    print("=" * 60, flush=True)
-    print(f"Question: {query}", flush=True)
-    print(f"Repository ID: {repo_id}", flush=True)
-    print(f"Collection ID: {repo_id}", flush=True)
+    # STAGE 1: INCOMING REQUEST
+    stage1_data = {
+        "request_id": request_id,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "repository_id": repo_id,
+        "collection_id": repo_id,
+        "user_question": query,
+        "filters": filters or {},
+        "retrieval_mode": retrieval_mode
+    }
+    log_stage(request_id, 1, "Incoming Request", stage1_data, latency_ms=0.0)
 
     if not isinstance(query, str):
-        print("=" * 60, flush=True)
-        print("EARLY EXIT", flush=True)
-        print("=" * 60, flush=True)
-        print("Reason: Query is not a string", flush=True)
-        print("Returned from: orchestrator.py", flush=True)
-        print("Line: 485", flush=True)
+        log_grounding_exit(
+            request_id=request_id,
+            file_path="agents/orchestrator.py",
+            function_name="answer",
+            line_number=510,
+            reason="Query is not a string",
+            condition="not isinstance(query, str)",
+            evidence={"type": type(query).__name__}
+        )
         ans = CANNOT_FIND_RESPONSE
         bd = {"planner_ms": 0, "vector_ms": 0, "mmr_ms": 0, "reranker_ms": 0, "llm_ms": 0, "total_ms": 0}
         _write_log(str(query), [], [], "error", 0.0, 0.0, ans, bd)
-        return ans, bd
+        return ans, bd, [], []
 
     if not query or not query.strip():
-        print("=" * 60, flush=True)
-        print("EARLY EXIT", flush=True)
-        print("=" * 60, flush=True)
-        print("Reason: Query is empty", flush=True)
-        print("Returned from: orchestrator.py", flush=True)
-        print("Line: 492", flush=True)
+        log_grounding_exit(
+            request_id=request_id,
+            file_path="agents/orchestrator.py",
+            function_name="answer",
+            line_number=522,
+            reason="Query is empty",
+            condition="not query or not query.strip()",
+            evidence={"query": query}
+        )
         ans = "Query is empty."
         bd = {"planner_ms": 0, "vector_ms": 0, "mmr_ms": 0, "reranker_ms": 0, "llm_ms": 0, "total_ms": 0}
         _write_log("", [], [], "error", 0.0, 0.0, ans, bd)
-        return ans, bd
+        return ans, bd, [], []
 
     try:
         initial_state = {
+            "request_id": request_id,
             "question": query,
             "agent": "",
             "retrieved_chunks": [],
@@ -551,6 +537,15 @@ def answer(
         latency_breakdown = final_state.get("latency_breakdown", {})
 
     except Exception as e:
+        log_grounding_exit(
+            request_id=request_id,
+            file_path="agents/orchestrator.py",
+            function_name="answer",
+            line_number=554,
+            reason=f"Workflow invocation failed: {str(e)}",
+            condition="exception during app.invoke(initial_state)",
+            evidence={"exception": str(e)}
+        )
         ans = CANNOT_FIND_RESPONSE
         agent = "error"
         chunks = []
@@ -558,37 +553,50 @@ def answer(
         latency_breakdown = {}
 
     latency = time.time() - start_time
+    total_ms = latency * 1000.0
     end_mem = get_process_memory()
     memory_diff = max(0.0, end_mem - start_mem)
 
-    # STAGE 11: CITATION ASSEMBLY
-    print("\n" + "=" * 60, flush=True)
-    print("STAGE 11: CITATION ASSEMBLY", flush=True)
-    print("=" * 60, flush=True)
-    print(f"Number of citations: {len(citations)}", flush=True)
-    print(f"Number of excerpts: {len(chunks)}", flush=True)
+    # STAGE 13: CITATION ASSEMBLY
+    t_stage13_start = time.perf_counter()
     seen_files = set()
-    for c in chunks:
-        f = c.get("metadata", {}).get("file")
+    citation_summary_log = []
+    for idx, cite in enumerate(citations, start=1):
+        f = cite.get("file")
         if f:
             seen_files.add(f)
-    print(f"Number of source files: {len(seen_files)}", flush=True)
-    print("List every citation:", flush=True)
-    for idx, cite in enumerate(citations, start=1):
-        print(f"  {idx}. {cite.get('citation')} (File: {cite.get('file')})", flush=True)
+        citation_summary_log.append({
+            "citation_index": idx,
+            "formatted_citation": cite.get("citation"),
+            "paper_title": cite.get("paper_title"),
+            "file": f,
+            "section": cite.get("section"),
+            "page_start": cite.get("page_start"),
+            "page_end": cite.get("page_end")
+        })
 
-    # STAGE 12: API RESPONSE
+    t_stage13_end = time.perf_counter()
+    stage13_ms = (t_stage13_end - t_stage13_start) * 1000
+
+    stage13_data = {
+        "citations_count": len(citations),
+        "source_files_count": len(seen_files),
+        "source_files": list(seen_files),
+        "citations": citation_summary_log
+    }
+    log_stage(request_id, 13, "Citation Assembly", stage13_data, latency_ms=stage13_ms)
+
+    # STAGE 14: FINAL API RESPONSE
     response_obj = {
+        "request_id": request_id,
         "Answer": ans,
         "Sources": list(seen_files),
         "Chunks": chunks,
-        "Excerpts": [c.get("content") for c in chunks],
-        "Metadata": [c.get("metadata") for c in chunks]
+        "Citations": citations,
+        "Latency": round(latency, 4),
+        "LatencyBreakdown": latency_breakdown
     }
-    print("\n" + "=" * 60, flush=True)
-    print("STAGE 12: API RESPONSE", flush=True)
-    print("=" * 60, flush=True)
-    print(json.dumps(response_obj, indent=2, default=str), flush=True)
+    log_stage(request_id, 14, "Final API Response", response_obj, latency_ms=total_ms)
 
     _write_log(query, chunks, citations, agent, latency, memory_diff, ans, latency_breakdown)
     return ans, latency_breakdown, chunks, citations

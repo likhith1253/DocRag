@@ -21,7 +21,7 @@ def _load_config():
     return _config
 
 
-def generate(prompt: str, model_key: str, chunk_count: int = None) -> str:
+def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: str = "default") -> str:
     """
     Generate response for a given prompt and model_key mapping to config.yaml.
     
@@ -29,6 +29,7 @@ def generate(prompt: str, model_key: str, chunk_count: int = None) -> str:
         prompt: The prompt text to send to the LLM.
         model_key: The configuration key mapping to the model name.
         chunk_count: Optional number of retrieved chunks included in the prompt.
+        request_id: Unique request ID for stage tracking.
         
     Returns:
         The generated text response.
@@ -69,7 +70,10 @@ def generate(prompt: str, model_key: str, chunk_count: int = None) -> str:
         backend = get_backend()
         start_backend = time.perf_counter()
         print("CALLING HFTransformersBackend.generate()", flush=True)
-        result = backend.generate(prompt, model)
+        try:
+            result = backend.generate(prompt, model, request_id=request_id)
+        except TypeError:
+            result = backend.generate(prompt, model)
         backend_ms = (time.perf_counter() - start_backend) * 1000
 
         # Save to cache (best-effort)

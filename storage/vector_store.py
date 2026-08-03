@@ -240,13 +240,15 @@ class VectorStoreManager:
             
         return all_chunks
 
-    def search(self, query: str, top_k: int = 30, metadata_filters: Dict[str, Any] = None) -> tuple[List[Dict[str, Any]], Dict[str, float]]:
+    def search(self, query: str, top_k: int = 30, metadata_filters: Dict[str, Any] = None, request_id: str = "default") -> tuple[List[Dict[str, Any]], Dict[str, float]]:
         """
         Search for top_k similar chunks with optional metadata filtering.
         Returns (results, timing_dict) where timing_dict has "embedding_ms" and "qdrant_ms".
         """
         import time
+        import numpy as np
         from qdrant_client.models import Filter, FieldCondition, MatchValue
+        from storage.pipeline_logger import log_stage
         
         if "e5" in self.embedding_model_name.lower():
             query_for_encode = f"query: {query}"
@@ -259,15 +261,19 @@ class VectorStoreManager:
         query_vector = query_vector_np.tolist()
         t_embed_end = time.perf_counter()
         
-        # Stage 2: EMBEDDING logging
         embed_time_ms = (t_embed_end - t_embed_start) * 1000
-        print("=" * 60, flush=True)
-        print("STAGE 2: EMBEDDING", flush=True)
-        print("=" * 60, flush=True)
-        print(f"Embedding model: {self.embedding_model_name}", flush=True)
-        print(f"Embedding dimension: {self.vector_size}", flush=True)
-        print(f"Embedding time: {embed_time_ms:.2f} ms", flush=True)
-        print(f"Embedding vector shape: {query_vector_np.shape}", flush=True)
+        vector_norm = float(np.linalg.norm(query_vector_np))
+        vector_preview = [round(float(x), 6) for x in query_vector_np[:5]]
+
+        # Stage 2: EMBEDDING logging
+        stage2_data = {
+            "embedding_model": self.embedding_model_name,
+            "embedding_dimension": self.vector_size,
+            "latency_ms": round(embed_time_ms, 2),
+            "vector_norm": round(vector_norm, 6),
+            "vector_preview": vector_preview
+        }
+        log_stage(request_id, 2, "Embedding", stage2_data, latency_ms=embed_time_ms)
 
         t_qdrant_start = time.perf_counter()
         query_filter = None
@@ -369,42 +375,38 @@ class VectorStoreManager:
             except Exception:
                 pass
 
-        # Stage 3: VECTOR SEARCH logging
-        print("=" * 60, flush=True)
-        print("STAGE 3: VECTOR SEARCH", flush=True)
-        print("=" * 60, flush=True)
-        print(f"Number of chunks returned: {len(retrieved)}", flush=True)
-        print("", flush=True)
-        for i, r in enumerate(retrieved[:10], start=1):
-            doc_name = r.get("metadata", {}).get("file") or r.get("metadata", {}).get("paper_title") or "Unknown"
-            chunk_id = r.get("id") or r.get("metadata", {}).get("hash") or f"chunk_{i}"
-            score = r.get("score", 0.0)
-            chars = len(r.get("content", ""))
-            meta = r.get("metadata", {})
-            print(f"[Vector Result {i}]", flush=True)
-            print(f"Score: {score}", flush=True)
-            print(f"Document: {doc_name}", flush=True)
-            print(f"Chunk ID: {chunk_id}", flush=True)
-            print(f"Characters: {chars}", flush=True)
-            print(f"Metadata: {meta}", flush=True)
-            print("", flush=True)
+        qdrant_ms = (t_qdrant_end - t_qdrant_start) * 1000
 
-        if retrieved:
-            scores = [r.get("score", 0.0) for r in retrieved]
-            lowest = min(scores)
-            highest = max(scores)
-            avg = sum(scores) / len(scores)
-            print(f"Lowest score: {lowest}", flush=True)
-            print(f"Highest score: {highest}", flush=True)
-            print(f"Average score: {avg}", flush=True)
-        else:
-            print("Lowest score: N/A", flush=True)
-            print("Highest score: N/A", flush=True)
-            print("Average score: N/A", flush=True)
+        # Stage 3: VECTOR SEARCH logging
+        retrieved_log = []
+        for rank, r in enumerate(retrieved, start=1):
+            doc_name = r.get("metadata", {}).get("file") or r.get("metadata", {}).get("paper_title") or "Unknown"
+            cid = r.get("id") or r.get("metadata", {}).get("hash") or f"chunk_{rank}"
+            sec = r.get("metadata", {}).get("section", "Unknown")
+            page = r.get("metadata", {}).get("page_start", "?")
+            snippet = r.get("content", "")[:250]
+            retrieved_log.append({
+                "rank": rank,
+                "similarity_score": round(float(r.get("score", 0.0)), 6),
+                "chunk_id": str(cid),
+                "filename": doc_name,
+                "section": sec,
+                "page": page,
+                "first_250_chars": snippet
+            })
+
+        stage3_data = {
+            "top_k_requested": top_k,
+            "top_k_returned": len(retrieved),
+            "collection_name": self.collection_name,
+            "qdrant_latency_ms": round(qdrant_ms, 2),
+            "retrieved_chunks": retrieved_log
+        }
+        log_stage(request_id, 3, "Vector Search", stage3_data, latency_ms=qdrant_ms)
 
         timing = {
-            "embedding_ms": (t_embed_end - t_embed_start) * 1000,
-            "qdrant_ms": (t_qdrant_end - t_qdrant_start) * 1000,
+            "embedding_ms": embed_time_ms,
+            "qdrant_ms": qdrant_ms,
             # Pass numpy query vector so orchestrator can forward it to MMR
             "query_vector": query_vector_np,
         }

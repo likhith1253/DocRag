@@ -1,3 +1,4 @@
+debug_mode: true
 chunking:
   max_chunk_tokens: 1024
   overlap_tokens: 128
@@ -30,3 +31,4 @@ router:
 workers:
   parse_workers: 4
   qa_workers: 2
+

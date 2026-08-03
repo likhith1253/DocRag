@@ -70,6 +70,7 @@ class QueryPayload(BaseModel):
     collection_id: str = None   # alias for repo_id — both accepted
     repo_id: str = None         # legacy name kept for compatibility
     filters: dict = None
+    request_id: str = None
 
 
 # ---------------------------------------------------------------------------
@@ -88,9 +89,11 @@ def health():
 @app.post("/query")
 def query(payload: QueryPayload):
     req_start = time.perf_counter()
+    from storage.pipeline_logger import generate_request_id
+    req_id = payload.request_id or generate_request_id()
     now_str = time.strftime("%Y-%m-%d %H:%M:%S")
     print(f"\n==================================================", flush=True)
-    print(f"[{now_str}] [REQUEST RECEIVED]", flush=True)
+    print(f"[{now_str}] [REQUEST RECEIVED] (Request ID: {req_id})", flush=True)
     print(f"Question: {payload.question}", flush=True)
     print(f"Collection ID / Repo ID: {payload.collection_id or payload.repo_id}", flush=True)
     print(f"==================================================", flush=True)
@@ -108,7 +111,6 @@ def query(payload: QueryPayload):
     if repo_id and not registry_instance.get_repository(repo_id):
         raise HTTPException(status_code=404, detail=f"Collection '{repo_id}' not found.")
     t_lookup_end = time.perf_counter()
-    print(f"Repository Lookup & Validation .... {(t_lookup_end - t_lookup_start)*1000:.2f} ms", flush=True)
 
     try:
         t_orch_start = time.perf_counter()
@@ -116,9 +118,9 @@ def query(payload: QueryPayload):
             question,
             repo_id=repo_id,
             filters=payload.filters,
+            request_id=req_id,
         )
         t_orch_end = time.perf_counter()
-        print(f"Orchestrator Execution ........... {(t_orch_end - t_orch_start)*1000:.2f} ms", flush=True)
 
         t_meta_start = time.perf_counter()
         agent = "doc_agent"
@@ -131,10 +133,8 @@ def query(payload: QueryPayload):
                 sources.append(fp)
                 seen_files.add(fp)
 
-        t_meta_end = time.perf_counter()
-        print(f"Citation & Metadata Assembly ..... {(t_meta_end - t_meta_start)*1000:.2f} ms", flush=True)
-
         response_dict = {
+            "request_id": req_id,
             "answer": ans,
             "agent": agent,
             "latency": latency,
