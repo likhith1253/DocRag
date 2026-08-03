@@ -13,7 +13,7 @@ def mmr_rerank(
     query: str,
     chunks: List[Dict[str, Any]],
     top_k: int = 5,
-    lambda_param: float = 0.5,
+    lambda_param: float = None,   # None = read from config (default 0.7)
     query_vector: Optional[np.ndarray] = None,
 ) -> List[Dict[str, Any]]:
     """
@@ -45,6 +45,12 @@ def mmr_rerank(
     config = _get_config()
     embedding_model_name = config.get("embedding_model", "all-MiniLM-L6-v2")
     device = config.get("device", "auto")
+
+    # Read lambda from config if caller did not override (BUG-6 fix)
+    if lambda_param is None:
+        lambda_param = float(
+            config.get("retrieval", {}).get("mmr_lambda", 0.7)
+        )
 
     # ------------------------------------------------------------------
     # Determine which chunks already have stored vectors and which need
@@ -123,14 +129,32 @@ def mmr_rerank(
         unselected_indices.remove(best_idx)
 
     res = [chunks[idx] for idx in selected_indices]
-    selected_ids = [chunks[idx].get("id") or chunks[idx].get("metadata", {}).get("hash") or f"idx_{idx}" for idx in selected_indices]
+    selected_ids = [
+        chunks[idx].get("id") or chunks[idx].get("metadata", {}).get("hash") or f"idx_{idx}"
+        for idx in selected_indices
+    ]
 
     print("=" * 60, flush=True)
     print("STAGE 5: MMR", flush=True)
     print("=" * 60, flush=True)
     print("MMR enabled?: YES", flush=True)
+    print(f"lambda_param: {lambda_param}", flush=True)
     print(f"Input chunks: {len(chunks)}", flush=True)
     print(f"Output chunks: {len(res)}", flush=True)
     print(f"Selected chunk IDs: {selected_ids}", flush=True)
+
+    # Log dropped chunks so we can diagnose if the target chunk was evicted here
+    if unselected_indices:
+        print(f"Dropped chunks ({len(unselected_indices)} total):", flush=True)
+        for idx in unselected_indices:
+            c = chunks[idx]
+            dropped_id = c.get("id") or c.get("metadata", {}).get("hash", f"idx_{idx}")
+            q_sim = float(sim_to_query[idx])
+            sec = c.get("metadata", {}).get("section", "?")
+            print(
+                f"  DROPPED idx={idx} query_sim={q_sim:.4f} "
+                f"section='{sec}' id={str(dropped_id)[:12]}",
+                flush=True,
+            )
 
     return res

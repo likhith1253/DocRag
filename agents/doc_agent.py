@@ -135,12 +135,17 @@ def run(question: str, chunks: List[Dict[str, Any]]) -> str:
         doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
         chars = len(c.get("content", ""))
         score = c.get("score", 0.0)
+        sec = c.get("metadata", {}).get("section", "Unknown Section")
+        pg_start = c.get("metadata", {}).get("page_start", "?")
+        pg_end = c.get("metadata", {}).get("page_end", "?")
         preview = c.get("content", "")[:300]
         print(f"\n[Chunk {i}]", flush=True)
-        print(f"Chunk ID: {cid}", flush=True)
+        print(f"Chunk ID: {str(cid)[:24]}", flush=True)
         print(f"Document: {doc_name}", flush=True)
+        print(f"Section: {sec}", flush=True)
+        print(f"Pages: {pg_start}–{pg_end}", flush=True)
         print(f"Characters: {chars}", flush=True)
-        print(f"Score: {score}", flush=True)
+        print(f"Score: {score:.4f}", flush=True)
         print(f"Context preview:\n{preview}", flush=True)
 
     context_block = _build_context_block(valid_chunks)

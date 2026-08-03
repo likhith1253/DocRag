@@ -17,6 +17,7 @@ Changes from CodeGraphRAG:
 """
 
 import os
+import re
 import sys
 import time
 import json
@@ -48,6 +49,12 @@ LOGS_DIR = os.path.join(
 LOGS_PATH = os.path.join(LOGS_DIR, "query_logs.jsonl")
 
 _v_manager_override = None
+
+# Precompile section filter regex at module level (BUG-10 fix — avoid recompilation per query)
+_LOW_VALUE_SECTION_RE = re.compile(
+    r'\b(references?|bibliography|acknowledgements?|acknowledgments?)\b',
+    re.IGNORECASE,
+)
 
 
 def get_process_memory() -> float:
@@ -230,13 +237,15 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         chunks = unique_chunks
         debug['post_dedupe_count'] = len(chunks)
 
-        # Filter out low-value sections (e.g., References/Bibliography)
+        # Filter out low-value sections (References, Bibliography, Acknowledgements).
+        # BUG-10 fix: use word-boundary match instead of substring to avoid removing
+        # sections like "Reference Architecture" or "Cross-References to Earlier Work".
         filtered_chunks = []
         for c in chunks:
-            sec = (c.get("metadata", {}).get("section") or "").lower()
+            sec = (c.get("metadata", {}).get("section") or "").strip()
             cid = c.get("id") or c.get("metadata", {}).get("hash") or "unknown"
             doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
-            if any(x in sec for x in ["reference", "bibliography", "acknowledg"]):
+            if _LOW_VALUE_SECTION_RE.search(sec):
                 print(f"REMOVED CHUNK: Chunk ID: {cid} | Document: {doc_name} | WHY: Low-value section filter ('{sec}')", flush=True)
                 continue
             filtered_chunks.append(c)
@@ -270,7 +279,11 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         debug['post_crossencoder_count'] = len(chunks) if chunks else 0
         print(f"  ├─ Cross-Encoder Reranking (Precision) ... {latency_breakdown['reranker_ms']:.2f} ms", flush=True)
 
-        if not chunks:
+        # BUG-5 fix: trigger fallback not only when zero chunks remain, but also when
+        # the best-scoring chunk is very low confidence (< 0.35) — indicates the primary
+        # collection returned results from the wrong paper.
+        top_score = chunks[0].get("score", 1.0) if chunks else 0.0
+        if not chunks or top_score < 0.35:
             debug['fallback_attempted'] = True
             # Fallback: try a corpus-wide search in the global 'chunks' collection
             try:
@@ -416,8 +429,20 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
 
     try:
         chunks = state["retrieved_chunks"]
-        # Limit to top N chunks to avoid context confusion but allow more context for complex questions
-        chunks = chunks[:8]
+        # BUG-1/BUG-8 fix: read cap from config, log every chunk that gets dropped here.
+        _cfg = _get_config()
+        agent_chunk_cap = int(
+            _cfg.get("retrieval", {}).get("agent_chunk_cap", 8)
+        )
+        pre_cap_count = len(chunks)
+        chunks = chunks[:agent_chunk_cap]
+        if pre_cap_count > agent_chunk_cap:
+            print(
+                f"[AGENT CAP] Trimmed {pre_cap_count} → {agent_chunk_cap} chunks "
+                f"(agent_chunk_cap={agent_chunk_cap}). "
+                f"Dropped ranks {agent_chunk_cap+1}–{pre_cap_count}.",
+                flush=True,
+            )
         t0 = time.perf_counter()
         ans = doc_agent.run(state["question"], chunks)
         t1 = time.perf_counter()

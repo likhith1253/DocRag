@@ -41,7 +41,14 @@ def generate(prompt: str, model_key: str, chunk_count: int = None) -> str:
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_path = cache_dir / "llm_prompt_cache.json"
 
-    key = hashlib.sha256((prompt + "::" + str(model)).encode("utf-8")).hexdigest()
+    gen_cfg = config.get("generation", {})
+
+    # Include generation config in cache key so model upgrades or param changes
+    # automatically invalidate old cached responses (BUG-3 fix).
+    num_predict = gen_cfg.get("num_predict", 512) if gen_cfg else 512
+    temperature = gen_cfg.get("temperature", 0.7) if gen_cfg else 0.7
+    cache_seed = f"{prompt}::{model}::np={num_predict}::temp={temperature}"
+    key = hashlib.sha256(cache_seed.encode("utf-8")).hexdigest()
     cache = {}
     try:
         if cache_path.exists():
@@ -49,8 +56,6 @@ def generate(prompt: str, model_key: str, chunk_count: int = None) -> str:
                 cache = json.load(f)
     except Exception:
         cache = {}
-
-    gen_cfg = config.get("generation", {})
 
     disable_cache = os.environ.get("DISABLE_PROMPT_CACHE", "").lower() in ("true", "1", "yes")
     start_total = time.perf_counter()

@@ -86,8 +86,17 @@ def rerank_cross_encoder(
     print("=" * 60, flush=True)
     print("Cross Encoder enabled?: YES", flush=True)
     print(f"Input chunks: {len(chunks)}", flush=True)
-    print(f"Output chunks: {len(out_chunks)}", flush=True)
-    print(f"Scores: {score_list}", flush=True)
-    print(f"Sorted order: {sorted_order}", flush=True)
+    print(f"Output chunks (top_k={top_k}): {len(out_chunks)}", flush=True)
+    # Log ALL ranked chunks so ranks beyond top_k are visible for debugging
+    for rank, c in enumerate(sorted_chunks, 1):
+        cid = str(c.get("id") or c.get("metadata", {}).get("hash") or "unknown")[:12]
+        sec = c.get("metadata", {}).get("section", "?")
+        ce_s = c.get("rerank_score", 0.0)
+        kept = "✓ KEPT" if rank <= top_k else "✗ DROPPED"
+        print(
+            f"  Rank #{rank:2d} [{kept}] ce_score={ce_s:.4f} "
+            f"section='{sec}' id={cid}",
+            flush=True,
+        )
 
     return out_chunks
