@@ -415,6 +415,21 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
                 f"Dropped ranks {agent_chunk_cap+1}–{pre_cap_count}.",
                 flush=True,
             )
+
+        # ── BUG FIX: Rebuild citations from the CAPPED chunks only ──────
+        # Previously, citations were built from all 20 retrieve_node chunks
+        # but only 8 capped chunks were sent to the LLM, causing:
+        #   - Citation count mismatch (Problem 4: 0 or 20 citations vs 8 chunks)
+        #   - Stage contract violation (Problem 5: Stage 7=8 vs Stage 11=20)
+        #   - Prompt contamination (Problem 3: unrelated paper chunks in context)
+        capped_citations = build_citation_list(chunks, request_id=request_id)
+        print(
+            f"[AGENT NODE] Citations rebuilt from {len(chunks)} capped chunks: "
+            f"{len(capped_citations)} citations (was {len(state.get('citations', []))} "
+            f"from {pre_cap_count} retrieve_node chunks)",
+            flush=True,
+        )
+
         t0 = time.perf_counter()
         ans = doc_agent.run(state["question"], chunks, request_id=request_id)
         t1 = time.perf_counter()
@@ -425,9 +440,14 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             for k in ("planner_ms", "vector_ms", "mmr_ms", "reranker_ms", "llm_ms")
         )
 
+        # ── BUG FIX: Return the capped chunks as retrieved_chunks ────────
+        # Previously, retrieved_chunks in the final state still held the full
+        # 20-chunk set from retrieve_node.  This caused _write_log() and the
+        # API response to report 20 chunks despite only 8 entering the LLM.
         return {
             "answer": ans,
-            "citations": state.get("citations", []),
+            "retrieved_chunks": chunks,
+            "citations": capped_citations,
             "latency_breakdown": latency_breakdown,
         }
     except Exception as e:
@@ -575,7 +595,7 @@ def answer(
     seen_files = set()
     citation_summary_log = []
 
-    # Stage 11 pipeline contract: citation input == citation output
+    # Pipeline contract: chunk count == citation count (both from capped set)
     input_chunk_count = len(chunks)
     output_citation_count = len(citations)
 
@@ -583,17 +603,21 @@ def answer(
         f"REQUEST ID: {request_id}",
         "ORCHESTRATOR PIPELINE CONTRACT CHECK (Stage 13)",
         "=" * 60,
-        f"LLM context chunk count (retrieved_chunks in final_state): {input_chunk_count}",
-        f"Citation input chunk count (build_citation_list input):    {input_chunk_count}",
-        f"Citation output count (build_citation_list output):        {output_citation_count}",
+        f"Capped chunk count (retrieved_chunks in final_state): {input_chunk_count}",
+        f"Citation count (from agent_node's capped rebuild):    {output_citation_count}",
     ]
     if output_citation_count == 0 and input_chunk_count > 0:
-        msg = (f"PIPELINE CONTRACT VIOLATION: Citation input chunk count ({input_chunk_count}) "
-               f"!= Citation output count ({output_citation_count})")
+        msg = (f"PIPELINE CONTRACT VIOLATION: Chunk count ({input_chunk_count}) "
+               f"!= Citation count ({output_citation_count})")
+        contract_lines.append(msg)
+        print(msg, flush=True)
+    elif input_chunk_count != output_citation_count and input_chunk_count > 0:
+        msg = (f"PIPELINE CONTRACT WARNING: Chunk count ({input_chunk_count}) "
+               f"!= Citation count ({output_citation_count}) — may indicate deduplication")
         contract_lines.append(msg)
         print(msg, flush=True)
     else:
-        contract_lines.append("Contract OK: citation input chunk count matched output (or input was 0).")
+        contract_lines.append("Contract OK: chunk count == citation count.")
 
     try:
         contract_path = os.path.join(LOGS_DIR, "pipeline_contract_check.txt")
