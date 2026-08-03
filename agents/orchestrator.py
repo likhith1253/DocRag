@@ -317,7 +317,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                     if fb_chunks:
                         return {
                             "retrieved_chunks": fb_chunks,
-                            "citations": build_citation_list(fb_chunks),
+                            "citations": build_citation_list(fb_chunks, request_id=request_id),
                             "latency_breakdown": latency_breakdown,
                         }
             except Exception:
@@ -343,7 +343,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
 
         return {
             "retrieved_chunks": chunks,
-            "citations": build_citation_list(chunks),
+            "citations": build_citation_list(chunks, request_id=request_id),
             "latency_breakdown": latency_breakdown,
         }
     except Exception as e:
@@ -574,6 +574,34 @@ def answer(
     t_stage13_start = time.perf_counter()
     seen_files = set()
     citation_summary_log = []
+
+    # Stage 11 pipeline contract: citation input == citation output
+    input_chunk_count = len(chunks)
+    output_citation_count = len(citations)
+
+    contract_lines = [
+        f"REQUEST ID: {request_id}",
+        "ORCHESTRATOR PIPELINE CONTRACT CHECK (Stage 13)",
+        "=" * 60,
+        f"LLM context chunk count (retrieved_chunks in final_state): {input_chunk_count}",
+        f"Citation input chunk count (build_citation_list input):    {input_chunk_count}",
+        f"Citation output count (build_citation_list output):        {output_citation_count}",
+    ]
+    if output_citation_count == 0 and input_chunk_count > 0:
+        msg = (f"PIPELINE CONTRACT VIOLATION: Citation input chunk count ({input_chunk_count}) "
+               f"!= Citation output count ({output_citation_count})")
+        contract_lines.append(msg)
+        print(msg, flush=True)
+    else:
+        contract_lines.append("Contract OK: citation input chunk count matched output (or input was 0).")
+
+    try:
+        contract_path = os.path.join(LOGS_DIR, "pipeline_contract_check.txt")
+        with open(contract_path, "a", encoding="utf-8") as _f:
+            _f.write("\n".join(contract_lines) + "\n\n")
+    except Exception:
+        pass
+
     for idx, cite in enumerate(citations, start=1):
         f = cite.get("file")
         if f:
@@ -585,17 +613,18 @@ def answer(
             "file": f,
             "section": cite.get("section"),
             "page_start": cite.get("page_start"),
-            "page_end": cite.get("page_end")
+            "page_end": cite.get("page_end"),
         })
 
     t_stage13_end = time.perf_counter()
     stage13_ms = (t_stage13_end - t_stage13_start) * 1000
 
     stage13_data = {
-        "citations_count": len(citations),
+        "input_chunk_count": input_chunk_count,
+        "citations_count": output_citation_count,
         "source_files_count": len(seen_files),
         "source_files": list(seen_files),
-        "citations": citation_summary_log
+        "citations": citation_summary_log,
     }
     log_stage(request_id, 13, "Citation Assembly", stage13_data, latency_ms=stage13_ms)
 
