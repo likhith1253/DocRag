@@ -527,6 +527,8 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
 
     except Exception as e:
         log_exception(e, "doc_agent.run")
+        if isinstance(e, AssertionError):
+            raise e
         return CANNOT_FIND_RESPONSE
 
     finally:
