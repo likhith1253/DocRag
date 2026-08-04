@@ -14,4 +14,5 @@ metadata_storage/
 snapshot_storage/
 papers/
 test_qdrant_storage/
-
+!.debug/
+!.debug/current_query/*

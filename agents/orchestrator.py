@@ -664,6 +664,18 @@ def answer(
     }
     log_stage(request_id, 14, "Final API Response", response_obj, latency_ms=total_ms)
 
+    # ── STEP 8: ASSERTIONS ─────────────────────────────────────────────
+    assert ans is not None, "ASSERTION FAILED: returned_answer is None"
+    assert citations is not None, "ASSERTION FAILED: citations is None"
+
+    # Finalize per-query forensic report (.debug/current_query/) & clean terminal output
+    from storage.pipeline_logger import forensic_tracer
+    forensic_tracer.returned_answer = ans
+    forensic_tracer.citations = citations
+    forensic_tracer.response_json = response_obj
+    forensic_tracer.write_artifacts()
+    forensic_tracer.print_terminal_summary()
+
     _write_log(query, chunks, citations, agent, latency, memory_diff, ans, latency_breakdown)
     return ans, latency_breakdown, chunks, citations
 

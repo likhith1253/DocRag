@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import yaml
 import uuid
 import threading
@@ -72,7 +73,25 @@ class VectorStoreManager:
                 self.device = "cpu"
 
         if self.qdrant_path not in VectorStoreManager._clients:
-            VectorStoreManager._clients[self.qdrant_path] = QdrantClient(path=self.qdrant_path)
+            client_obj = None
+            for attempt in range(3):
+                try:
+                    client_obj = QdrantClient(path=self.qdrant_path)
+                    break
+                except Exception as e:
+                    err_msg = str(e)
+                    if "already accessed by another instance" in err_msg:
+                        qdrant_url = os.environ.get("QDRANT_URL") or self.config.get("qdrant_url")
+                        if qdrant_url:
+                            client_obj = QdrantClient(url=qdrant_url)
+                            break
+                        if attempt < 2:
+                            time.sleep(1.0)
+                        else:
+                            raise e
+                    else:
+                        raise e
+            VectorStoreManager._clients[self.qdrant_path] = client_obj
         self.client = VectorStoreManager._clients[self.qdrant_path]
 
         self.encoder = _get_encoder(self.embedding_model_name, self.device)
