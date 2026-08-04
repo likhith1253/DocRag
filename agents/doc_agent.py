@@ -341,6 +341,27 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
             )
             return CANNOT_FIND_RESPONSE
 
+        # ── PIPELINE CONTRACT ASSERTIONS ──────────────────────────────────
+        agent_chunk_cap = 8
+        try:
+            from storage.vector_store import _get_config
+            agent_chunk_cap = int(_get_config().get("retrieval", {}).get("agent_chunk_cap", 8))
+        except Exception:
+            pass
+
+        # Assertion 1: Input chunk count <= agent_chunk_cap
+        assert len(chunks) <= agent_chunk_cap, (
+            f"PIPELINE CONTRACT VIOLATION: Received {len(chunks)} chunks, "
+            f"which exceeds the maximum allowed agent_chunk_cap ({agent_chunk_cap})."
+        )
+
+        # Assertion 2: Chunk ID uniqueness
+        chunk_ids = [str(c.get("id") or c.get("metadata", {}).get("hash") or f"chunk_{i}") for i, c in enumerate(valid_chunks, start=1)]
+        assert len(set(chunk_ids)) == len(valid_chunks), (
+            f"PIPELINE CONTRACT VIOLATION: Input valid_chunks contains duplicates! "
+            f"Total valid: {len(valid_chunks)}, Unique IDs: {len(set(chunk_ids))}"
+        )
+
         # ── STAGE 8: CONTEXT ASSEMBLY ───────────────────────────────────────
         t_stage8_start = time.perf_counter()
         context_chunks_log = []
@@ -369,6 +390,12 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         t_stage8_end = time.perf_counter()
         stage8_ms = (t_stage8_end - t_stage8_start) * 1000
 
+        # Assertion 3: Excerpt count matches valid chunk count
+        assert context_block.count("[EXCERPT ") == len(valid_chunks), (
+            f"PIPELINE CONTRACT VIOLATION: Excerpt count in context block ({context_block.count('[EXCERPT ')} "
+            f"does not match valid chunk count ({len(valid_chunks)})."
+        )
+
         stage8_data = {
             "valid_chunk_count": len(valid_chunks),
             "context_block_chars": len(context_block),
@@ -392,6 +419,17 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         full_prompt = _build_grounding_prompt(question, context_block, prompt_trace_lines)
         t_stage9_end = time.perf_counter()
         stage9_ms = (t_stage9_end - t_stage9_start) * 1000
+
+        # Assertion 4: Prompt explosion guard (< 100,000 chars)
+        assert len(full_prompt) < 100_000, (
+            f"PROMPT EXPLOSION FATAL ERROR: Assembled prompt length ({len(full_prompt)} chars) "
+            f"exceeds maximum threshold of 100,000 chars!"
+        )
+
+        # Assertion 5: No full repo/document text leak
+        assert "repository_text" not in full_prompt, (
+            "PIPELINE CONTRACT VIOLATION: Forbidden key 'repository_text' found in full prompt!"
+        )
 
         prompt_chars = len(full_prompt)
         prompt_words = len(full_prompt.split())

@@ -86,8 +86,41 @@ def rerank_cross_encoder(
         
     # Sort descending
     sorted_chunks = sorted(chunks, key=lambda x: x["score"], reverse=True)
-    out_chunks = sorted_chunks[:top_k]
-    removed_chunks_list = sorted_chunks[top_k:]
+    
+    # ── RETRIEVAL QUALITY & TOPIC CONCENTRATION FILTER ──────────────────────────
+    # Prune off-topic chunks that fall far below the top relevance score or belong
+    # to isolated low-scoring outlier papers when a primary paper is dominant.
+    filtered_sorted_chunks = []
+    if sorted_chunks:
+        top_score = sorted_chunks[0]["score"]
+        # Score floor: prune chunks with score far below top score
+        score_threshold = max(-2.0, top_score - 4.5) if top_score > 0 else top_score - 5.0
+        
+        # Paper concentration check
+        paper_top_counts = {}
+        for c in sorted_chunks[:5]:
+            p = c.get("metadata", {}).get("paper_title") or c.get("metadata", {}).get("file") or "Unknown"
+            paper_top_counts[p] = paper_top_counts.get(p, 0) + 1
+
+        for rank, c in enumerate(sorted_chunks, start=1):
+            p = c.get("metadata", {}).get("paper_title") or c.get("metadata", {}).get("file") or "Unknown"
+            c_score = c.get("score", 0.0)
+            
+            # Prune score floor violations
+            if c_score < score_threshold and rank > 1:
+                continue
+                
+            # Prune isolated off-topic papers if dominant paper exists in top ranks
+            if rank > 3 and paper_top_counts and paper_top_counts.get(p, 0) == 0 and (top_score - c_score > 2.5):
+                # Outlier paper with low relative score
+                continue
+
+            filtered_sorted_chunks.append(c)
+
+    # Fallback to sorted_chunks if filtering pruned everything
+    candidate_chunks = filtered_sorted_chunks if filtered_sorted_chunks else sorted_chunks
+    out_chunks = candidate_chunks[:top_k]
+    kept_set = set(id(c) for c in out_chunks)
 
     t_end = time.perf_counter()
     latency_ms = (t_end - t_start) * 1000
@@ -101,7 +134,7 @@ def rerank_cross_encoder(
             "filename": c.get("metadata", {}).get("file", "Unknown"),
             "ce_score": round(float(c.get("rerank_score", 0.0)), 6),
             "combined_score": round(float(c.get("score", 0.0)), 6),
-            "status": "KEPT" if rank <= top_k else "DROPPED"
+            "status": "KEPT" if id(c) in kept_set else "DROPPED"
         })
 
     stage6_data = {
