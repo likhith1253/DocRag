@@ -19,6 +19,7 @@ import os
 import sys
 import json
 import time
+import gc
 from pathlib import Path
 
 # Force LLM cache disabled so we always get live inference
@@ -126,6 +127,16 @@ def run_benchmark():
 
         elapsed = time.perf_counter() - t0
         total_latency += elapsed
+
+        # Free memory between queries to prevent numpy allocation failures
+        # when running 14+ LLM inferences sequentially in the same process.
+        gc.collect()
+        try:
+            import torch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
 
         check = _check_answer(answer_text, key_concepts)
         if check["passed"]:
