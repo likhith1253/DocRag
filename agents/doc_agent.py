@@ -113,24 +113,40 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
     trace_lines.append(f"Unique chunks entering context block: {len(unique_chunks)}")
     print(f"\n[PROMPT BUILDER] Input chunks: {len(chunks)} | Unique: {len(unique_chunks)}", flush=True)
 
-    # ── Sort by (paper_title/file, section, page_start) ───────────────────
-    def _sort_key(c: Dict[str, Any]):
+    # ── Group by paper while preserving CrossEncoder ranking precedence ────
+    def _paper_key(c: Dict[str, Any]) -> str:
         m = c.get("metadata", {})
-        paper = (m.get("paper_title") or m.get("file") or "").lower()
+        return (m.get("paper_title") or m.get("file") or "Unknown Paper").lower()
+
+    # Record original CrossEncoder rank for each chunk
+    for orig_rank, c in enumerate(unique_chunks):
+        c["_ce_rank"] = orig_rank
+
+    # Map each paper to the minimum CrossEncoder rank among its chunks
+    paper_min_rank: Dict[str, int] = {}
+    for c in unique_chunks:
+        pkey = _paper_key(c)
+        if pkey not in paper_min_rank:
+            paper_min_rank[pkey] = c["_ce_rank"]
+        else:
+            paper_min_rank[pkey] = min(paper_min_rank[pkey], c["_ce_rank"])
+
+    # Sort key:
+    # 1. paper_min_rank (paper containing top CrossEncoder chunk appears FIRST)
+    # 2. section (lowercase)
+    # 3. page_start (int)
+    def _sort_key(c: Dict[str, Any]):
+        pkey = _paper_key(c)
+        m = c.get("metadata", {})
         section = (m.get("section") or "").lower()
         page = m.get("page_start") or 0
         try:
             page = int(page)
         except (TypeError, ValueError):
             page = 0
-        return (paper, section, page)
+        return (paper_min_rank[pkey], section, page)
 
     unique_chunks.sort(key=_sort_key)
-
-    # ── Group by paper ─────────────────────────────────────────────────────
-    def _paper_key(c: Dict[str, Any]) -> str:
-        m = c.get("metadata", {})
-        return (m.get("paper_title") or m.get("file") or "Unknown Paper").lower()
 
     parts: List[str] = []
     running_len: int = 0
@@ -138,7 +154,7 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
     append_num: int = 0
 
     trace_lines.append("")
-    trace_lines.append("--- PER-PAPER GROUPS ---")
+    trace_lines.append("--- PER-PAPER GROUPS (CE RANK PRESERVED) ---")
 
     for paper_key, group_iter in itertools.groupby(unique_chunks, key=_paper_key):
         group = list(group_iter)
@@ -324,7 +340,15 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
     )
 
     # ── Depth-specific instruction ─────────────────────────────────────────
-    if answer_depth == "CONCISE":
+    if answer_depth == "EXTRACTION":
+        depth_instruction = (
+            "ANSWER FORMAT: Explicit Parameter & Metric Extraction.\n"
+            "1. List every explicit parameter value, hyperparameter, numerical setting, dataset metric, or experimental detail mentioned in the excerpts.\n"
+            "2. Use bullet points formatted as: • **<Parameter Name>**: <Exact Value or Setting> [Citation].\n"
+            "3. If a specific value or hyperparameter is not explicitly stated in the excerpts, write 'Not specified in excerpts.'\n"
+            "4. DO NOT summarize into vague generalities (e.g. do not say 'various hyperparameters were used'). State the exact numbers, rates, dimensions, and settings.\n"
+        )
+    elif answer_depth == "CONCISE":
         depth_instruction = (
             "ANSWER FORMAT: Concise and direct (1–2 paragraphs).\n"
             "Provide a clear, grounded explanation of what is being asked.\n"
@@ -409,16 +433,19 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
 
 def _build_confidence_block(chunks: List[Dict[str, Any]]) -> str:
     """
-    Compute a confidence indicator based on retrieval quality.
+    Compute a structured Evidence Summary indicator based on retrieval quality.
     Appended AFTER the LLM's answer — not part of the prompt.
-
-    Heuristics:
-      High   : >= 4 chunks from a single paper, avg CE score > 2.5
-      Medium : >= 2 chunks, avg CE score > 0.5
-      Low    : everything else
     """
     if not chunks:
-        return "\n\n---\n**Confidence: Low** | No chunks retrieved."
+        return (
+            "\n\n---\n"
+            "**Evidence Summary**\n"
+            "- **Retrieved Papers**: 0\n"
+            "- **Retrieved Chunks**: 0\n"
+            "- **Dominant Paper Coverage**: 0%\n"
+            "- **Average CrossEncoder Score**: 0.00\n"
+            "- **Evidence Strength**: Low"
+        )
 
     papers: Dict[str, int] = {}
     scores: List[float] = []
@@ -435,25 +462,27 @@ def _build_confidence_block(chunks: List[Dict[str, Any]]) -> str:
     n_papers = len(papers)
     top_paper = max(papers, key=papers.get)
     top_count = papers[top_paper]
+    coverage_pct = int(round((top_count / n) * 100)) if n > 0 else 0
     avg_score = sum(scores) / len(scores) if scores else 0.0
 
     if n >= 4 and top_count >= 4 and avg_score > 2.5:
         level = "High"
-        reason = f"Retrieved {n} chunks — {top_count} from a single paper | Avg. CrossEncoder score: {avg_score:.2f}"
     elif n >= 4 and top_count >= 3 and avg_score > 1.0:
         level = "High"
-        reason = f"Retrieved {n} chunks from {n_papers} paper(s) | Avg. score: {avg_score:.2f}"
     elif n >= 2 and avg_score > 0.5:
         level = "Medium"
-        reason = f"Retrieved {n} chunks from {n_papers} paper(s) | Avg. score: {avg_score:.2f}"
     else:
         level = "Low"
-        reason = (
-            f"Retrieved {n} chunks from {n_papers} paper(s) with low semantic agreement "
-            f"| Avg. score: {avg_score:.2f}"
-        )
 
-    return f"\n\n---\n**Confidence: {level}** | {reason}"
+    return (
+        f"\n\n---\n"
+        f"**Evidence Summary**\n"
+        f"- **Retrieved Papers**: {n_papers}\n"
+        f"- **Retrieved Chunks**: {n}\n"
+        f"- **Dominant Paper Coverage**: {coverage_pct}%\n"
+        f"- **Average CrossEncoder Score**: {avg_score:.2f}\n"
+        f"- **Evidence Strength**: {level}"
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -103,11 +103,19 @@ def _detect_answer_depth(question_lower: str) -> str:
     Map a question to the appropriate answer depth.
 
     Returns one of:
+        EXTRACTION  — hyperparameter, numerical, experimental setup, parameter list questions
         CONCISE     — definition / what-is questions
         DETAILED    — how / why / mechanism / causal questions
         COMPARATIVE — compare / difference / versus questions
         SURVEY      — overview / review / summarize / list-all questions
     """
+    # Extraction (hyperparameters, setup, parameters, numbers, datasets)
+    if re.search(
+        r'\b(hyperparameter|parameter|setting|config|learning rate|batch size|dropout|gamma|alpha|beta|epsilon|lambda|momentum|weight decay|experimental setup|dataset size|epochs|training setup|hardware|values? used)\b',
+        question_lower,
+    ):
+        return "EXTRACTION"
+
     # Comparative
     if re.search(
         r'\b(compar|versus|vs\.?|difference between|better than|contrast|relative to)\b',

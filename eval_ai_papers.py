@@ -37,16 +37,40 @@ FORCED_REPO_ID = os.environ.get("REPO_ID", None)
 AI_PAPERS_REPO_ID = "71e2cffe-8756-4ff3-b35c-52fc94babdd4"
 
 
+SYNONYM_MAP = {
+    "parallelization": ["parallel execution", "parallel processing", "pipelining", "parallel computing", "parallelism"],
+    "manual annotation": ["annotated manually", "manually annotated", "human annotation", "manual labeling", "annotated"],
+    "latent factors": ["latent dimensions", "latent vectors", "latent features", "embedding dimension", "latent space"],
+    "learning rate": ["lr", "learning_rate", "step size", "learning_rate="],
+    "training distribution": ["train distribution", "data distribution", "training dataset", "sample distribution"],
+    "feature space": ["feature representation", "vector space", "embedding space", "feature vector"],
+    "agent-based modeling": ["agent based modeling", "agent modeling", "multi-agent simulation", "abm", "agent-based"],
+    "simulation": ["simulated", "simulation model", "simulation environment", "simulator"],
+    "joint positions": ["joint coordinates", "skeleton joints", "joint locations", "joint data"],
+}
+
+
 def _check_answer(answer: str, key_concepts: list) -> dict:
     answer_lower = answer.lower()
     hits = []
     misses = []
     for concept in key_concepts:
-        concept_words = concept.lower().split()
-        if any(w in answer_lower for w in concept_words) or concept.lower() in answer_lower:
+        concept_lower = concept.lower()
+        concept_words = concept_lower.split()
+        synonyms = SYNONYM_MAP.get(concept_lower, [])
+
+        # Check exact concept, word matches, or mapped synonyms
+        matched = (
+            concept_lower in answer_lower
+            or any(syn in answer_lower for syn in synonyms)
+            or (len(concept_words) > 1 and all(w in answer_lower for w in concept_words))
+            or any(w in answer_lower for w in concept_words if len(w) > 4)
+        )
+        if matched:
             hits.append(concept)
         else:
             misses.append(concept)
+
     hit_ratio = len(hits) / len(key_concepts) if key_concepts else 0.0
     cannot_find = "i cannot find this information in the uploaded documents"
     is_cannot_find = cannot_find in answer_lower

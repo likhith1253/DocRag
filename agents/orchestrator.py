@@ -385,20 +385,17 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             "latency_breakdown": latency_breakdown,
         }
     elif state.get("error"):
+        err_detail = state.get("error")
         log_grounding_exit(
             request_id=request_id,
             file_path="agents/orchestrator.py",
             function_name="agent_node",
-            line_number=417,
-            reason=f"Retrieval error ('{state.get('error')}')",
+            line_number=391,
+            reason=f"Retrieval error ('{err_detail}')",
             condition="state.get('error') is not empty",
-            evidence={"state_error": state.get("error")}
+            evidence={"state_error": err_detail}
         )
-        return {
-            "answer": CANNOT_FIND_RESPONSE,
-            "citations": [],
-            "latency_breakdown": latency_breakdown,
-        }
+        raise RuntimeError(f"PIPELINE FAILURE IN RETRIEVAL: {err_detail}")
 
     try:
         chunks = state["retrieved_chunks"]

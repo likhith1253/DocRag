@@ -58,9 +58,13 @@ def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: s
     except Exception:
         cache = {}
 
-    disable_cache = os.environ.get("DISABLE_PROMPT_CACHE", "").lower() in ("true", "1", "yes")
+    # Disable prompt caching by default unless explicitly enabled via ENABLE_PROMPT_CACHE=1
+    enable_cache_env = os.environ.get("ENABLE_PROMPT_CACHE", "").lower() in ("true", "1", "yes")
+    disable_cache_env = os.environ.get("DISABLE_PROMPT_CACHE", "").lower() in ("true", "1", "yes")
+    cache_enabled = enable_cache_env and not disable_cache_env
+
     start_total = time.perf_counter()
-    cache_hit = (key in cache) and not disable_cache
+    cache_hit = (key in cache) and cache_enabled
     if cache_hit:
         result = cache[key]
         backend_ms = 0.0

@@ -72,27 +72,39 @@ class VectorStoreManager:
             except ImportError:
                 self.device = "cpu"
 
-        if self.qdrant_path not in VectorStoreManager._clients:
-            client_obj = None
-            for attempt in range(3):
-                try:
-                    client_obj = QdrantClient(path=self.qdrant_path)
-                    break
-                except Exception as e:
-                    err_msg = str(e)
-                    if "already accessed by another instance" in err_msg:
-                        qdrant_url = os.environ.get("QDRANT_URL") or self.config.get("qdrant_url")
-                        if qdrant_url:
-                            client_obj = QdrantClient(url=qdrant_url)
-                            break
-                        if attempt < 2:
-                            time.sleep(1.0)
+        import threading
+        if not hasattr(VectorStoreManager, "_client_lock"):
+            VectorStoreManager._client_lock = threading.Lock()
+
+        with VectorStoreManager._client_lock:
+            if self.qdrant_path not in VectorStoreManager._clients or VectorStoreManager._clients[self.qdrant_path] is None:
+                client_obj = None
+                max_attempts = 10
+                for attempt in range(max_attempts):
+                    try:
+                        client_obj = QdrantClient(path=self.qdrant_path)
+                        break
+                    except Exception as e:
+                        err_msg = str(e)
+                        is_lock_err = (
+                            "already accessed by another instance" in err_msg
+                            or "AlreadyLocked" in err_msg
+                             or "PermissionError" in err_msg
+                            or "[Errno 13]" in err_msg
+                        )
+                        if is_lock_err:
+                            qdrant_url = os.environ.get("QDRANT_URL") or self.config.get("qdrant_url")
+                            if qdrant_url:
+                                client_obj = QdrantClient(url=qdrant_url)
+                                break
+                            if attempt < max_attempts - 1:
+                                time.sleep(0.5 * (attempt + 1))
+                            else:
+                                raise e
                         else:
                             raise e
-                    else:
-                        raise e
-            VectorStoreManager._clients[self.qdrant_path] = client_obj
-        self.client = VectorStoreManager._clients[self.qdrant_path]
+                VectorStoreManager._clients[self.qdrant_path] = client_obj
+            self.client = VectorStoreManager._clients[self.qdrant_path]
 
         self.encoder = _get_encoder(self.embedding_model_name, self.device)
         self.collection_name = collection_name
