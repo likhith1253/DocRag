@@ -23,7 +23,14 @@ import time
 import json
 import ctypes
 import yaml
-from typing import TypedDict, List, Dict, Any
+from typing import List, Dict, Any
+try:
+    from typing import TypedDict
+except ImportError:
+    try:
+        from typing_extensions import TypedDict
+    except ImportError:
+        TypedDict = dict
 from langgraph.graph import StateGraph, END
 
 if hasattr(sys.stdout, "reconfigure"):
