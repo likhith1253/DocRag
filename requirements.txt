@@ -15,7 +15,6 @@ sentencepiece>=0.2.0
 safetensors>=0.4.0
 huggingface-hub>=0.22.0
 sentence-transformers>=2.5.0
-langgraph>=0.0.30
 
 # Vector Database & Knowledge Graph Storage
 qdrant-client>=1.8.0

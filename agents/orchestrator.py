@@ -31,7 +31,11 @@ except ImportError:
         from typing_extensions import TypedDict
     except ImportError:
         TypedDict = dict
-from langgraph.graph import StateGraph, END
+try:
+    from langgraph.graph import StateGraph, END
+except ImportError:
+    StateGraph = None
+    END = None
 
 if hasattr(sys.stdout, "reconfigure"):
     try:

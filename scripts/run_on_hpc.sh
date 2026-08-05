@@ -1,10 +1,27 @@
 #!/bin/bash
-# run_on_hpc.sh - Wrapper to ensure dependencies are installed before running
+# run_on_hpc.sh - Clean Virtual Environment Runner for HPC
 
-echo "Checking and installing required dependencies..."
-pip3 install --user -r requirements.txt
+echo "======================================================="
+echo "Setting up Python Virtual Environment (venv)..."
+echo "======================================================="
 
-echo "Dependencies installed. Running verification suite..."
+# Create a clean venv if it doesn't exist
+if [ ! -d "hpc_venv" ]; then
+    python3 -m venv hpc_venv
+fi
+
+# Activate virtual environment
+source hpc_venv/bin/activate
+
+echo "Installing/verifying requirements inside virtual environment..."
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+
+echo "======================================================="
+echo "Dependencies ready. Executing 50-query verification..."
+echo "======================================================="
+
 export DISABLE_PROMPT_CACHE=1
 export ENABLE_PROMPT_CACHE=0
-python3 scripts/run_hpc_verification.py
+
+python scripts/run_hpc_verification.py
