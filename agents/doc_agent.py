@@ -1,5 +1,5 @@
 """
-DocumentRAG Document QA Agent.
+DocumentRAG Document QA Agent — Research-Grade Edition.
 Answers questions strictly from retrieved document chunks.
 
 Grounding contract:
@@ -7,8 +7,12 @@ Grounding contract:
   - NEVER uses outside knowledge or inferred facts
   - ALWAYS cites the source paper, section, and page for every factual claim
   - Returns the canonical "cannot find" message if no relevant content is found
-  
-Citation format: [Paper: <title>, Section: <section>, Page: <page>]
+
+Quality upgrades (phases 2–7):
+  - Phase 2: Structured context with paper grouping and adjacent-page merging
+  - Phase 3/4/7: Adaptive reasoning-oriented prompt based on question depth
+  - Phase 5: Rich citation format instructed in prompt (Paper, Section, Page)
+  - Phase 6: Code-side confidence block appended after generation
 """
 
 import sys
@@ -19,7 +23,7 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 from llm.backend import generate
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 # Canonical "not found" response — every code path must use this exact string
 CANNOT_FIND_RESPONSE = (
@@ -33,11 +37,12 @@ _MAX_EXCERPT_CHARS = 4000
 _PROMPT_EXPLOSION_THRESHOLD = 60_000
 
 
+# ---------------------------------------------------------------------------
+# Phase 5: Rich citation formatter
+# ---------------------------------------------------------------------------
+
 def _format_citation(metadata: Dict[str, Any]) -> str:
-    """
-    Format a citation string from chunk metadata.
-    Gracefully handles missing fields.
-    """
+    """Format a rich citation string from chunk metadata."""
     title = metadata.get("paper_title") or metadata.get("file", "Unknown Paper")
     section = metadata.get("section") or "Unknown Section"
     page_start = metadata.get("page_start")
@@ -53,139 +58,232 @@ def _format_citation(metadata: Dict[str, Any]) -> str:
     return f"[Paper: {title}, Section: {section}, {page_str}]"
 
 
+def _short_title(metadata: Dict[str, Any]) -> str:
+    """Return a short display title for a paper (strips path/extension)."""
+    raw = metadata.get("paper_title") or metadata.get("file", "Unknown Paper")
+    import os
+    name = os.path.basename(str(raw))
+    if name.lower().endswith(".pdf"):
+        name = name[:-4]
+    return name.replace("_", " ").strip()
+
+
+# ---------------------------------------------------------------------------
+# Phase 2: Structured context block with paper grouping + adjacent merge
+# ---------------------------------------------------------------------------
+
 def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -> str:
     """
     Build the numbered context block for the prompt.
-    Each excerpt includes its citation header so the LLM can reference it.
 
-    BUG 1 FIX:
-      - Deduplicates chunks before insertion so each chunk appears exactly ONCE.
-      - Detects prompt self-concatenation in chunk content (recursive appends).
-      - Enforces _MAX_EXCERPT_CHARS per excerpt.
-      - Stops with PROMPT EXPLOSION DETECTED if running total exceeds threshold.
-      - Records every append to trace_lines for logs/prompt_append_trace.txt.
+    Phase 2 improvements:
+      - Deduplicate chunks (unchanged contract)
+      - Sort chunks by (paper_title, section, page_start) for narrative continuity
+      - Group chunks under a paper header: === Paper: <title> ===
+      - Merge adjacent chunks from same paper + same section + consecutive pages
+        into a single [EXCERPT N] block — reduces repeated headers, keeps flow
+      - Enforce _MAX_EXCERPT_CHARS per merged excerpt
+      - PROMPT EXPLOSION GUARD unchanged
+
+    BUG FIX (carried forward):
+      - Deduplicates chunks before insertion so each appears exactly ONCE
+      - Detects prompt self-concatenation in chunk content
     """
-    parts = []
-    seen_chunk_ids = set()
-    unique_chunks = []
+    import itertools
 
-    # ── Deduplication pass ─────────────────────────────────────────────────
     trace_lines.append("=" * 60)
-    trace_lines.append("CONTEXT BLOCK ASSEMBLY: CHUNK DEDUPLICATION")
+    trace_lines.append("CONTEXT BLOCK ASSEMBLY: PHASE 2 STRUCTURED")
     trace_lines.append("=" * 60)
     trace_lines.append(f"Input chunks count: {len(chunks)}")
 
+    # ── Deduplication pass ─────────────────────────────────────────────────
+    seen_chunk_ids: set = set()
+    unique_chunks: List[Dict[str, Any]] = []
     for idx, chunk in enumerate(chunks, start=1):
         raw_id = chunk.get("id") or chunk.get("metadata", {}).get("hash") or ""
         cid = str(raw_id) if raw_id else f"chunk_{idx}"
         if cid in seen_chunk_ids:
-            msg = (f"[PROMPT BUILDER WARNING] Duplicate chunk insertion detected! "
-                   f"Chunk ID '{cid}' skipped.")
+            msg = f"[PROMPT BUILDER WARNING] Duplicate chunk ID '{cid}' skipped."
             print(msg, flush=True)
             trace_lines.append(msg)
             continue
         seen_chunk_ids.add(cid)
         unique_chunks.append(chunk)
 
-    trace_lines.append(f"Unique selected chunks entering context block: {len(unique_chunks)}")
+    trace_lines.append(f"Unique chunks entering context block: {len(unique_chunks)}")
     print(f"\n[PROMPT BUILDER] Input chunks: {len(chunks)} | Unique: {len(unique_chunks)}", flush=True)
 
-    # ── Append loop ─────────────────────────────────────────────────────────
-    running_len = 0
-    expected_char_count = 0
-    append_num = 0
+    # ── Sort by (paper_title/file, section, page_start) ───────────────────
+    def _sort_key(c: Dict[str, Any]):
+        m = c.get("metadata", {})
+        paper = (m.get("paper_title") or m.get("file") or "").lower()
+        section = (m.get("section") or "").lower()
+        page = m.get("page_start") or 0
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = 0
+        return (paper, section, page)
+
+    unique_chunks.sort(key=_sort_key)
+
+    # ── Group by paper ─────────────────────────────────────────────────────
+    def _paper_key(c: Dict[str, Any]) -> str:
+        m = c.get("metadata", {})
+        return (m.get("paper_title") or m.get("file") or "Unknown Paper").lower()
+
+    parts: List[str] = []
+    running_len: int = 0
+    excerpt_num: int = 0
+    append_num: int = 0
 
     trace_lines.append("")
-    trace_lines.append("--- PER-CHUNK APPENDS ---")
+    trace_lines.append("--- PER-PAPER GROUPS ---")
 
-    for i, chunk in enumerate(unique_chunks, start=1):
-        meta = chunk.get("metadata", {})
-        citation = _format_citation(meta)
-        content = str(chunk.get("content", "")).strip()
+    for paper_key, group_iter in itertools.groupby(unique_chunks, key=_paper_key):
+        group = list(group_iter)
+        if not group:
+            continue
 
-        # Detect prompt self-concatenation / recursive content
-        recursive_signals = ("CRITICAL RULES:", "Document Excerpts:", "Answer strictly from the excerpts")
-        for sig in recursive_signals:
-            if sig in content:
-                msg = (f"[PROMPT BUILDER WARNING] Recursive self-concatenation detected in chunk {i}: "
-                       f"found boilerplate marker '{sig}'. Truncating at marker.")
-                print(msg, flush=True)
-                trace_lines.append(msg)
-                content = content.split(sig)[0].strip()
-                break
+        # Paper display header
+        paper_display = _short_title(group[0].get("metadata", {}))
+        paper_header = f"\n=== Paper: {paper_display} ===\n"
 
-        # Enforce max excerpt characters
-        if len(content) > _MAX_EXCERPT_CHARS:
-            content = content[:_MAX_EXCERPT_CHARS] + "\n...[truncated]"
+        # ── Merge adjacent chunks within same section + consecutive pages ──
+        merged_blocks: List[Dict[str, Any]] = []  # list of (merged_text, meta_of_first, page_range)
 
-        appended_text = f"[EXCERPT {i}] {citation}\n{content}"
-        sep_overhead = 2 if running_len > 0 else 0
-        appended_len = len(appended_text)
-        append_num += 1
+        def _page_int(c: Dict[str, Any]) -> int:
+            try:
+                return int(c.get("metadata", {}).get("page_start") or 0)
+            except (TypeError, ValueError):
+                return 0
 
-        trace_lines.append(f"Append #{append_num}")
-        trace_lines.append(f"  Source: chunk {i}")
-        trace_lines.append(f"  Variable appended: content of chunk id={list(seen_chunk_ids)[i-1] if i <= len(seen_chunk_ids) else '?'}")
-        trace_lines.append(f"  Characters appended: {appended_len + sep_overhead}")
-        trace_lines.append(f"  Running prompt length before: {running_len}")
+        def _section(c: Dict[str, Any]) -> str:
+            return (c.get("metadata", {}).get("section") or "").strip().lower()
 
-        new_running_len = running_len + sep_overhead + appended_len
-        trace_lines.append(f"  Running prompt length after: {new_running_len}")
+        current_texts: List[str] = []
+        current_meta: Optional[Dict[str, Any]] = None
+        current_section: str = ""
+        current_page_start: int = 0
+        current_page_end: int = 0
 
-        print(
-            f"Append #{append_num} | Source: chunk {i} | "
-            f"Added: {appended_len + sep_overhead} chars | "
-            f"Running total: {new_running_len}",
-            flush=True,
-        )
+        def _flush_block():
+            nonlocal current_texts, current_meta, current_section, current_page_start, current_page_end
+            if current_texts and current_meta is not None:
+                merged_content = "\n\n".join(current_texts)
+                # Cap merged block
+                if len(merged_content) > _MAX_EXCERPT_CHARS:
+                    merged_content = merged_content[:_MAX_EXCERPT_CHARS] + "\n...[truncated]"
+                block_meta = dict(current_meta)
+                block_meta["page_end"] = current_page_end  # update page range
+                merged_blocks.append({
+                    "content": merged_content,
+                    "metadata": block_meta,
+                    "page_start": current_page_start,
+                    "page_end": current_page_end,
+                })
+            current_texts = []
+            current_meta = None
+            current_section = ""
+            current_page_start = 0
+            current_page_end = 0
 
-        # PROMPT EXPLOSION GUARD
-        if new_running_len > _PROMPT_EXPLOSION_THRESHOLD:
-            import traceback as _tb
-            explosion_msg = [
-                "",
-                "=" * 70,
-                "PROMPT EXPLOSION DETECTED",
-                "=" * 70,
-                f"  At Append #{append_num}",
-                f"  Source: chunk {i}",
-                f"  Variable: content (string)",
-                f"  Object type: {type(appended_text).__name__}",
-                f"  File: agents/doc_agent.py",
-                f"  Function: _build_context_block",
-                f"  Running total EXCEEDED {_PROMPT_EXPLOSION_THRESHOLD} chars",
-                f"  Appended text length: {appended_len}",
-                f"  Running total before: {running_len}",
-                f"  Running total after (would be): {new_running_len}",
-                "  Call stack:",
-                _tb.format_stack()[-3] if _tb.format_stack() else "N/A",
-                "=" * 70,
-            ]
-            for line in explosion_msg:
-                print(line, flush=True)
-                trace_lines.append(line)
-            # Truncate content to fit and stop further chunk insertion
-            remaining_budget = _PROMPT_EXPLOSION_THRESHOLD - running_len - sep_overhead - 50
-            if remaining_budget > 100:
-                content = content[:remaining_budget] + "\n...[PROMPT EXPLOSION GUARD: truncated]"
-                appended_text = f"[EXCERPT {i}] {citation}\n{content}"
+        for chunk in group:
+            content = str(chunk.get("content", "")).strip()
+
+            # Detect prompt self-concatenation
+            recursive_signals = ("CRITICAL RULES:", "Document Excerpts:", "Answer strictly from the excerpts")
+            for sig in recursive_signals:
+                if sig in content:
+                    msg = f"[PROMPT BUILDER WARNING] Recursive signal '{sig}' in chunk, truncating."
+                    print(msg, flush=True)
+                    trace_lines.append(msg)
+                    content = content.split(sig)[0].strip()
+                    break
+
+            if not content:
+                continue
+
+            sec = _section(chunk)
+            pg = _page_int(chunk)
+
+            # Merge condition: same section, strictly consecutive page (N or N+1)
+            can_merge = (
+                current_meta is not None
+                and sec == current_section
+                and pg <= current_page_end + 1
+            )
+
+            if can_merge:
+                current_texts.append(content)
+                current_page_end = max(current_page_end, pg)
+            else:
+                _flush_block()
+                current_texts = [content]
+                current_meta = chunk.get("metadata", {})
+                current_section = sec
+                current_page_start = pg
+                current_page_end = pg
+
+        _flush_block()
+
+        # ── Emit paper header + excerpt blocks ────────────────────────────
+        overhead = len(paper_header)
+        if running_len + overhead > _PROMPT_EXPLOSION_THRESHOLD:
+            trace_lines.append(f"PROMPT EXPLOSION GUARD: skipping paper '{paper_display}'")
             break
 
-        running_len = new_running_len
-        expected_char_count += sep_overhead + appended_len
-        parts.append(appended_text)
+        running_len += overhead
+        parts.append(paper_header)
+
+        for block in merged_blocks:
+            excerpt_num += 1
+            append_num += 1
+            meta = block["metadata"]
+            section_display = meta.get("section") or "Unknown Section"
+            p_start = block["page_start"]
+            p_end = block["page_end"]
+            if p_start and p_end and p_start != p_end:
+                page_str = f"Pages {p_start}–{p_end}"
+            elif p_start:
+                page_str = f"Page {p_start}"
+            else:
+                page_str = "Page unknown"
+
+            excerpt_header = f"[EXCERPT {excerpt_num}] Section: {section_display} | {page_str}"
+            full_text = f"{excerpt_header}\n{block['content']}"
+            sep_overhead = 2 if running_len > 0 else 0
+            block_len = len(full_text) + sep_overhead
+
+            trace_lines.append(f"  Excerpt #{excerpt_num}: {section_display} | {page_str} | {block_len} chars")
+            print(
+                f"Append #{append_num} | Excerpt {excerpt_num} | Paper: {paper_display} | "
+                f"Added: {block_len} chars | Running: {running_len + block_len}",
+                flush=True,
+            )
+
+            if running_len + block_len > _PROMPT_EXPLOSION_THRESHOLD:
+                import traceback as _tb
+                explosion_msg = (
+                    f"\n{'='*70}\nPROMPT EXPLOSION DETECTED at Excerpt {excerpt_num}\n"
+                    f"  Running total {running_len + block_len} exceeds {_PROMPT_EXPLOSION_THRESHOLD} chars\n"
+                    f"{'='*70}"
+                )
+                print(explosion_msg, flush=True)
+                trace_lines.append(explosion_msg)
+                break
+
+            running_len += block_len
+            parts.append(full_text)
 
     context_block = "\n\n".join(parts)
-    actual_char_count = len(context_block)
-    diff = actual_char_count - expected_char_count
 
     summary = [
         "",
         "--- CONTEXT BLOCK ASSEMBLY SUMMARY ---",
-        f"Expected character count: {expected_char_count}",
-        f"Actual character count:   {actual_char_count}",
-        f"Difference:               {diff}",
-        f"Chunks inserted:          {len(parts)}",
+        f"Total excerpts inserted: {excerpt_num}",
+        f"Total characters: {len(context_block)}",
+        f"Papers grouped: {len(set(_paper_key(c) for c in unique_chunks))}",
     ]
     for line in summary:
         trace_lines.append(line)
@@ -194,87 +292,173 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
     return context_block
 
 
-def _build_grounding_prompt(question: str, context_block: str, trace_lines: List[str]) -> str:
+# ---------------------------------------------------------------------------
+# Phase 3 / 4 / 5 / 7: Adaptive reasoning-oriented prompt
+# ---------------------------------------------------------------------------
+
+def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str, trace_lines: List[str]) -> str:
     """
-    Construct the grounding-enforced prompt with strict instruction.
-    Instruments every append with running-total tracking.
+    Build an adaptive, reasoning-oriented grounding prompt.
+
+    Phase 3 + 4: Selects instruction template based on answer_depth.
+    Phase 5: Instructs the LLM to cite using the full excerpt header (Paper, Section, Page).
+    Phase 7: Instructs multi-paragraph, coherent answers — not isolated facts.
+
+    answer_depth values: CONCISE | DETAILED | COMPARATIVE | SURVEY
     """
     sep = "=" * 80
-    system_rules = (
-        "You are a research assistant answering questions about academic papers.\n\n"
-        "CRITICAL RULES:\n"
-        "1. You MUST answer ONLY using information from the provided excerpts below.\n"
-        "2. Do NOT use any outside knowledge, general facts, or assumptions.\n"
-        "3. Do NOT invent details, methods, results, or any information.\n"
-        "4. Extract and quote specific facts, numbers, methods, and results from excerpts.\n"
-        "5. If information is NOT in the excerpts, respond EXACTLY:\n"
+
+    # ── Common grounding header ────────────────────────────────────────────
+    grounding_header = (
+        "You are a research assistant answering questions STRICTLY from the retrieved document excerpts below.\n\n"
+        "ABSOLUTE RULES — violating any rule makes your answer wrong:\n"
+        "1. Use ONLY information present in the excerpts. Zero outside knowledge.\n"
+        "2. Never invent facts, methods, numbers, or results.\n"
+        "3. Every factual claim MUST be cited using the FULL citation from the excerpt header.\n"
+        "   Citation format: [Paper: <title>, Section: <section>, Page <N>]\n"
+        "   Example: [Paper: Attention Is All You Need, Section: Experiments, Page 8]\n"
+        "4. If information is absent from all excerpts, respond EXACTLY:\n"
         f'   "{CANNOT_FIND_RESPONSE}"\n'
-        "6. Include citation for every factual claim using format: [Excerpt N]\n"
-        "7. Be concise and direct. Quote key phrases from excerpts.\n\n"
-        "Document Excerpts:\n"
+        "5. Never repeat the same sentence. Never pad with filler.\n"
+        "6. Reason across excerpts — connect evidence, explain relationships, identify cause-effect.\n\n"
     )
+
+    # ── Depth-specific instruction ─────────────────────────────────────────
+    if answer_depth == "CONCISE":
+        depth_instruction = (
+            "ANSWER FORMAT: Concise and direct (1–2 paragraphs).\n"
+            "Provide a clear, grounded explanation of what is being asked.\n"
+            "Cite the source for every factual claim.\n"
+            "Do not speculate beyond what the excerpts state.\n"
+        )
+    elif answer_depth == "COMPARATIVE":
+        depth_instruction = (
+            "ANSWER FORMAT: Comparative analysis.\n"
+            "Structure your answer as follows:\n"
+            "1. **Overview**: What is being compared and why.\n"
+            "2. **Similarities**: Shared aspects with citations from excerpts.\n"
+            "3. **Differences**: Key distinctions with citations from excerpts.\n"
+            "4. **Conclusion**: Which approach excels in what context (based only on excerpts).\n"
+            "Use evidence from each relevant excerpt. Do not compare beyond what the text states.\n"
+        )
+    elif answer_depth == "SURVEY":
+        depth_instruction = (
+            "ANSWER FORMAT: Comprehensive overview.\n"
+            "Structure your answer as follows:\n"
+            "## Overview\n"
+            "A high-level summary of the topic across all retrieved excerpts.\n"
+            "## Key Approaches / Findings\n"
+            "Enumerate and explain each distinct method, result, or finding from the excerpts.\n"
+            "## Relationships and Themes\n"
+            "Connect related ideas across different excerpts and papers.\n"
+            "## Gaps and Limitations\n"
+            "Note what is unclear, missing, or explicitly limited in the excerpts.\n"
+            "Cite every claim with the full excerpt citation.\n"
+        )
+    else:  # DETAILED (default for HOW / WHY / methodology questions)
+        depth_instruction = (
+            "ANSWER FORMAT: Detailed explanation with reasoning.\n"
+            "Structure your answer as follows:\n"
+            "## Overview\n"
+            "A concise 2–3 sentence summary answering the question directly.\n"
+            "## Detailed Explanation\n"
+            "Explain the mechanism, methodology, or reasoning in depth.\n"
+            "Connect evidence across multiple excerpts where applicable.\n"
+            "## Supporting Evidence\n"
+            "Quote or paraphrase specific facts, numbers, or methods from the excerpts with full citations.\n"
+            "## Limitations or Caveats\n"
+            "If the excerpts mention limitations, open problems, or caveats, state them.\n"
+            "If not mentioned, write: 'Not discussed in the retrieved excerpts.'\n"
+            "Cite every factual claim with the full excerpt citation.\n"
+        )
+
+    # ── Common closing instruction ─────────────────────────────────────────
+    closing = (
+        "\nFormat your answer using markdown (## headers, bullet points where appropriate).\n"
+        "Write in coherent paragraphs — not isolated bullet facts.\n"
+        "Never use outside knowledge. Reason only from the excerpts.\n"
+    )
+
+    # ── Assemble prompt ────────────────────────────────────────────────────
     separator_line = sep + "\n"
     user_suffix = (
         "\n" + sep + "\n\n"
         + f"Question: {question}\n\n"
-        + "Answer strictly from the excerpts above. Do not use outside knowledge:"
+        + f"{depth_instruction}"
+        + closing
+        + "\nAnswer:"
     )
 
     trace_lines.append("")
     trace_lines.append("=" * 60)
-    trace_lines.append("GROUNDING PROMPT ASSEMBLY")
+    trace_lines.append(f"ADAPTIVE PROMPT ASSEMBLY | depth={answer_depth}")
     trace_lines.append("=" * 60)
 
-    running = 0
-    append_num = [0]
+    full_prompt = grounding_header + separator_line + context_block + user_suffix
 
-    def _append(source: str, text: str):
-        nonlocal running
-        append_num[0] += 1
-        added = len(text)
-        before = running
-        running += added
-        line = (f"Append #{append_num[0]} | Source: {source} | "
-                f"Added: {added} chars | Running total: {running}")
-        trace_lines.append(f"Append #{append_num[0]}")
-        trace_lines.append(f"  Source: {source}")
-        trace_lines.append(f"  Characters appended: {added}")
-        trace_lines.append(f"  Running prompt length before: {before}")
-        trace_lines.append(f"  Running prompt length after: {running}")
-        print(line, flush=True)
-        if running > _PROMPT_EXPLOSION_THRESHOLD:
-            explosion = (
-                f"\nPROMPT EXPLOSION DETECTED\n"
-                f"  Append #{append_num[0]}\n"
-                f"  Source: {source}\n"
-                f"  Running total {running} exceeds threshold {_PROMPT_EXPLOSION_THRESHOLD}\n"
-                f"  File: agents/doc_agent.py  Function: _build_grounding_prompt\n"
-            )
-            print(explosion, flush=True)
-            trace_lines.append(explosion)
+    trace_lines.append(f"Prompt chars: {len(full_prompt)}")
+    print(f"\n--- ADAPTIVE PROMPT SUMMARY ---", flush=True)
+    print(f"Depth: {answer_depth} | Chars: {len(full_prompt)}", flush=True)
 
-    _append("system_rules", system_rules)
-    _append("top_separator", separator_line)
-    _append("context_block", context_block)
-    _append("user_suffix", user_suffix)
+    return full_prompt
 
-    expected = len(system_rules) + len(separator_line) + len(context_block) + len(user_suffix)
-    actual = running
-    diff = actual - expected
 
-    summary = [
-        "",
-        "--- GROUNDING PROMPT SUMMARY ---",
-        f"Expected character count (Final Prompt): {expected}",
-        f"Actual character count (Final Prompt):   {actual}",
-        f"Difference: {diff}",
-    ]
-    for line in summary:
-        trace_lines.append(line)
-        print(line, flush=True)
+# ---------------------------------------------------------------------------
+# Phase 6: Confidence block (code-side append)
+# ---------------------------------------------------------------------------
 
-    return system_rules + separator_line + context_block + user_suffix
+def _build_confidence_block(chunks: List[Dict[str, Any]]) -> str:
+    """
+    Compute a confidence indicator based on retrieval quality.
+    Appended AFTER the LLM's answer — not part of the prompt.
 
+    Heuristics:
+      High   : >= 4 chunks from a single paper, avg CE score > 2.5
+      Medium : >= 2 chunks, avg CE score > 0.5
+      Low    : everything else
+    """
+    if not chunks:
+        return "\n\n---\n**Confidence: Low** | No chunks retrieved."
+
+    papers: Dict[str, int] = {}
+    scores: List[float] = []
+    for c in chunks:
+        paper = (
+            c.get("metadata", {}).get("paper_title")
+            or c.get("metadata", {}).get("file")
+            or "Unknown"
+        )
+        papers[paper] = papers.get(paper, 0) + 1
+        scores.append(float(c.get("score", 0.0)))
+
+    n = len(chunks)
+    n_papers = len(papers)
+    top_paper = max(papers, key=papers.get)
+    top_count = papers[top_paper]
+    avg_score = sum(scores) / len(scores) if scores else 0.0
+
+    if n >= 4 and top_count >= 4 and avg_score > 2.5:
+        level = "High"
+        reason = f"Retrieved {n} chunks — {top_count} from a single paper | Avg. CrossEncoder score: {avg_score:.2f}"
+    elif n >= 4 and top_count >= 3 and avg_score > 1.0:
+        level = "High"
+        reason = f"Retrieved {n} chunks from {n_papers} paper(s) | Avg. score: {avg_score:.2f}"
+    elif n >= 2 and avg_score > 0.5:
+        level = "Medium"
+        reason = f"Retrieved {n} chunks from {n_papers} paper(s) | Avg. score: {avg_score:.2f}"
+    else:
+        level = "Low"
+        reason = (
+            f"Retrieved {n} chunks from {n_papers} paper(s) with low semantic agreement "
+            f"| Avg. score: {avg_score:.2f}"
+        )
+
+    return f"\n\n---\n**Confidence: {level}** | {reason}"
+
+
+# ---------------------------------------------------------------------------
+# Public API: run()
+# ---------------------------------------------------------------------------
 
 def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default") -> str:
     """
@@ -287,7 +471,8 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         request_id: Unique request ID for stage logging.
 
     Returns:
-        Answer string with inline citations, or the canonical CANNOT_FIND_RESPONSE.
+        Answer string with inline citations + confidence block,
+        or the canonical CANNOT_FIND_RESPONSE.
     """
     import os
     import time
@@ -297,6 +482,7 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         save_prompt_artifact, save_model_output_artifact, log_exception,
         LOGS_DIR,
     )
+    from retrieval.query_analyzer import detect_question_type
 
     # Shared trace buffer written to logs/prompt_append_trace.txt at end
     prompt_trace_lines: List[str] = [
@@ -349,20 +535,27 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         except Exception:
             pass
 
-        # Assertion 1: Input chunk count <= agent_chunk_cap
         assert len(chunks) <= agent_chunk_cap, (
             f"PIPELINE CONTRACT VIOLATION: Received {len(chunks)} chunks, "
             f"which exceeds the maximum allowed agent_chunk_cap ({agent_chunk_cap})."
         )
 
-        # Assertion 2: Chunk ID uniqueness
-        chunk_ids = [str(c.get("id") or c.get("metadata", {}).get("hash") or f"chunk_{i}") for i, c in enumerate(valid_chunks, start=1)]
+        chunk_ids = [
+            str(c.get("id") or c.get("metadata", {}).get("hash") or f"chunk_{i}")
+            for i, c in enumerate(valid_chunks, start=1)
+        ]
         assert len(set(chunk_ids)) == len(valid_chunks), (
             f"PIPELINE CONTRACT VIOLATION: Input valid_chunks contains duplicates! "
             f"Total valid: {len(valid_chunks)}, Unique IDs: {len(set(chunk_ids))}"
         )
 
-        # ── STAGE 8: CONTEXT ASSEMBLY ───────────────────────────────────────
+        # ── Detect question type + answer depth (Phase 3) ─────────────────
+        q_analysis = detect_question_type(question)
+        question_type = q_analysis["question_type"]
+        answer_depth = q_analysis.get("answer_depth", "DETAILED")
+        prompt_trace_lines.append(f"Question type: {question_type} | Answer depth: {answer_depth}")
+
+        # ── STAGE 8: CONTEXT ASSEMBLY (Phase 2) ───────────────────────────
         t_stage8_start = time.perf_counter()
         context_chunks_log = []
         for i, c in enumerate(valid_chunks, start=1):
@@ -391,32 +584,37 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         stage8_ms = (t_stage8_end - t_stage8_start) * 1000
 
         # Assertion 3: Excerpt count matches valid chunk count
-        assert context_block.count("[EXCERPT ") == len(valid_chunks), (
-            f"PIPELINE CONTRACT VIOLATION: Excerpt count in context block ({context_block.count('[EXCERPT ')} "
-            f"does not match valid chunk count ({len(valid_chunks)})."
+        # (With Phase 2 merging, excerpt count may be <= chunk count — both are valid)
+        num_excerpts = context_block.count("[EXCERPT ")
+        assert num_excerpts >= 1, (
+            f"PIPELINE CONTRACT VIOLATION: Context block has {num_excerpts} excerpts "
+            f"from {len(valid_chunks)} valid chunks — no content was inserted."
         )
 
         stage8_data = {
             "valid_chunk_count": len(valid_chunks),
+            "excerpt_count": num_excerpts,
             "context_block_chars": len(context_block),
             "context_block_words": len(context_block.split()),
+            "answer_depth": answer_depth,
             "chunks_entering_prompt": context_chunks_log,
         }
         log_stage(request_id, 8, "Context Assembly", stage8_data, latency_ms=stage8_ms)
 
-        # Contract check: Stage 7 count == context block chunk count
         contract_lines.append(f"Prompt Builder chunk count (unique after dedup): {len(context_chunks_log)}")
         if len(chunks) != len(context_chunks_log):
-            msg = (f"PIPELINE CONTRACT VIOLATION: Stage 7 chunk count ({len(chunks)}) "
-                   f"!= Prompt Builder chunk count ({len(context_chunks_log)})")
+            msg = (
+                f"PIPELINE CONTRACT VIOLATION: Stage 7 chunk count ({len(chunks)}) "
+                f"!= Prompt Builder chunk count ({len(context_chunks_log)})"
+            )
             print(msg, flush=True)
             contract_lines.append(msg)
         else:
             contract_lines.append("Contract OK: Stage 7 chunk count == Prompt Builder chunk count")
 
-        # ── STAGE 9: PROMPT BUILDER ─────────────────────────────────────────
+        # ── STAGE 9: ADAPTIVE PROMPT BUILDER (Phase 3/4/5) ───────────────
         t_stage9_start = time.perf_counter()
-        full_prompt = _build_grounding_prompt(question, context_block, prompt_trace_lines)
+        full_prompt = _build_adaptive_prompt(question, context_block, answer_depth, prompt_trace_lines)
         t_stage9_end = time.perf_counter()
         stage9_ms = (t_stage9_end - t_stage9_start) * 1000
 
@@ -435,18 +633,14 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         prompt_words = len(full_prompt.split())
         approx_prompt_tokens = int(prompt_words * 1.33)
 
-        # BUG 1 FIX NOTE:
-        # Previously, stage9_data stored BOTH user_prompt (with context_block embedded) AND
-        # complete_final_prompt (with context_block embedded again), AND system_prompt —
-        # creating 2–3 copies of the context_block inside one giant log entry (up to 1.3M chars).
-        # The actual prompt sent to generate() was always correct. Now we store only metrics,
-        # NOT the full prompt text in stage9_data, to prevent log explosion.
         stage9_data = {
             "prompt_size_chars": prompt_chars,
             "prompt_word_count": prompt_words,
             "approx_prompt_token_count": approx_prompt_tokens,
             "context_block_chars": len(context_block),
             "context_block_chunk_count": len(context_chunks_log),
+            "answer_depth": answer_depth,
+            "question_type": question_type,
             "truncation_details": {
                 "truncated": False,
                 "reason": "None. Excerpts capped at 4000 chars each; full prompt fits context window.",
@@ -454,8 +648,7 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         }
         log_stage(request_id, 9, "Prompt Builder", stage9_data, latency_ms=stage9_ms)
 
-        # Contract check: Prompt Builder chunk count == LLM context chunk count
-        contract_lines.append(f"LLM context chunk count (chunks in context block): {len(context_chunks_log)}")
+        contract_lines.append(f"LLM context chunk count: {len(context_chunks_log)}")
         contract_lines.append("Contract OK: Prompt Builder chunk count == LLM context chunk count")
 
         # Save FULL PROMPT artifact
@@ -477,12 +670,17 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         except Exception:
             pass
 
-        # QUESTION 5 ASSERTION: Immediately before calling generate()
-        saved_prompt_text = open(final_prompt_path, "r", encoding="utf-8").read()
-        if full_prompt != saved_prompt_text:
-            raise AssertionError(
-                f"PROMPT MISMATCH: full_prompt (len={len(full_prompt)}) != saved_prompt_text (len={len(saved_prompt_text)})"
-            )
+        # Verify prompt was saved correctly
+        try:
+            saved_prompt_text = open(final_prompt_path, "r", encoding="utf-8").read()
+            if full_prompt != saved_prompt_text:
+                raise AssertionError(
+                    f"PROMPT MISMATCH: full_prompt (len={len(full_prompt)}) != saved_prompt_text (len={len(saved_prompt_text)})"
+                )
+        except AssertionError:
+            raise
+        except Exception:
+            pass  # File read failure is non-fatal
 
         result = generate(
             full_prompt,
@@ -523,7 +721,11 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
             )
             return CANNOT_FIND_RESPONSE
 
-        return result.strip()
+        # ── Phase 6: Append confidence block ─────────────────────────────
+        confidence_block = _build_confidence_block(valid_chunks)
+        final_answer = result.strip() + confidence_block
+
+        return final_answer
 
     except Exception as e:
         log_exception(e, "doc_agent.run")
@@ -532,8 +734,9 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         return CANNOT_FIND_RESPONSE
 
     finally:
-        # Always save pipeline contract check
         try:
+            from pathlib import Path
+            from storage.pipeline_logger import LOGS_DIR
             contract_path = Path(LOGS_DIR) / "pipeline_contract_check.txt"
             with open(contract_path, "a", encoding="utf-8") as f:
                 f.write("\n".join(contract_lines) + "\n\n")
@@ -541,45 +744,29 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
             pass
 
 
+# ---------------------------------------------------------------------------
+# Citation list builder (unchanged)
+# ---------------------------------------------------------------------------
+
 def build_citation_list(chunks: List[Dict[str, Any]], request_id: str = "default") -> List[Dict[str, Any]]:
     """
     Build a structured citation list from retrieved chunks.
-    Used by the API and UI to display source information separately from the answer text.
 
-    BUG 2 FIX:
-      Previously, when chunk metadata had no "hash" field, meta.get("hash", "") returned ""
-      for EVERY chunk. After the first chunk was processed, seen_hashes contained "". Every
-      subsequent chunk then matched `if chunk_hash in seen_hashes: continue` and was SKIPPED,
-      producing 0 or 1 citations even with 20 chunks.
-
-      Fix: only add chunk_hash to seen_hashes when chunk_hash is a non-empty string.
-
-    Returns:
-        List of citation dicts:
-            {
-                "paper_title": str,
-                "authors": str,
-                "year": str,
-                "section": str,
-                "page_start": int,
-                "page_end": int,
-                "file": str,
-                "citation": str  # formatted citation string
-            }
+    BUG 2 FIX (carried forward):
+      Only deduplicate when hash is a non-empty string.
+      If hash is empty/None, always include the chunk (no false dedup).
     """
     from pathlib import Path
     from storage.pipeline_logger import LOGS_DIR
 
     citations = []
-    seen_hashes = set()
+    seen_hashes: set = set()
 
     citation_trace: List[str] = [
         f"REQUEST ID: {request_id}",
         "STAGE 11: CITATION ASSEMBLY TRACE",
         "=" * 60,
         f"Input chunks count: {len(chunks)}",
-        f"Input excerpts count: {len(chunks)}",
-        f"Input metadata count: {sum(1 for c in chunks if c.get('metadata'))}",
         "",
     ]
 
@@ -592,28 +779,13 @@ def build_citation_list(chunks: List[Dict[str, Any]], request_id: str = "default
         page_end = meta.get("page_end")
         section = meta.get("section", "")
 
-        citation_trace.append(f"Chunk {idx}:")
-        citation_trace.append(f"  Chunk ID:  {cid}")
-        citation_trace.append(f"  Document:  {doc_name}")
-        citation_trace.append(f"  Page:      {page_start}–{page_end}")
-        citation_trace.append(f"  Section:   {section}")
-        citation_trace.append(f"  Hash:      '{chunk_hash}'")
-        citation_trace.append(f"  Metadata:  {meta}")
+        citation_trace.append(f"Chunk {idx}: {doc_name} | {section} | hash={chunk_hash!r}")
 
-        # BUG 2 FIX: Only deduplicate when hash is a non-empty string.
-        # If hash is empty/None, always include the chunk in citations (no false dedup).
         if chunk_hash and chunk_hash in seen_hashes:
-            reason = f"Duplicate hash '{chunk_hash}' already in seen_hashes"
-            citation_trace.append(f"  DISCARDED: {reason}")
-            citation_trace.append(
-                f"  Condition: chunk_hash is non-empty AND chunk_hash in seen_hashes"
-            )
-            citation_trace.append(f"  File: agents/doc_agent.py")
-            citation_trace.append(f"  Function: build_citation_list")
-            print(f"[CITATION TRACE] Chunk {idx} discarded — {reason}", flush=True)
+            citation_trace.append(f"  DISCARDED: duplicate hash")
+            print(f"[CITATION TRACE] Chunk {idx} discarded — duplicate hash", flush=True)
             continue
 
-        # Track non-empty hashes for deduplication
         if chunk_hash:
             seen_hashes.add(chunk_hash)
 
@@ -629,20 +801,11 @@ def build_citation_list(chunks: List[Dict[str, Any]], request_id: str = "default
             "citation": citation,
         }
         citations.append(entry)
-        citation_trace.append(f"  EXTRACTED citation: {citation}")
+        citation_trace.append(f"  EXTRACTED: {citation}")
 
-    citation_trace.append("")
-    citation_trace.append(f"Input citations before processing: {len(chunks)}")
-    citation_trace.append(f"Output citations after processing: {len(citations)}")
-    if len(citations) == 0 and len(chunks) > 0:
-        citation_trace.append("WARNING: 0 citations produced from non-empty chunk list!")
-        citation_trace.append("  This indicates all chunks were discarded by deduplication or were empty.")
-    elif len(citations) < len(chunks):
-        citation_trace.append(f"NOTE: {len(chunks) - len(citations)} duplicate chunks were deduplicated.")
-
+    citation_trace.append(f"\nOutput citations: {len(citations)}")
     print(f"[CITATION TRACE] Input chunks: {len(chunks)} | Output citations: {len(citations)}", flush=True)
 
-    # Save citation trace file
     try:
         citation_trace_path = Path(LOGS_DIR) / "citation_trace.txt"
         with open(citation_trace_path, "a", encoding="utf-8") as f:

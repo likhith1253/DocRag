@@ -34,7 +34,8 @@ class TestDocAgentContract(unittest.TestCase):
         
         result = doc_agent.run("What is FPGA performance?", self.sample_chunks, request_id="test_contract_valid")
         
-        self.assertEqual(result, "FPGA acceleration increases efficiency [Excerpt 1].")
+        # Phase 6: answer now includes appended confidence block — check prefix
+        self.assertTrue(result.startswith("FPGA acceleration increases efficiency [Excerpt 1]."))
         self.assertTrue(mock_generate.called)
 
     def test_chunk_cap_assertion_failure(self):

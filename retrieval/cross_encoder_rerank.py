@@ -137,13 +137,64 @@ def rerank_cross_encoder(
             "status": "KEPT" if id(c) in kept_set else "DROPPED"
         })
 
+    # ── Phase 1: Paper-level retrieval diagnostics ──────────────────────────
+    # Compute per-paper chunk counts, scores, and coverage for forensic report.
+    paper_diagnostics: dict = {}
+    for c in out_chunks:
+        paper = (
+            c.get("metadata", {}).get("paper_title")
+            or c.get("metadata", {}).get("file")
+            or "Unknown"
+        )
+        s = float(c.get("score", 0.0))
+        if paper not in paper_diagnostics:
+            paper_diagnostics[paper] = {"chunks": 0, "scores": []}
+        paper_diagnostics[paper]["chunks"] += 1
+        paper_diagnostics[paper]["scores"].append(s)
+
+    paper_summary = []
+    for paper, info in sorted(paper_diagnostics.items(), key=lambda x: -x[1]["chunks"]):
+        avg_s = sum(info["scores"]) / len(info["scores"]) if info["scores"] else 0.0
+        paper_summary.append({
+            "paper": paper,
+            "chunks": info["chunks"],
+            "avg_ce_score": round(avg_s, 4),
+            "max_ce_score": round(max(info["scores"]), 4) if info["scores"] else 0.0,
+        })
+
+    top_paper = paper_summary[0]["paper"] if paper_summary else "N/A"
+    top_paper_chunks = paper_summary[0]["chunks"] if paper_summary else 0
+    total_out = len(out_chunks)
+    coverage_pct = round(top_paper_chunks / total_out * 100, 1) if total_out else 0.0
+    all_ce_scores = [c.get("score", 0.0) for c in out_chunks]
+    avg_ce_all = round(sum(all_ce_scores) / len(all_ce_scores), 4) if all_ce_scores else 0.0
+    max_ce_all = round(max(all_ce_scores), 4) if all_ce_scores else 0.0
+
+    retrieval_diagnostics = {
+        "papers_retrieved": len(paper_diagnostics),
+        "top_contributing_paper": top_paper,
+        "top_paper_chunk_count": top_paper_chunks,
+        "top_paper_coverage_pct": coverage_pct,
+        "avg_ce_score_all": avg_ce_all,
+        "max_ce_score_all": max_ce_all,
+        "paper_breakdown": paper_summary,
+    }
+
+    # Push diagnostics into forensic tracer (written to .debug/current_query/)
+    try:
+        from storage.pipeline_logger import forensic_tracer
+        forensic_tracer.retrieval_diagnostics = retrieval_diagnostics
+    except Exception:
+        pass
+
     stage6_data = {
         "cross_encoder_enabled": True,
         "reranker_model": model_name,
         "question_type_detected": question_type,
         "input_chunks_count": len(chunks),
         "output_chunks_count": len(out_chunks),
-        "evaluated_chunks": evaluated_log
+        "retrieval_diagnostics": retrieval_diagnostics,
+        "evaluated_chunks": evaluated_log,
     }
     log_stage(request_id, 6, "Cross Encoder", stage6_data, latency_ms=latency_ms)
 

@@ -112,6 +112,7 @@ class ForensicTracker:
             self.response_json: Dict[str, Any] = {}
             self.first_failing_stage: str = "NONE"
             self.root_cause: str = "NONE"
+            self.retrieval_diagnostics: Dict[str, Any] = {}
 
             # Cleanly prepare .debug/current_query directory
             try:
@@ -219,6 +220,23 @@ class ForensicTracker:
                     f"Prompt tokens          : {self.prompt_tokens}\n",
                     f"LLM output length      : {len(self.raw_llm_output or '')}\n",
                     f"Citation count         : {len(self.citations)}\n\n",
+                ]
+                # Retrieval diagnostics (Phase 1)
+                if self.retrieval_diagnostics:
+                    rd = self.retrieval_diagnostics
+                    summary_lines.append("Retrieval Diagnostics:\n")
+                    summary_lines.append(f"  Papers retrieved       : {rd.get('papers_retrieved', '?')}\n")
+                    summary_lines.append(f"  Top contributing paper : {rd.get('top_contributing_paper', '?')}\n")
+                    summary_lines.append(f"  Top paper chunks       : {rd.get('top_paper_chunk_count', '?')}\n")
+                    summary_lines.append(f"  Top paper coverage     : {rd.get('top_paper_coverage_pct', '?')}%\n")
+                    summary_lines.append(f"  Avg CE score (all)     : {rd.get('avg_ce_score_all', '?')}\n")
+                    summary_lines.append(f"  Max CE score           : {rd.get('max_ce_score_all', '?')}\n")
+                    for pb in rd.get("paper_breakdown", []):
+                        summary_lines.append(
+                            f"    [{pb['chunks']} chunks | avg={pb['avg_ce_score']:.4f}] {pb['paper']}\n"
+                        )
+                    summary_lines.append("\n")
+                summary_lines += [
                     "Final Answer:\n",
                     f"{self.returned_answer}\n\n",
                     f"First Failing Stage : {self.first_failing_stage}\n",
