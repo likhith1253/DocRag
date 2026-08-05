@@ -45,7 +45,7 @@ SYNONYM_MAP = {
 }
 
 
-def evaluate_answer(answer: str, key_concepts: list) -> dict:
+def evaluate_answer(answer, key_concepts):
     answer_lower = answer.lower()
     hits = []
     misses = []
