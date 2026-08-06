@@ -145,6 +145,13 @@ class VectorStoreManager:
             )
         _ensured_collections.add(cache_key)
 
+    def count(self) -> int:
+        """Returns total number of vector points stored in this collection."""
+        try:
+            return self.client.get_collection(self.collection_name).points_count
+        except Exception:
+            return 0
+
     def add_chunks(self, chunks: List[Dict[str, Any]]):
         """
         Add chunks to Qdrant collection.

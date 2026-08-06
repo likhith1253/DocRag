@@ -203,6 +203,18 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             v_manager = _v_manager_override
         else:
             v_manager = VectorStoreManager(collection_name=v_coll)
+            points_in_coll = v_manager.count()
+            if points_in_coll == 0 and v_coll != "chunks":
+                fb_manager = VectorStoreManager(collection_name="chunks")
+                if fb_manager.count() > 0:
+                    print(f"[COLLECTION GUARD] Collection '{v_coll}' has 0 points. Falling back to active collection 'chunks' ({fb_manager.count()} points).", flush=True)
+                    v_coll = "chunks"
+                    v_manager = fb_manager
+
+        from storage.forensic_logger import ForensicLogger
+        f_logger = state.get("f_logger")
+        if f_logger:
+            f_logger.set_routing(repo_id, v_coll, v_manager.count(), filters)
 
         # Apply retrieval mode constraints
         if retrieval_mode == "single" and repo_id:
@@ -292,6 +304,9 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 state["question"], chunks, top_k=rerank_top_k, request_id=request_id
             )
         latency_breakdown["reranker_ms"] = (time.perf_counter() - t0) * 1000
+
+        if f_logger:
+            f_logger.set_retrieval(vector_top_k, initial_chunk_count, len(chunks), len(chunks), chunks)
 
         # Stage 7: Knowledge Graph (DocumentRAG uses metadata graph mapping)
         use_graph = retrieval_conf.get("use_graph", False)
@@ -442,7 +457,13 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
         ans = doc_agent.run(state["question"], chunks, request_id=request_id)
         t1 = time.perf_counter()
 
-        latency_breakdown["llm_ms"] = (t1 - t0) * 1000
+        llm_ms = (t1 - t0) * 1000
+        latency_breakdown["llm_ms"] = llm_ms
+
+        f_logger = state.get("f_logger")
+        if f_logger:
+            f_logger.set_llm(len(ans or ""), int(len((ans or "").split()) * 1.33), llm_ms, ans)
+
         latency_breakdown["total_ms"] = sum(
             latency_breakdown.get(k, 0)
             for k in ("planner_ms", "vector_ms", "mmr_ms", "reranker_ms", "llm_ms")
@@ -555,6 +576,10 @@ def answer(
         _write_log("", [], [], "error", 0.0, 0.0, ans, bd)
         return ans, bd, [], []
 
+    from storage.forensic_logger import ForensicLogger
+    f_logger = ForensicLogger(request_id=request_id)
+    f_logger.log_event("incoming_request", f"query='{query[:60]}...' | repo_id='{repo_id}'")
+
     try:
         initial_state = {
             "request_id": request_id,
@@ -567,6 +592,7 @@ def answer(
             "repo_id": repo_id or "",
             "filters": filters or {},
             "retrieval_mode": retrieval_mode,
+            "f_logger": f_logger,
         }
 
         final_state = app.invoke(initial_state)
@@ -578,25 +604,25 @@ def answer(
         latency_breakdown = final_state.get("latency_breakdown", {})
 
     except Exception as e:
+        f_logger.log_exception("workflow_invoke", e)
         log_grounding_exit(
             request_id=request_id,
             file_path="agents/orchestrator.py",
             function_name="answer",
-            line_number=554,
+            line_number=584,
             reason=f"Workflow invocation failed: {str(e)}",
             condition="exception during app.invoke(initial_state)",
             evidence={"exception": str(e)}
         )
-        ans = CANNOT_FIND_RESPONSE
-        agent = "error"
-        chunks = []
-        citations = []
-        latency_breakdown = {}
+        f_logger.finalize(CANNOT_FIND_RESPONSE, [], {})
+        raise RuntimeError(f"WORKFLOW INVOCATION FATAL FAILURE: {str(e)}") from e
 
     latency = time.time() - start_time
     total_ms = latency * 1000.0
     end_mem = get_process_memory()
     memory_diff = max(0.0, end_mem - start_mem)
+
+    f_logger.finalize(ans, citations, latency_breakdown)
 
     # STAGE 13: CITATION ASSEMBLY
     t_stage13_start = time.perf_counter()
