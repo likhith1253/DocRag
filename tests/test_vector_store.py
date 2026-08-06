@@ -1,6 +1,8 @@
 import os
 import unittest
 import shutil
+import tempfile
+from pathlib import Path
 from ingestion.loader import load_repository
 from ingestion.language_detect import detect_language
 from ingestion.chunker import chunk_file
@@ -39,7 +41,7 @@ class TestVectorStore(unittest.TestCase):
 
     def test_add_and_search(self):
         # Read files from workspace_path
-        workspace_path = "d:/Document_RAG"
+        workspace_path = str(Path(__file__).resolve().parents[1])
         
         # Collect chunks from a few select python files in tests
         chunks = []
@@ -75,6 +77,21 @@ class TestVectorStore(unittest.TestCase):
         self.assertIn("content", result_chunks[0])
         self.assertIn("metadata", result_chunks[0])
         self.assertIn("score", result_chunks[0])
+
+    def test_qdrant_path_resolves_against_repo_root(self):
+        repo_root = Path(__file__).resolve().parents[1]
+        original_cwd = os.getcwd()
+        temp_dir = tempfile.mkdtemp()
+        try:
+            os.chdir(temp_dir)
+            manager = VectorStoreManager()
+            self.assertEqual(
+                Path(manager.qdrant_path).resolve(),
+                (repo_root / "test_qdrant_storage").resolve(),
+            )
+        finally:
+            os.chdir(original_cwd)
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 if __name__ == "__main__":
     unittest.main()

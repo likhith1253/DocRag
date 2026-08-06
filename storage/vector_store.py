@@ -16,6 +16,7 @@ from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml")
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ---------------------------------------------------------------------------
 # Module-level singletons
@@ -29,6 +30,18 @@ _encoder_cache: Dict[str, SentenceTransformer] = {}
 _config_cache: Dict[str, Any] = {}
 _ensured_collections = set()
 _encoder_lock = threading.Lock()
+
+
+def _resolve_storage_path(path_value: str) -> str:
+    """
+    Resolve a storage path against the repository root so local Qdrant access
+    stays stable regardless of the process working directory.
+    """
+    if not path_value:
+        return path_value
+    if os.path.isabs(path_value):
+        return path_value
+    return os.path.abspath(os.path.join(PROJECT_ROOT, path_value))
 
 
 def _get_config() -> Dict[str, Any]:
@@ -62,7 +75,7 @@ class VectorStoreManager:
     def __init__(self, collection_name: str = "chunks"):
         self.config = _get_config()
 
-        self.qdrant_path = self.config.get("qdrant_path", "./qdrant_storage")
+        self.qdrant_path = _resolve_storage_path(self.config.get("qdrant_path", "./qdrant_storage"))
         self.embedding_model_name = self.config.get("embedding_model", "all-MiniLM-L6-v2")
         self.device = self.config.get("device", "auto")
         if self.device == "auto":
