@@ -166,6 +166,21 @@ def route_node(state: AgentState) -> Dict[str, Any]:
             if top_repos:
                 updates["repo_id"] = top_repos[0]
 
+        registry = get_registry()
+        ready_repos = [r for r in registry.list_repositories() if r.status == "READY"]
+        print(f"[ROUTER] Registry lookup result     : {len(ready_repos)} READY repositories found.", flush=True)
+
+        final_repo_id = updates.get("repo_id") or repo_id
+        if final_repo_id:
+            r_obj = registry.get_repository(final_repo_id)
+            r_name = r_obj.name if r_obj else final_repo_id
+            r_coll = r_obj.vector_collection if r_obj else f"collection_{final_repo_id}"
+            print(f"[ROUTER] Selected repository        : {r_name} (ID: {final_repo_id})", flush=True)
+            print(f"[ROUTER] Selected collection id     : {r_coll}", flush=True)
+        else:
+            print(f"[ROUTER] Selected repository        : None (Unassigned)", flush=True)
+            print(f"[ROUTER] Selected collection id     : None", flush=True)
+
         return updates
     except Exception as e:
         return {
@@ -228,6 +243,8 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                             break
                     except Exception:
                         pass
+
+        print(f"[RETRIEVAL] Collection passed into vector search : '{v_coll}' (Points: {v_manager.count()})", flush=True)
 
         from storage.forensic_logger import ForensicLogger
         f_logger = state.get("f_logger")
