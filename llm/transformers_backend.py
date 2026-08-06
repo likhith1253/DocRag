@@ -86,6 +86,14 @@ class HFTransformersBackend(LLMBackend):
         self.model.eval()
         print("HuggingFace Transformers model loaded successfully.")
 
+    def ensure_loaded(self):
+        """Public load hook used by startup warm-up and health verification."""
+        self._ensure_loaded()
+
+    def is_loaded(self) -> bool:
+        """Return whether the tokenizer and model are both available in memory."""
+        return self.model is not None and self.tokenizer is not None
+
     def _load_gen_config(self):
         if CONFIG_PATH.exists():
             try:

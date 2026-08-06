@@ -1,5 +1,7 @@
 import os
 import unittest
+import threading
+import time
 from unittest.mock import patch, MagicMock
 
 class TestLLMBackends(unittest.TestCase):
@@ -19,6 +21,32 @@ class TestLLMBackends(unittest.TestCase):
         
         backend = get_backend()
         self.assertIsInstance(backend, HFTransformersBackend)
+
+    def test_backend_factory_is_thread_safe_singleton(self):
+        from llm import backend_factory
+
+        def fake_ctor():
+            time.sleep(0.05)
+            return object()
+
+        with patch("llm.transformers_backend.HFTransformersBackend", side_effect=fake_ctor) as mock_ctor:
+            results = []
+            ready = threading.Event()
+
+            def worker():
+                ready.wait()
+                results.append(backend_factory.get_backend("transformers"))
+
+            threads = [threading.Thread(target=worker) for _ in range(2)]
+            for thread in threads:
+                thread.start()
+            ready.set()
+            for thread in threads:
+                thread.join(timeout=2.0)
+
+            self.assertEqual(mock_ctor.call_count, 1)
+            self.assertEqual(len(results), 2)
+            self.assertIs(results[0], results[1])
 
     def test_ollama_backend_factory_selection(self):
         os.environ["LLM_BACKEND"] = "ollama"
@@ -63,9 +91,11 @@ class TestLLMBackends(unittest.TestCase):
             mock_tok_inst.return_value = {"input_ids": torch.tensor([[1, 2, 3]])}
             mock_tok_inst.decode.return_value = "Test Transformers Response"
             mock_tok.return_value = mock_tok_inst
-            
+
             mock_model_inst = MagicMock()
+            mock_model_inst.config = type("Config", (), {"max_position_embeddings": 32768})()
             mock_model_inst.generate.return_value = torch.tensor([[1, 2, 3, 4, 5]])
+            mock_model_inst.to.return_value = mock_model_inst
             mock_model.return_value = mock_model_inst
 
             backend = HFTransformersBackend(model_name="Qwen/Qwen2.5-3B-Instruct")

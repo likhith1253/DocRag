@@ -35,7 +35,23 @@ async def lifespan(app: FastAPI):
     def _warmup():
         try:
             from llm.backend_factory import get_backend
-            get_backend()
+            backend = get_backend()
+            print(
+                f"[STARTUP] backend id={id(backend)} class={backend.__class__.__name__} "
+                f"model_name={getattr(backend, 'model_name', None)} device={getattr(backend, 'device', None)} "
+                f"loaded_before={bool(getattr(backend, 'model', None) is not None and getattr(backend, 'tokenizer', None) is not None)}",
+                flush=True,
+            )
+            if hasattr(backend, "ensure_loaded"):
+                backend.ensure_loaded()
+            else:
+                backend._ensure_loaded()
+            print(
+                f"[STARTUP] backend id={id(backend)} class={backend.__class__.__name__} "
+                f"model_name={getattr(backend, 'model_name', None)} device={getattr(backend, 'device', None)} "
+                f"loaded_after={bool(getattr(backend, 'model', None) is not None and getattr(backend, 'tokenizer', None) is not None)}",
+                flush=True,
+            )
             print("[STARTUP] LLM backend model loaded successfully!", flush=True)
         except Exception as e:
             print(f"[STARTUP WARN] LLM backend pre-load error: {e}", flush=True)
@@ -66,23 +82,44 @@ def _backend_health_payload():
         from llm.backend_factory import get_backend
 
         backend = get_backend()
-        loaded = bool(getattr(backend, "model", None) is not None and getattr(backend, "tokenizer", None) is not None)
+        loaded = bool(
+            getattr(backend, "model", None) is not None and
+            getattr(backend, "tokenizer", None) is not None
+        )
+        backend_object_id = id(backend)
+        backend_class = backend.__class__.__name__
+        model_name = getattr(backend, "model_name", None)
+        device = getattr(backend, "device", None)
+        dtype = getattr(backend, "dtype_str", None)
+        gpu_name = getattr(backend, "gpu_name", None)
+        print(
+            f"[HEALTH] backend id={backend_object_id} class={backend_class} "
+            f"model_name={model_name} device={device} dtype={dtype} "
+            f"gpu_name={gpu_name} model_loaded={loaded}",
+            flush=True,
+        )
         backend_info = {
-            "backend_name": backend.__class__.__name__,
-            "model_name": getattr(backend, "model_name", None),
-            "device": getattr(backend, "device", None),
-            "dtype": getattr(backend, "dtype_str", None),
-            "gpu_name": getattr(backend, "gpu_name", None),
+            "backend_name": backend_class,
+            "backend_class": backend_class,
+            "backend_object_id": backend_object_id,
+            "model_name": model_name,
+            "device": device,
+            "dtype": dtype,
+            "gpu_name": gpu_name,
+            "model_loaded": loaded,
             "loaded": loaded,
         }
         return backend_info
     except Exception as exc:
         return {
             "backend_name": None,
+            "backend_class": None,
+            "backend_object_id": None,
             "model_name": None,
             "device": None,
             "dtype": None,
             "gpu_name": None,
+            "model_loaded": False,
             "loaded": False,
             "error": str(exc),
         }
