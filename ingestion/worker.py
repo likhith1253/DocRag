@@ -433,8 +433,20 @@ def background_ingest_repository(
                 """Worker: parse one PDF and return (rel_path, chunks)."""
                 abs_path = all_pdf_files.get(rel_path)
                 if not abs_path or not os.path.exists(abs_path):
+                    bname = os.path.basename(rel_path)
+                    for k, v in all_pdf_files.items():
+                        if k == bname or os.path.basename(k) == bname:
+                            abs_path = v
+                            break
+
+                if not abs_path or not os.path.exists(abs_path):
+                    if os.path.exists(rel_path):
+                        abs_path = rel_path
+
+                if not abs_path or not os.path.exists(abs_path):
                     logger.warning(f"[Worker] PDF not found on disk: {rel_path}")
                     return rel_path, []
+
                 progress.update(current_file=os.path.basename(rel_path))
                 chunks = _parse_and_chunk_pdf(abs_path, rel_path, repo_id)
                 return rel_path, chunks
