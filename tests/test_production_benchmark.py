@@ -191,3 +191,34 @@ def test_aggregate_records_computes_metrics():
     assert summary["accuracy"] == 0.5
     assert summary["exact_match_rate"] == 0.5
     assert summary["avg_http_latency_s"] > 0
+
+
+def test_default_resume_is_false():
+    config = BenchmarkConfig(dataset_path=Path("eval/generated_benchmark.json"))
+    assert config.resume is False
+
+
+def test_preflight_checks_raises_when_backend_not_loaded():
+    class UnloadedClient:
+        def health(self):
+            return {
+                "status": "ok",
+                "backend": {
+                    "loaded": False,
+                    "model_name": "mock-model",
+                },
+            }
+
+    runner = ProductionBenchmarkRunner(
+        BenchmarkConfig(
+            dataset_path=Path("eval/generated_benchmark.json"),
+            health_timeout_s=0.1,
+        ),
+        client=UnloadedClient(),
+    )
+
+    from eval.production_benchmark import BenchmarkHTTPError
+    import pytest
+    with pytest.raises(BenchmarkHTTPError):
+        runner.run()
+

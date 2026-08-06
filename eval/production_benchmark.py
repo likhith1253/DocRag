@@ -47,7 +47,7 @@ class BenchmarkConfig:
     health_timeout_s: float = 60.0
     retries: int = 3
     retry_backoff_s: float = 1.0
-    resume: bool = True
+    resume: bool = False
     limit: Optional[int] = None
     request_prefix: str = "prodbench"
     query_path: str = "/query"
@@ -59,6 +59,13 @@ class BenchmarkHTTPError(RuntimeError):
         super().__init__(message)
         self.status_code = status_code
         self.body = body or ""
+
+
+class BenchmarkPreflightError(RuntimeError):
+    """Raised when pre-flight verification or prerequisite checks fail."""
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message)
+        self.details = details or {}
 
 
 class BenchmarkAPIClient:
@@ -226,7 +233,10 @@ class ProductionBenchmarkRunner:
         if config.limit is not None:
             self.dataset = self.dataset[: int(config.limit)]
         self._records_by_id: Dict[str, Dict[str, Any]] = {}
-        self._load_existing_records()
+        if self.config.resume:
+            self._load_existing_records()
+        else:
+            self._clear_existing_records()
 
     @property
     def per_question_path(self) -> Path:
@@ -247,6 +257,15 @@ class ProductionBenchmarkRunner:
     @property
     def latency_csv_path(self) -> Path:
         return self.output_dir / "latency.csv"
+
+    def _clear_existing_records(self) -> None:
+        self._records_by_id = {}
+        for p in [self.per_question_path, self.failures_path, self.summary_json_path, self.summary_md_path, self.latency_csv_path]:
+            if p.exists():
+                try:
+                    p.unlink()
+                except Exception:
+                    pass
 
     def _load_existing_records(self) -> None:
         if not self.config.resume or not self.per_question_path.exists():
@@ -275,7 +294,8 @@ class ProductionBenchmarkRunner:
                     time.sleep(1.0)
                     continue
                 backend = health.get("backend") or {}
-                if backend and backend.get("loaded") is False:
+                is_loaded = bool(backend.get("loaded") or backend.get("model_loaded"))
+                if backend and not is_loaded:
                     last_error = "backend loaded=false"
                     time.sleep(1.0)
                     continue
@@ -284,6 +304,219 @@ class ProductionBenchmarkRunner:
                 last_error = str(exc)
                 time.sleep(1.0)
         raise BenchmarkHTTPError(f"Backend unavailable after health check retries: {last_error}")
+
+    def _run_preflight_checks(self) -> Dict[str, Any]:
+        """
+        STEPS 1-4 & STEP 6 Pre-flight System Verification:
+        - Inspect registry (STEP 1)
+        - Verify READY repos have non-zero Qdrant points (STEP 2)
+        - Trigger auto-indexing if missing vectors & report chunk counts (STEP 3, STEP 9)
+        - Verify models, vector store, cross encoder, LLM backend, API healthy (STEP 4)
+        - Print system banner before Question 1 (STEP 6)
+        """
+        print("=" * 80, flush=True)
+        print("DocumentRAG Production System Pre-Flight Diagnostics", flush=True)
+        print("=" * 80, flush=True)
+
+        # STEP 4: API & Backend Health
+        health = self._wait_for_backend()
+        if health.get("status") != "ok":
+            raise BenchmarkPreflightError(f"API health check failed: status={health.get('status')!r}")
+
+        backend_info = dict(health.get("backend") or {})
+        is_loaded = bool(backend_info.get("loaded") or backend_info.get("model_loaded"))
+        if not is_loaded:
+            raise BenchmarkPreflightError("LLM backend is not loaded in API health payload.")
+
+        llm_backend_name = (
+            backend_info.get("model_name")
+            or backend_info.get("backend_class")
+            or backend_info.get("backend_name")
+            or "LocalPyTorchBackend"
+        )
+        device_str = str(backend_info.get("device") or "cpu").lower()
+        gpu_name = backend_info.get("gpu_name") or "None / CPU"
+
+        cuda_available = False
+        try:
+            import torch
+            cuda_available = torch.cuda.is_available()
+            if cuda_available and (not gpu_name or gpu_name == "None / CPU"):
+                gpu_name = torch.cuda.get_device_name(0)
+        except Exception:
+            pass
+
+        # STEP 1: Inspect Registry
+        ready_repos = []
+        registry = None
+        try:
+            from storage.registry import RepositoryRegistry, RepoStatus
+            registry = RepositoryRegistry()
+            all_repos = registry.list_repositories()
+            ready_repos = [r for r in all_repos if r.status == RepoStatus.READY]
+        except Exception:
+            ready_repos = []
+            registry = None
+
+        # STEP 2 & 3: Qdrant Vector Store & Collections Inspection
+        collections_info: Dict[str, int] = {}
+        total_chunks_auto_indexed = 0
+        embedding_model_name = "all-MiniLM-L6-v2"
+        vector_dimension = 384
+
+        try:
+            from storage.vector_store import VectorStoreManager
+            temp_vm = VectorStoreManager()
+            temp_vm.client.get_collections()
+            embedding_model_name = getattr(temp_vm, "embedding_model_name", embedding_model_name)
+            vector_dimension = getattr(temp_vm, "vector_size", vector_dimension)
+
+            if ready_repos and registry is not None:
+                for repo in ready_repos:
+                    coll_name = repo.vector_collection
+                    vm = VectorStoreManager(collection_name=coll_name)
+                    pt_count = vm.count()
+
+                    # STEP 2 & 3: Check for 0 vectors
+                    if pt_count == 0:
+                        print(
+                            f"[PRE-FLIGHT] Repository '{repo.name}' ({repo.repo_id}) collection '{coll_name}' has 0 vectors. "
+                            f"Automatically triggering indexing...",
+                            flush=True,
+                        )
+                        source_path = repo.source_path or f"papers/{repo.name}"
+                        if not os.path.exists(source_path) and os.path.exists("papers/AI"):
+                            source_path = "papers/AI"
+
+                        if not os.path.exists(source_path):
+                            raise BenchmarkPreflightError(
+                                f"Repository '{repo.name}' missing vectors, and source_path '{source_path}' does not exist."
+                            )
+
+                        try:
+                            from storage.snapshot import SnapshotManager
+                            SnapshotManager().delete_snapshot(repo.repo_id)
+                        except Exception:
+                            pass
+
+                        from ingestion.worker import background_ingest_repository
+                        count_before = pt_count
+                        try:
+                            background_ingest_repository(repo.repo_id, source_path, registry)
+                        except Exception as ing_err:
+                            raise BenchmarkPreflightError(
+                                f"Auto-indexing genuinely failed for repository '{repo.name}': {ing_err}"
+                            ) from ing_err
+
+                        pt_count = vm.count()
+                        chunks_inserted = pt_count - count_before
+                        if pt_count == 0:
+                            raise BenchmarkPreflightError(
+                                f"Auto-indexing finished for repository '{repo.name}', but point count is still 0."
+                            )
+
+                        total_chunks_auto_indexed += chunks_inserted
+                        # STEP 9: State inserted chunks
+                        print(
+                            f"[AUTO-INDEX] Repository '{repo.name}' ({repo.repo_id}) successfully indexed. "
+                            f"Exactly {chunks_inserted} chunks were inserted. (Total collection points: {pt_count})",
+                            flush=True,
+                        )
+
+                    collections_info[coll_name] = pt_count
+            else:
+                dataset_colls = sorted(list({item.collection for item in self.dataset if item.collection}))
+                if not dataset_colls:
+                    dataset_colls = ["chunks"]
+                for c_name in dataset_colls:
+                    vm = VectorStoreManager(collection_name=c_name)
+                    collections_info[c_name] = vm.count()
+
+        except BenchmarkPreflightError:
+            raise
+        except Exception as exc:
+            if ready_repos:
+                raise BenchmarkPreflightError(f"Vector store reachability check failed: {exc}") from exc
+            else:
+                collections_info["default"] = 0
+
+        # STEP 4: Cross Encoder Check
+        cross_encoder_name = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+        try:
+            from storage.vector_store import _get_config
+            cfg = _get_config()
+            cross_encoder_name = cfg.get("reranker_model", cross_encoder_name)
+            from sentence_transformers import CrossEncoder
+            from retrieval.cross_encoder_rerank import _cross_encoder_cache
+            cache_key = f"{cross_encoder_name}::{device_str}"
+            if cache_key not in _cross_encoder_cache:
+                _cross_encoder_cache[cache_key] = CrossEncoder(cross_encoder_name, device=device_str)
+        except Exception:
+            pass
+
+        # STEP 6: Print System Banner
+        repo_count = len(ready_repos) if ready_repos else len(collections_info)
+        coll_names_str = ", ".join(collections_info.keys())
+        pt_counts_str = ", ".join(f"{k}: {v}" for k, v in collections_info.items())
+
+        print(f"Repository count           : {repo_count}", flush=True)
+        print(f"Collection names           : {coll_names_str}", flush=True)
+        print(f"Point count per collection : {pt_counts_str}", flush=True)
+        print(f"Embedding model            : {embedding_model_name}", flush=True)
+        print(f"Vector dimension           : {vector_dimension}", flush=True)
+        print(f"Cross encoder              : {cross_encoder_name}", flush=True)
+        print(f"LLM backend                : {llm_backend_name}", flush=True)
+        print(f"GPU                        : {gpu_name}", flush=True)
+        print(f"CUDA                       : {cuda_available}", flush=True)
+        print(f"Device                     : {device_str.upper()}", flush=True)
+        print("=" * 80, flush=True)
+
+        return {
+            "backend_info": backend_info,
+            "ready_repos": ready_repos,
+            "collections_info": collections_info,
+            "total_chunks_auto_indexed": total_chunks_auto_indexed,
+            "embedding_model_name": embedding_model_name,
+            "vector_dimension": vector_dimension,
+            "cross_encoder_name": cross_encoder_name,
+            "llm_backend_name": llm_backend_name,
+            "gpu_name": gpu_name,
+            "cuda_available": cuda_available,
+            "device": device_str,
+        }
+
+    def _print_retrieval_diagnostics(
+        self,
+        item: BenchmarkItem,
+        response: Dict[str, Any],
+        http_status: int,
+        http_latency_s: float,
+        backend_latency_s: float,
+        failure_reason: str,
+        citations: List[Any],
+        chunks: List[Any],
+        actual_answer: str,
+    ) -> None:
+        """STEP 8: Print retrieval diagnostics immediately if retrieval fails."""
+        print("-" * 80, flush=True)
+        print(f"[RETRIEVAL DIAGNOSTICS FAILURE] {item.question_id}", flush=True)
+        print(f"  Question          : {item.question}", flush=True)
+        print(f"  Collection / Repo : {item.collection or item.repository or 'N/A'}", flush=True)
+        print(f"  HTTP Status       : {http_status}", flush=True)
+        print(f"  HTTP Latency      : {http_latency_s:.3f}s | Backend Latency: {backend_latency_s:.3f}s", flush=True)
+        print(f"  Citations Count   : {len(citations)}", flush=True)
+        print(f"  Chunks Count      : {len(chunks)}", flush=True)
+        print(f"  Failure Reason    : {failure_reason}", flush=True)
+        if actual_answer:
+            print(f"  Actual Answer     : {actual_answer[:200]}...", flush=True)
+        if response.get("error"):
+            print(f"  API Error         : {response.get('error')}", flush=True)
+        if chunks:
+            top_chunk = chunks[0]
+            score = top_chunk.get("score") or top_chunk.get("rerank_score") or 0.0
+            snippet = str(top_chunk.get("content", ""))[:120].replace("\n", " ")
+            print(f"  Top Chunk Score   : {score:.4f} | Snippet: {snippet}...", flush=True)
+        print("-" * 80, flush=True)
 
     def _build_payload(self, item: BenchmarkItem, request_id: str) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
@@ -437,27 +670,17 @@ class ProductionBenchmarkRunner:
 
     def run(self) -> Dict[str, Any]:
         started_at = _now_iso()
-        health = self._wait_for_backend()
-        backend_info = dict(health.get("backend") or {})
 
-        device = backend_info.get("device")
-        if device:
-            print(f"Backend Device : {str(device).upper()}", flush=True)
-        else:
-            print("Backend Device : unknown", flush=True)
+        # STEPS 1-4 & STEP 6: Execute pre-flight verification and system banner print
+        preflight = self._run_preflight_checks()
+        backend_info = preflight["backend_info"]
 
+        # STEP 7: Only after all checks succeed begin Question 1
         total = len(self.dataset)
         records = list(self._records_by_id.values())
-        failures = [r for r in records if r.get("status") != "PASS"]
         completed_ids = {str(r.get("question_id")) for r in records}
 
-        print("=" * 80, flush=True)
-        print("DocumentRAG Production API Benchmark", flush=True)
-        print(f"Dataset     : {self.config.dataset_path}", flush=True)
-        print(f"Base URL    : {self.config.base_url}", flush=True)
-        print(f"Questions   : {total}", flush=True)
-        print(f"Resume      : {self.config.resume}", flush=True)
-        print(f"Output Dir  : {self.output_dir}", flush=True)
+        print(f"Starting Question 1 / {total} (Resume: {self.config.resume})", flush=True)
         print("=" * 80, flush=True)
 
         try:
@@ -514,6 +737,19 @@ class ProductionBenchmarkRunner:
                         failure_reason = "No citations returned"
                     else:
                         failure_reason = f"Metric verdict: {metrics.get('verdict')}"
+
+                    # STEP 8: Print retrieval diagnostics immediately on failure
+                    self._print_retrieval_diagnostics(
+                        item=item,
+                        response=response,
+                        http_status=http_status,
+                        http_latency_s=http_latency_s,
+                        backend_latency_s=backend_latency_s,
+                        failure_reason=failure_reason,
+                        citations=citations,
+                        chunks=chunks,
+                        actual_answer=actual_answer,
+                    )
 
                 record = {
                     "timestamp": _now_iso(),
@@ -577,6 +813,10 @@ class ProductionBenchmarkRunner:
 
 
 def build_runner_from_args(args: Any) -> ProductionBenchmarkRunner:
+    resume = bool(getattr(args, "resume", False))
+    if getattr(args, "no_resume", False):
+        resume = False
+
     config = BenchmarkConfig(
         dataset_path=Path(args.dataset).expanduser().resolve(),
         base_url=args.base_url,
@@ -585,7 +825,7 @@ def build_runner_from_args(args: Any) -> ProductionBenchmarkRunner:
         health_timeout_s=args.health_timeout,
         retries=args.retries,
         retry_backoff_s=args.retry_backoff,
-        resume=not args.no_resume,
+        resume=resume,
         limit=args.limit,
         request_prefix=args.request_prefix,
         query_path=args.query_path,
@@ -606,7 +846,8 @@ def add_cli_args(parser: Any) -> None:
     parser.add_argument("--request-prefix", default="prodbench", help="Prefix for request IDs.")
     parser.add_argument("--query-path", default="/query", help="Query route path.")
     parser.add_argument("--health-path", default="/health", help="Health route path.")
-    parser.add_argument("--no-resume", action="store_true", help="Disable resume support and overwrite outputs.")
+    parser.add_argument("--resume", action="store_true", default=False, help="Explicitly enable resume mode to continue previous benchmark run.")
+    parser.add_argument("--no-resume", action="store_true", help="Deprecated. Resume is disabled by default.")
 
 
 def main(argv: Optional[List[str]] = None) -> int:
@@ -619,11 +860,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         runner = build_runner_from_args(args)
         summary = runner.run()
-    except BenchmarkHTTPError as exc:
-        print(f"Benchmark aborted: {exc}", flush=True)
-        return 1
-    except FileNotFoundError as exc:
-        print(f"Benchmark aborted: {exc}", flush=True)
+    except (BenchmarkHTTPError, BenchmarkPreflightError, FileNotFoundError) as exc:
+        print(f"\n[BENCHMARK ABORTED] {exc}", flush=True)
         return 1
 
     print("\nBenchmark complete.", flush=True)
