@@ -672,6 +672,23 @@ def background_ingest_repository(
         repo.last_error = None
         registry.register(repo)
 
+        final_points = 0
+        try:
+            final_points = v_manager.count()
+        except Exception:
+            pass
+
+        print("=" * 80, flush=True)
+        print(f"[REINDEX DIAGNOSTIC SUMMARY] Repository '{repo_id}'", flush=True)
+        print(f"  [1/7] Source Path         : {target_path} -> Resolved: {resolved_target}", flush=True)
+        print(f"  [2/7] Discovered Files    : {len(all_pdf_files)} PDF files.", flush=True)
+        print(f"  [3/7] Parsed Documents   : {len(new_chunks_by_file)}/{len(files_to_parse)} PDFs parsed ({failed_parse_count} failed).", flush=True)
+        print(f"  [4/7] Chunks Generated   : {total_new_chunks} chunks created.", flush=True)
+        print(f"  [5/7] Chunks Needed Embed: {len(chunks_needed)} chunks needed embedding.", flush=True)
+        print(f"  [6/7] Uploaded to Qdrant : {current_completed} chunks uploaded.", flush=True)
+        print(f"  [7/7] Final Point Count  : {final_points} points in Qdrant.", flush=True)
+        print("=" * 80, flush=True)
+
         # Invalidate content-aware router cache so next query uses fresh chunk embeddings
         try:
             from retrieval.repository_router import invalidate_router_cache
