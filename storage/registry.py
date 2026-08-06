@@ -72,8 +72,26 @@ class RepositoryRegistry:
     def register(self, repo: Repository) -> None:
         """Registers a new repository or overwrites an existing one."""
         with self._lock:
+            # If attempting to register as READY, verify points count > 0
+            if repo.status == RepoStatus.READY and repo.vector_collection:
+                try:
+                    from storage.vector_store import VectorStoreManager
+                    vm = VectorStoreManager(collection_name=repo.vector_collection)
+                    if vm.count() == 0:
+                        repo.status = RepoStatus.FAILED
+                        repo.last_error = "Zero vectors indexed in collection."
+                except Exception as e:
+                    repo.status = RepoStatus.FAILED
+                    repo.last_error = f"Vector count verification failed: {e}"
+
             self.repositories[repo.repo_id] = repo
             self._save()
+
+        try:
+            from retrieval.repository_router import invalidate_router_cache
+            invalidate_router_cache(repo.repo_id)
+        except Exception:
+            pass
 
     def get_repository(self, repo_id: str) -> Optional[Repository]:
         """Retrieves a repository by its ID."""
@@ -87,10 +105,29 @@ class RepositoryRegistry:
         """Updates the status of a repository."""
         with self._lock:
             if repo_id in self.repositories:
-                self.repositories[repo_id].status = status
+                repo = self.repositories[repo_id]
+                # If marking as READY, verify count > 0
+                if status == RepoStatus.READY and repo.vector_collection:
+                    try:
+                        from storage.vector_store import VectorStoreManager
+                        vm = VectorStoreManager(collection_name=repo.vector_collection)
+                        if vm.count() == 0:
+                            status = RepoStatus.FAILED
+                            repo.last_error = "Zero vectors indexed in collection."
+                    except Exception as e:
+                        status = RepoStatus.FAILED
+                        repo.last_error = f"Vector count verification failed: {e}"
+
+                repo.status = status
                 self._save()
             else:
                 raise ValueError(f"Repository {repo_id} not found in registry.")
+
+        try:
+            from retrieval.repository_router import invalidate_router_cache
+            invalidate_router_cache(repo_id)
+        except Exception:
+            pass
 
     def delete(self, repo_id: str) -> None:
         """Soft-deletes a repository."""
@@ -100,6 +137,12 @@ class RepositoryRegistry:
                 self._save()
             else:
                 raise ValueError(f"Repository {repo_id} not found in registry.")
+
+        try:
+            from retrieval.repository_router import invalidate_router_cache
+            invalidate_router_cache(repo_id)
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------

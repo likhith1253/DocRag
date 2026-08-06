@@ -97,8 +97,18 @@ def rank_repositories(query: str, registry: RepositoryRegistry, top_k: int = 1) 
     if not repos:
         return []
 
-    # Filter to queryable collections
-    queryable = [r for r in repos if r.status in QUERYABLE_REPO_STATUSES]
+    # Filter to queryable collections with >0 points stored
+    from storage.vector_store import VectorStoreManager
+    queryable = []
+    for r in repos:
+        if r.status in QUERYABLE_REPO_STATUSES and r.vector_collection:
+            try:
+                vm = VectorStoreManager(collection_name=r.vector_collection)
+                if vm.count() > 0:
+                    queryable.append(r)
+            except Exception:
+                pass
+
     if not queryable:
         return []
 

@@ -4,23 +4,26 @@ import agents.orchestrator as orchestrator
 
 router = APIRouter(tags=["query"])
 
+from typing import Optional
+
 class QueryPayload(BaseModel):
     question: str
-    repo_id: str = None
-    filters: dict = None
+    repo_id: Optional[str] = None
+    collection_id: Optional[str] = None
+    filters: Optional[dict] = None
+    retrieval_mode: Optional[str] = "single"
 
 @router.post("/query")
 def query(payload: QueryPayload):
     question = payload.question
+    effective_repo_id = payload.repo_id or payload.collection_id
     
     try:
-        # BUG FIX: orchestrator.answer() returns a tuple of 4 values:
-        #   (answer_text, latency_breakdown, chunks, citations)
-        # Previously this was assigned to a single variable `ans`, meaning
-        # `ans` was the entire tuple — not the answer string.  This caused
-        # garbled or unusable responses from this endpoint.
         ans, latency_breakdown, chunks, citations = orchestrator.answer(
-            question, repo_id=payload.repo_id, filters=payload.filters
+            question,
+            repo_id=effective_repo_id,
+            filters=payload.filters,
+            retrieval_mode=payload.retrieval_mode or "single"
         )
 
         agent = "doc_agent"

@@ -415,7 +415,7 @@ if ask_btn:
             try:
                 payload = {"question": question.strip()}
                 if selected_repo_id:
-                    payload["collection_id"] = selected_repo_id
+                    payload["repo_id"] = selected_repo_id
 
                 res = requests.post(
                     f"{API_URL}/query", json=payload, timeout=300

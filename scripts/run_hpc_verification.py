@@ -131,7 +131,7 @@ def run_hpc_verification():
                 query=question,
                 repo_id=None,  # Searches active 'chunks' collection where all papers are indexed
                 filters={},
-                retrieval_mode="single",
+                retrieval_mode="corpus",
                 request_id=req_id,
             )
             if isinstance(res, tuple):

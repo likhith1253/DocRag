@@ -1252,5 +1252,24 @@
         "tier2_total_chunks": 0,
         "tier2_indexed_chunks": 270,
         "last_error": null
+    },
+    "test_dummy_0_pts": {
+        "repo_id": "test_dummy_0_pts",
+        "name": "Dummy Empty Repo",
+        "branch": "main",
+        "commit": null,
+        "language": null,
+        "framework": null,
+        "vector_collection": "collection_dummy_empty_12345",
+        "knowledge_graph": "kg_dummy",
+        "metadata": "meta_dummy",
+        "embedding_model": "all-MiniLM-L6-v2",
+        "source_path": null,
+        "parser_version": "v1",
+        "indexed_at": null,
+        "status": "FAILED",
+        "tier2_total_chunks": 0,
+        "tier2_indexed_chunks": 0,
+        "last_error": "Zero vectors indexed in collection."
     }
 }

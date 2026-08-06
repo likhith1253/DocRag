@@ -132,9 +132,9 @@ def run_benchmark():
         try:
             result = orchestrator_answer(
                 query=question,
-                repo_id=repo_id,
+                repo_id=FORCED_REPO_ID,
                 filters={},
-                retrieval_mode="single",
+                retrieval_mode="corpus" if not FORCED_REPO_ID else "single",
             )
             if isinstance(result, tuple):
                 answer_text = result[0]

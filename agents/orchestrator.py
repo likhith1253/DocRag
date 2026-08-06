@@ -140,22 +140,23 @@ def route_node(state: AgentState) -> Dict[str, Any]:
 
         repo_id = state.get("repo_id")
         filters = state.get("filters") or {}
+        retrieval_mode = state.get("retrieval_mode", "single")
         
+        # Corpus mode bypasses repository routing explicitly
+        if retrieval_mode == "corpus":
+            pass
         # If repo_id is specified in filters, use it
-        if not repo_id and "paper_title" in filters:
-            # Try to find repo with this paper title
+        elif not repo_id and "paper_title" in filters:
             registry = get_registry()
             for rid, repo in registry.repositories.items():
-                if repo.status == "READY":
-                    # Check if this repo contains the paper
+                if repo.status == "READY" and repo.vector_collection:
                     v_manager = VectorStoreManager(collection_name=repo.vector_collection)
                     chunks, _ = v_manager.search(state["question"], top_k=5, metadata_filters=filters, request_id=state.get("request_id", "default"))
                     if chunks and chunks[0]:
                         updates["repo_id"] = rid
                         break
-        
-        # If still no repo_id, use repository router
-        if not repo_id:
+        # Otherwise if no repo_id supplied, invoke semantic router
+        elif not repo_id:
             from retrieval.repository_router import rank_repositories
             registry = get_registry()
             top_repos = rank_repositories(state["question"], registry, top_k=3)
@@ -195,8 +196,15 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         retrieval_mode = state.get("retrieval_mode", "single")
 
         registry = get_registry()
-        repo = registry.get_repository(repo_id) if repo_id else None
-        v_coll = repo.vector_collection if repo else "chunks"
+
+        # EXPLICIT RETRIEVAL BRANCHING
+        if retrieval_mode == "corpus":
+            v_coll = "chunks"
+        elif repo_id:
+            repo = registry.get_repository(repo_id)
+            v_coll = repo.vector_collection if (repo and repo.vector_collection) else "chunks"
+        else:
+            v_coll = "chunks"
 
         global _v_manager_override
         if _v_manager_override is not None:
