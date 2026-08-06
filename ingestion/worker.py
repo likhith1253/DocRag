@@ -143,10 +143,13 @@ def _resolve_target_path(target_path: str) -> list[str]:
         # Check if actual_path contains any PDF files
         has_pdfs = False
         if os.path.exists(actual_path):
-            for root, dirs, files in os.walk(actual_path):
-                if any(_is_pdf_file(f) for f in files):
-                    has_pdfs = True
-                    break
+            if os.path.isfile(actual_path) and _is_pdf_file(actual_path):
+                has_pdfs = True
+            else:
+                for root, dirs, files in os.walk(actual_path):
+                    if any(_is_pdf_file(f) for f in files):
+                        has_pdfs = True
+                        break
 
         if not has_pdfs:
             lower_path = actual_path.lower()
@@ -187,6 +190,11 @@ def _discover_pdf_files(target_path: str) -> dict:
     for path in paths:
         if not os.path.exists(path):
             continue
+        if os.path.isfile(path):
+            if _is_pdf_file(path):
+                pdf_files[os.path.basename(path)] = path
+            continue
+
         base_name = os.path.basename(os.path.normpath(path))
         for root, dirs, files in os.walk(path):
             # Skip hidden directories
@@ -345,13 +353,16 @@ def background_ingest_repository(
         snapshot = measure("Snapshot load", lambda: snapshot_manager.get_snapshot(repo_id))
 
         # compute_file_diff works on file hashes — file-extension agnostic
+        resolved_paths = _resolve_target_path(target_path)
+        resolved_target = ";".join(resolved_paths)
+        
         added_files, modified_files, deleted_files, new_file_hashes = measure(
             "Repository discovery",
-            lambda: compute_file_diff(target_path, snapshot),
+            lambda: compute_file_diff(resolved_target, snapshot),
         )
 
         # Filter to PDFs only
-        all_pdf_files = _discover_pdf_files(target_path)
+        all_pdf_files = _discover_pdf_files(resolved_target)
 
         def _is_pdf_rel(rel_path: str) -> bool:
             return _is_pdf_file(rel_path)

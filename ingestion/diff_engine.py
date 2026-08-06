@@ -79,6 +79,12 @@ def _hash_diff(target_path: str, old_hashes: Dict[str, str]) -> Tuple[List[str],
     for path in paths:
         if not os.path.exists(path):
             continue
+        if os.path.isfile(path):
+            file_hash = _hash_file(path)
+            if file_hash:
+                current_hashes[os.path.basename(path)] = file_hash
+            continue
+
         base_name = os.path.basename(os.path.normpath(path))
         for root, dirs, files in os.walk(path):
             dirs[:] = [d for d in dirs if not d.startswith('.')]
