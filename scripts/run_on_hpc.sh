@@ -18,10 +18,10 @@ pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 
 echo "======================================================="
-echo "Dependencies ready. Executing 50-query verification..."
+echo "Dependencies ready. Executing production API benchmark..."
 echo "======================================================="
 
 export DISABLE_PROMPT_CACHE=1
 export ENABLE_PROMPT_CACHE=0
 
-python scripts/run_hpc_verification.py
+python scripts/run_production_benchmark.py

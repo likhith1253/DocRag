@@ -61,6 +61,33 @@ app.add_middleware(
 app.include_router(repository_router)
 
 
+def _backend_health_payload():
+    try:
+        from llm.backend_factory import get_backend
+
+        backend = get_backend()
+        loaded = bool(getattr(backend, "model", None) is not None and getattr(backend, "tokenizer", None) is not None)
+        backend_info = {
+            "backend_name": backend.__class__.__name__,
+            "model_name": getattr(backend, "model_name", None),
+            "device": getattr(backend, "device", None),
+            "dtype": getattr(backend, "dtype_str", None),
+            "gpu_name": getattr(backend, "gpu_name", None),
+            "loaded": loaded,
+        }
+        return backend_info
+    except Exception as exc:
+        return {
+            "backend_name": None,
+            "model_name": None,
+            "device": None,
+            "dtype": None,
+            "gpu_name": None,
+            "loaded": False,
+            "error": str(exc),
+        }
+
+
 # ---------------------------------------------------------------------------
 # Request/response models
 # ---------------------------------------------------------------------------
@@ -79,7 +106,11 @@ class QueryPayload(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "system": "DocumentRAG"}
+    return {
+        "status": "ok",
+        "system": "DocumentRAG",
+        "backend": _backend_health_payload(),
+    }
 
 
 # ---------------------------------------------------------------------------

@@ -23,8 +23,8 @@ export ENABLE_PROMPT_CACHE=0
 # Activate virtual environment if applicable
 # source venv/bin/activate
 
-python scripts/run_hpc_verification.py
+python scripts/run_production_benchmark.py
 
 echo "================================================================="
-echo "Run Finished. Report saved to logs/hpc_50_runs_comprehensive_report.md"
+echo "Run Finished. Report saved to benchmark_results/summary.md"
 echo "================================================================="
