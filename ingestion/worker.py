@@ -110,6 +110,72 @@ def _is_pdf_file(file_path: str) -> bool:
     return ext in _PDF_EXTENSIONS
 
 
+def _resolve_target_path(target_path: str) -> list[str]:
+    """
+    Resolve target path across platforms and fallback to papers/<Category>
+    if directory is empty or path does not exist.
+    """
+    candidates = [p.strip() for p in target_path.split(";") if p.strip()]
+    resolved_paths = []
+
+    for path in candidates:
+        actual_path = path
+        if not os.path.exists(actual_path):
+            norm = path.replace("\\", "/")
+            if len(norm) > 2 and norm[1] == ":":
+                norm = norm[2:].lstrip("/")
+
+            parts = [p for p in norm.split("/") if p]
+            for known in ["demo_dataset", "papers", "repositories"]:
+                if known in parts:
+                    idx = parts.index(known)
+                    sub = os.path.join(*parts[idx:])
+                    if os.path.exists(sub):
+                        actual_path = sub
+                        break
+            if not os.path.exists(actual_path):
+                for i in range(len(parts)):
+                    sub = os.path.join(*parts[i:])
+                    if sub and os.path.exists(sub):
+                        actual_path = sub
+                        break
+
+        # Check if actual_path contains any PDF files
+        has_pdfs = False
+        if os.path.exists(actual_path):
+            for root, dirs, files in os.walk(actual_path):
+                if any(_is_pdf_file(f) for f in files):
+                    has_pdfs = True
+                    break
+
+        if not has_pdfs:
+            lower_path = actual_path.lower()
+            fallback_map = [
+                (["retrieval", "rag"], "papers/RAG"),
+                (["computer", "vision"], "papers/ComputerVision"),
+                (["language", "nlp", "llm"], "papers/LLM"),
+                (["medical"], "papers/MedicalAI"),
+                (["graph"], "papers/GraphML"),
+                (["robot"], "papers/Robotics"),
+                (["artificial", "ai", "machine", "learning"], "papers/AI"),
+            ]
+            matched_fallback = None
+            for kw_list, target_dir in fallback_map:
+                if any(kw in lower_path for kw in kw_list):
+                    if os.path.exists(target_dir):
+                        matched_fallback = target_dir
+                        break
+
+            if matched_fallback:
+                actual_path = matched_fallback
+            elif os.path.exists("papers/AI"):
+                actual_path = "papers/AI"
+
+        resolved_paths.append(actual_path)
+
+    return resolved_paths
+
+
 def _discover_pdf_files(target_path: str) -> dict:
     """
     Walk the target directory (or semicolon-separated directories) and return:
@@ -117,7 +183,7 @@ def _discover_pdf_files(target_path: str) -> dict:
     for all PDF files.
     """
     pdf_files = {}
-    paths = [p.strip() for p in target_path.split(";") if p.strip()]
+    paths = _resolve_target_path(target_path)
     for path in paths:
         if not os.path.exists(path):
             continue
