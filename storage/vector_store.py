@@ -145,9 +145,12 @@ class VectorStoreManager:
                 info = self.client.get_collection(self.collection_name)
                 existing_size = info.config.params.vectors.size
                 if existing_size != self.vector_size:
-                    raise RuntimeError(f"Dimension mismatch for '{self.collection_name}': expected {self.vector_size}, found {existing_size}. Collection must be manually re-indexed or deleted.")
-            except RuntimeError as e:
-                raise e
+                    print(
+                        f"[Qdrant] Dimension mismatch for '{self.collection_name}': existing {existing_size} != expected {self.vector_size}. Re-creating collection...",
+                        flush=True,
+                    )
+                    self.client.delete_collection(self.collection_name)
+                    exists = False
             except Exception as e:
                 print(f"[Qdrant] Error checking collection size for '{self.collection_name}': {e}")
 
