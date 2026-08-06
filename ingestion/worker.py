@@ -371,9 +371,23 @@ def background_ingest_repository(
         modified_files = [f for f in modified_files if _is_pdf_rel(f)]
         deleted_files = [f for f in deleted_files if _is_pdf_rel(f)]
 
+        # Qdrant zero-point guard: if Qdrant collection is currently empty, force full re-indexing of all PDFs
+        repo = registry.get_repository(repo_id)
+        coll_name = repo.vector_collection if (repo and repo.vector_collection) else f"collection_{repo_id}"
+        try:
+            from storage.vector_store import VectorStoreManager
+            vm = VectorStoreManager(collection_name=coll_name)
+            if vm.count() == 0 and all_pdf_files:
+                added_files = list(all_pdf_files.keys())
+                modified_files = []
+                deleted_files = []
+        except Exception:
+            if all_pdf_files:
+                added_files = list(all_pdf_files.keys())
+
         # Resume fix: find PDF files whose chunks were not fully embedded
         missing_files = set()
-        if snapshot.chunk_hashes:
+        if snapshot.chunk_hashes and not (added_files and len(added_files) == len(all_pdf_files)):
             for file_path, hashes in snapshot.chunk_hashes.items():
                 if not _is_pdf_rel(file_path):
                     continue
