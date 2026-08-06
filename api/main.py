@@ -31,32 +31,32 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("\n[STARTUP] Warm-up: Pre-loading LLM backend model in background...", flush=True)
-    def _warmup():
-        try:
-            from llm.backend_factory import get_backend
-            backend = get_backend()
-            print(
-                f"[STARTUP] backend id={id(backend)} class={backend.__class__.__name__} "
-                f"model_name={getattr(backend, 'model_name', None)} device={getattr(backend, 'device', None)} "
-                f"loaded_before={bool(getattr(backend, 'model', None) is not None and getattr(backend, 'tokenizer', None) is not None)}",
-                flush=True,
-            )
-            if hasattr(backend, "ensure_loaded"):
-                backend.ensure_loaded()
-            else:
-                backend._ensure_loaded()
-            print(
-                f"[STARTUP] backend id={id(backend)} class={backend.__class__.__name__} "
-                f"model_name={getattr(backend, 'model_name', None)} device={getattr(backend, 'device', None)} "
-                f"loaded_after={bool(getattr(backend, 'model', None) is not None and getattr(backend, 'tokenizer', None) is not None)}",
-                flush=True,
-            )
-            print("[STARTUP] LLM backend model loaded successfully!", flush=True)
-        except Exception as e:
-            print(f"[STARTUP WARN] LLM backend pre-load error: {e}", flush=True)
+    print("\n[STARTUP] Warm-up: Pre-loading LLM backend model synchronously...", flush=True)
+    try:
+        from llm.backend_factory import get_backend
 
-    threading.Thread(target=_warmup, daemon=True).start()
+        backend = get_backend()
+        print(
+            f"[STARTUP] backend id={id(backend)} class={backend.__class__.__name__} "
+            f"model_name={getattr(backend, 'model_name', None)} device={getattr(backend, 'device', None)} "
+            f"loaded_before={bool(getattr(backend, 'model', None) is not None and getattr(backend, 'tokenizer', None) is not None)}",
+            flush=True,
+        )
+        if hasattr(backend, "ensure_loaded"):
+            backend.ensure_loaded()
+        else:
+            backend._ensure_loaded()
+        print(
+            f"[STARTUP] backend id={id(backend)} class={backend.__class__.__name__} "
+            f"model_name={getattr(backend, 'model_name', None)} device={getattr(backend, 'device', None)} "
+            f"loaded_after={bool(getattr(backend, 'model', None) is not None and getattr(backend, 'tokenizer', None) is not None)}",
+            flush=True,
+        )
+        print("[STARTUP] LLM backend model loaded successfully!", flush=True)
+    except Exception as e:
+        print(f"[STARTUP WARN] LLM backend pre-load error: {e}", flush=True)
+        raise
+
     yield
 
 app = FastAPI(
