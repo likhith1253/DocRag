@@ -98,16 +98,12 @@ def rank_repositories(query: str, registry: RepositoryRegistry, top_k: int = 1) 
         return []
 
     # Filter to queryable collections with >0 points stored
-    from storage.vector_store import VectorStoreManager
     queryable = []
     for r in repos:
         if r.status in QUERYABLE_REPO_STATUSES and r.vector_collection:
-            try:
-                vm = VectorStoreManager(collection_name=r.vector_collection)
-                if vm.count() > 0:
-                    queryable.append(r)
-            except Exception:
-                pass
+            count = getattr(r, "tier2_indexed_chunks", 0) or 0
+            if count > 0 or r.status == "READY":
+                queryable.append(r)
 
     if not queryable:
         return []

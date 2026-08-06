@@ -146,17 +146,20 @@ def route_node(state: AgentState) -> Dict[str, Any]:
         if retrieval_mode == "corpus":
             pass
         # If repo_id is specified in filters, use it
-        elif not repo_id and "paper_title" in filters:
+        elif not repo_id and ("paper_title" in filters or "file" in filters):
             registry = get_registry()
             for rid, repo in registry.repositories.items():
                 if repo.status == "READY" and repo.vector_collection:
-                    v_manager = VectorStoreManager(collection_name=repo.vector_collection)
-                    chunks, _ = v_manager.search(state["question"], top_k=5, metadata_filters=filters, request_id=state.get("request_id", "default"))
-                    if chunks and chunks[0]:
-                        updates["repo_id"] = rid
-                        break
+                    try:
+                        v_manager = VectorStoreManager(collection_name=repo.vector_collection)
+                        chunks, _ = v_manager.search(state["question"], top_k=5, metadata_filters=filters, request_id=state.get("request_id", "default"))
+                        if chunks and chunks[0]:
+                            updates["repo_id"] = rid
+                            break
+                    except Exception:
+                        pass
         # Otherwise if no repo_id supplied, invoke semantic router
-        elif not repo_id:
+        if not updates.get("repo_id") and not repo_id:
             from retrieval.repository_router import rank_repositories
             registry = get_registry()
             top_repos = rank_repositories(state["question"], registry, top_k=3)
@@ -212,12 +215,19 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         else:
             v_manager = VectorStoreManager(collection_name=v_coll)
             points_in_coll = v_manager.count()
-            if points_in_coll == 0 and v_coll != "chunks":
-                fb_manager = VectorStoreManager(collection_name="chunks")
-                if fb_manager.count() > 0:
-                    print(f"[COLLECTION GUARD] Collection '{v_coll}' has 0 points. Falling back to active collection 'chunks' ({fb_manager.count()} points).", flush=True)
-                    v_coll = "chunks"
-                    v_manager = fb_manager
+            if points_in_coll == 0:
+                ready_repos = [r for r in registry.list_repositories() if r.status == "READY" and r.vector_collection]
+                for r in ready_repos:
+                    try:
+                        fb_manager = VectorStoreManager(collection_name=r.vector_collection)
+                        if fb_manager.count() > 0:
+                            v_coll = r.vector_collection
+                            v_manager = fb_manager
+                            repo_id = r.repo_id
+                            print(f"[COLLECTION GUARD] Redirected to active collection '{v_coll}' ({fb_manager.count()} points).", flush=True)
+                            break
+                    except Exception:
+                        pass
 
         from storage.forensic_logger import ForensicLogger
         f_logger = state.get("f_logger")
