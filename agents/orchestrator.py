@@ -328,9 +328,10 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         }
         log_stage(request_id, 7, "Knowledge Graph", stage7_data, latency_ms=0.0)
 
-        # Fallback if zero chunks remain
-        top_score = chunks[0].get("score", 1.0) if chunks else 0.0
-        if not chunks or top_score < 0.35:
+        # Fallback only when retrieval produced no chunks at all.
+        # A low score is still evidence, so we keep it and let the grounded
+        # doc agent decide whether the excerpt actually answers the question.
+        if not chunks:
             # Fallback search in global 'chunks'
             try:
                 fb_vman = VectorStoreManager(collection_name='chunks')
