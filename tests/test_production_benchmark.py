@@ -96,7 +96,32 @@ def test_runner_writes_outputs_and_supports_resume(tmp_path):
                     "dtype": "float32",
                     "model_name": "mock-model",
                 },
+                "diagnostics": {
+                    "embedding_model": "all-MiniLM-L6-v2",
+                    "vector_dimension": 384,
+                    "cross_encoder": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+                    "repository_count": 1,
+                    "collections": {"collection_repo-1": 100},
+                    "vector_store_reachable": True,
+                },
             }
+
+        def list_repositories(self):
+            return [
+                {
+                    "repo_id": "repo-1",
+                    "name": "test-repo",
+                    "status": "READY",
+                    "vector_collection": "collection_repo-1",
+                    "tier2_indexed_chunks": 100,
+                }
+            ]
+
+        def get_repository_status(self, repo_id):
+            return {"repo_id": repo_id, "status": "READY"}
+
+        def reindex_repository(self, repo_id):
+            return {"message": "Reindexing started", "repo_id": repo_id}
 
         def query(self, payload):
             self.query_calls += 1
@@ -222,3 +247,25 @@ def test_preflight_checks_raises_when_backend_not_loaded():
     with pytest.raises(BenchmarkHTTPError):
         runner.run()
 
+
+def test_benchmark_has_no_embedded_qdrant_imports():
+    """Requirement 8: Benchmark must never import VectorStoreManager, QdrantClient, or access qdrant_storage directly."""
+    import ast
+    source = Path("eval/production_benchmark.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    imported_names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imported_names.add(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            if node.module:
+                imported_names.add(node.module)
+            for alias in node.names:
+                imported_names.add(alias.name)
+
+    forbidden = {"VectorStoreManager", "QdrantClient", "RepositoryRegistry", "SnapshotManager", "qdrant_storage"}
+    assert not (forbidden & imported_names), f"Forbidden imports found: {forbidden & imported_names}"
+    assert "QdrantClient(" not in source
+    assert "VectorStoreManager(" not in source

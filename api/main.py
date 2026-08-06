@@ -125,6 +125,49 @@ def _backend_health_payload():
         }
 
 
+def _system_diagnostics_payload():
+    try:
+        from storage.vector_store import _get_config, VectorStoreManager
+        cfg = _get_config()
+        embedding_model = cfg.get("embedding_model", "all-MiniLM-L6-v2")
+        cross_encoder = cfg.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+        vm = VectorStoreManager()
+        vector_dim = getattr(vm, "vector_size", 384)
+
+        from storage.registry import RepositoryRegistry, RepoStatus
+        registry = RepositoryRegistry()
+        ready_repos = [r for r in registry.list_repositories() if r.status == RepoStatus.READY]
+
+        collections = {}
+        for r in ready_repos:
+            coll_name = r.vector_collection
+            try:
+                coll_vm = VectorStoreManager(collection_name=coll_name)
+                collections[coll_name] = coll_vm.count()
+            except Exception:
+                collections[coll_name] = getattr(r, "tier2_indexed_chunks", 0)
+
+        return {
+            "embedding_model": embedding_model,
+            "vector_dimension": vector_dim,
+            "cross_encoder": cross_encoder,
+            "repository_count": len(ready_repos),
+            "collections": collections,
+            "vector_store_reachable": True,
+        }
+    except Exception as exc:
+        return {
+            "embedding_model": "all-MiniLM-L6-v2",
+            "vector_dimension": 384,
+            "cross_encoder": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+            "repository_count": 0,
+            "collections": {},
+            "vector_store_reachable": False,
+            "error": str(exc),
+        }
+
+
 # ---------------------------------------------------------------------------
 # Request/response models
 # ---------------------------------------------------------------------------
@@ -147,6 +190,7 @@ def health():
         "status": "ok",
         "system": "DocumentRAG",
         "backend": _backend_health_payload(),
+        "diagnostics": _system_diagnostics_payload(),
     }
 
 

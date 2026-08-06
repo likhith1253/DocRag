@@ -127,6 +127,25 @@ class BenchmarkAPIClient:
     def query(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         return self._request_json("POST", self.query_path, payload)
 
+    def list_repositories(self) -> List[Dict[str, Any]]:
+        try:
+            res = self._request_json("GET", "/repository/")
+            return res if isinstance(res, list) else []
+        except Exception:
+            return []
+
+    def get_repository_status(self, repo_id: str) -> Dict[str, Any]:
+        try:
+            return self._request_json("GET", f"/repository/{repo_id}/status")
+        except Exception as exc:
+            return {"error": str(exc), "status": "UNKNOWN"}
+
+    def reindex_repository(self, repo_id: str) -> Dict[str, Any]:
+        try:
+            return self._request_json("POST", f"/repository/{repo_id}/reindex")
+        except Exception as exc:
+            return {"error": str(exc)}
+
 
 def load_dataset(path: Path) -> List[BenchmarkItem]:
     with open(path, "r", encoding="utf-8") as f:
@@ -307,18 +326,20 @@ class ProductionBenchmarkRunner:
 
     def _run_preflight_checks(self) -> Dict[str, Any]:
         """
-        STEPS 1-4 & STEP 6 Pre-flight System Verification:
-        - Inspect registry (STEP 1)
-        - Verify READY repos have non-zero Qdrant points (STEP 2)
-        - Trigger auto-indexing if missing vectors & report chunk counts (STEP 3, STEP 9)
-        - Verify models, vector store, cross encoder, LLM backend, API healthy (STEP 4)
+        STEPS 1-4 & STEP 6 Pre-flight System Verification via pure HTTP API:
+        - Communicate ONLY through HTTP (BenchmarkAPIClient)
+        - Never open local storage or instantiate embedded vector stores
+        - Inspect registry (STEP 1) via API /repository/
+        - Verify READY repos have non-zero points (STEP 2) via API
+        - Trigger auto-indexing if missing vectors (STEP 3, STEP 9) via API
+        - Verify models, vector store, cross encoder, LLM backend, API healthy (STEP 4) via /health
         - Print system banner before Question 1 (STEP 6)
         """
         print("=" * 80, flush=True)
         print("DocumentRAG Production System Pre-Flight Diagnostics", flush=True)
         print("=" * 80, flush=True)
 
-        # STEP 4: API & Backend Health
+        # STEP 4: API & LLM Backend Health via HTTP
         health = self._wait_for_backend()
         if health.get("status") != "ok":
             raise BenchmarkPreflightError(f"API health check failed: status={health.get('status')!r}")
@@ -328,6 +349,11 @@ class ProductionBenchmarkRunner:
         if not is_loaded:
             raise BenchmarkPreflightError("LLM backend is not loaded in API health payload.")
 
+        diagnostics_info = dict(health.get("diagnostics") or {})
+        if diagnostics_info and diagnostics_info.get("vector_store_reachable") is False:
+            err = diagnostics_info.get("error") or "Vector store reachable is false"
+            raise BenchmarkPreflightError(f"Vector store reachability check failed: {err}")
+
         llm_backend_name = (
             backend_info.get("model_name")
             or backend_info.get("backend_class")
@@ -336,123 +362,83 @@ class ProductionBenchmarkRunner:
         )
         device_str = str(backend_info.get("device") or "cpu").lower()
         gpu_name = backend_info.get("gpu_name") or "None / CPU"
+        cuda_available = bool(device_str == "cuda" or (gpu_name and gpu_name != "None / CPU"))
 
-        cuda_available = False
-        try:
-            import torch
-            cuda_available = torch.cuda.is_available()
-            if cuda_available and (not gpu_name or gpu_name == "None / CPU"):
-                gpu_name = torch.cuda.get_device_name(0)
-        except Exception:
-            pass
+        embedding_model_name = diagnostics_info.get("embedding_model") or "all-MiniLM-L6-v2"
+        vector_dimension = diagnostics_info.get("vector_dimension") or 384
+        cross_encoder_name = diagnostics_info.get("cross_encoder") or "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
-        # STEP 1: Inspect Registry
-        ready_repos = []
-        registry = None
-        try:
-            from storage.registry import RepositoryRegistry, RepoStatus
-            registry = RepositoryRegistry()
-            all_repos = registry.list_repositories()
-            ready_repos = [r for r in all_repos if r.status == RepoStatus.READY]
-        except Exception:
-            ready_repos = []
-            registry = None
+        # STEP 1: Inspect Registry via HTTP /repository/
+        repos_from_api = self.client.list_repositories()
+        ready_repos = [r for r in repos_from_api if r.get("status") == "READY"]
 
-        # STEP 2 & 3: Qdrant Vector Store & Collections Inspection
-        collections_info: Dict[str, int] = {}
+        # STEP 2 & 3: Qdrant Vector Store & Collections Inspection via HTTP
+        collections_info: Dict[str, int] = dict(diagnostics_info.get("collections") or {})
         total_chunks_auto_indexed = 0
-        embedding_model_name = "all-MiniLM-L6-v2"
-        vector_dimension = 384
 
-        try:
-            from storage.vector_store import VectorStoreManager
-            temp_vm = VectorStoreManager()
-            temp_vm.client.get_collections()
-            embedding_model_name = getattr(temp_vm, "embedding_model_name", embedding_model_name)
-            vector_dimension = getattr(temp_vm, "vector_size", vector_dimension)
+        if ready_repos:
+            for repo in ready_repos:
+                repo_id = repo.get("repo_id")
+                coll_name = repo.get("vector_collection") or f"collection_{repo_id}"
+                pt_count = collections_info.get(coll_name)
+                if pt_count is None:
+                    pt_count = int(repo.get("tier2_indexed_chunks") or 0)
 
-            if ready_repos and registry is not None:
-                for repo in ready_repos:
-                    coll_name = repo.vector_collection
-                    vm = VectorStoreManager(collection_name=coll_name)
-                    pt_count = vm.count()
+                # STEP 2 & 3: Check for 0 vectors
+                if pt_count == 0 and repo_id:
+                    print(
+                        f"[PRE-FLIGHT] Repository '{repo.get('name')}' ({repo_id}) collection '{coll_name}' has 0 vectors. "
+                        f"Automatically triggering HTTP reindexing...",
+                        flush=True,
+                    )
+                    reindex_resp = self.client.reindex_repository(repo_id)
+                    if reindex_resp.get("error"):
+                        raise BenchmarkPreflightError(
+                            f"Auto-indexing trigger failed for repository '{repo.get('name')}': {reindex_resp.get('error')}"
+                        )
 
-                    # STEP 2 & 3: Check for 0 vectors
+                    # Poll HTTP status until READY
+                    deadline = time.time() + 300.0
+                    indexed_ok = False
+                    while time.time() < deadline:
+                        time.sleep(2.0)
+                        st_resp = self.client.get_repository_status(repo_id)
+                        if st_resp.get("status") == "READY":
+                            indexed_ok = True
+                            break
+                        elif st_resp.get("status") == "FAILED":
+                            raise BenchmarkPreflightError(
+                                f"Auto-indexing genuinely failed for repository '{repo.get('name')}'."
+                            )
+
+                    if not indexed_ok:
+                        raise BenchmarkPreflightError(
+                            f"Auto-indexing timed out for repository '{repo.get('name')}'."
+                        )
+
+                    updated_repos = self.client.list_repositories()
+                    matching = [r for r in updated_repos if r.get("repo_id") == repo_id]
+                    pt_count = int(matching[0].get("tier2_indexed_chunks", 0)) if matching else 0
                     if pt_count == 0:
-                        print(
-                            f"[PRE-FLIGHT] Repository '{repo.name}' ({repo.repo_id}) collection '{coll_name}' has 0 vectors. "
-                            f"Automatically triggering indexing...",
-                            flush=True,
-                        )
-                        source_path = repo.source_path or f"papers/{repo.name}"
-                        if not os.path.exists(source_path) and os.path.exists("papers/AI"):
-                            source_path = "papers/AI"
-
-                        if not os.path.exists(source_path):
-                            raise BenchmarkPreflightError(
-                                f"Repository '{repo.name}' missing vectors, and source_path '{source_path}' does not exist."
-                            )
-
-                        try:
-                            from storage.snapshot import SnapshotManager
-                            SnapshotManager().delete_snapshot(repo.repo_id)
-                        except Exception:
-                            pass
-
-                        from ingestion.worker import background_ingest_repository
-                        count_before = pt_count
-                        try:
-                            background_ingest_repository(repo.repo_id, source_path, registry)
-                        except Exception as ing_err:
-                            raise BenchmarkPreflightError(
-                                f"Auto-indexing genuinely failed for repository '{repo.name}': {ing_err}"
-                            ) from ing_err
-
-                        pt_count = vm.count()
-                        chunks_inserted = pt_count - count_before
-                        if pt_count == 0:
-                            raise BenchmarkPreflightError(
-                                f"Auto-indexing finished for repository '{repo.name}', but point count is still 0."
-                            )
-
-                        total_chunks_auto_indexed += chunks_inserted
-                        # STEP 9: State inserted chunks
-                        print(
-                            f"[AUTO-INDEX] Repository '{repo.name}' ({repo.repo_id}) successfully indexed. "
-                            f"Exactly {chunks_inserted} chunks were inserted. (Total collection points: {pt_count})",
-                            flush=True,
+                        raise BenchmarkPreflightError(
+                            f"Auto-indexing finished for repository '{repo.get('name')}', but point count is still 0."
                         )
 
-                    collections_info[coll_name] = pt_count
-            else:
+                    total_chunks_auto_indexed += pt_count
+                    print(
+                        f"[AUTO-INDEX] Repository '{repo.get('name')}' ({repo_id}) successfully indexed via HTTP. "
+                        f"Exactly {pt_count} chunks were inserted.",
+                        flush=True,
+                    )
+
+                collections_info[coll_name] = pt_count
+        else:
+            if not collections_info:
                 dataset_colls = sorted(list({item.collection for item in self.dataset if item.collection}))
                 if not dataset_colls:
                     dataset_colls = ["chunks"]
                 for c_name in dataset_colls:
-                    vm = VectorStoreManager(collection_name=c_name)
-                    collections_info[c_name] = vm.count()
-
-        except BenchmarkPreflightError:
-            raise
-        except Exception as exc:
-            if ready_repos:
-                raise BenchmarkPreflightError(f"Vector store reachability check failed: {exc}") from exc
-            else:
-                collections_info["default"] = 0
-
-        # STEP 4: Cross Encoder Check
-        cross_encoder_name = "cross-encoder/ms-marco-MiniLM-L-6-v2"
-        try:
-            from storage.vector_store import _get_config
-            cfg = _get_config()
-            cross_encoder_name = cfg.get("reranker_model", cross_encoder_name)
-            from sentence_transformers import CrossEncoder
-            from retrieval.cross_encoder_rerank import _cross_encoder_cache
-            cache_key = f"{cross_encoder_name}::{device_str}"
-            if cache_key not in _cross_encoder_cache:
-                _cross_encoder_cache[cache_key] = CrossEncoder(cross_encoder_name, device=device_str)
-        except Exception:
-            pass
+                    collections_info[c_name] = collections_info.get(c_name, 0)
 
         # STEP 6: Print System Banner
         repo_count = len(ready_repos) if ready_repos else len(collections_info)
