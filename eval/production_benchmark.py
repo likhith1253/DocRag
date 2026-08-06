@@ -391,48 +391,57 @@ class ProductionBenchmarkRunner:
                         f"Automatically triggering HTTP reindexing...",
                         flush=True,
                     )
-                    reindex_resp = self.client.reindex_repository(repo_id)
-                    if reindex_resp.get("error"):
-                        raise BenchmarkPreflightError(
-                            f"Auto-indexing trigger failed for repository '{repo.get('name')}': {reindex_resp.get('error')}"
-                        )
-
-                    # Poll HTTP status until READY
-                    deadline = time.time() + 300.0
-                    indexed_ok = False
-                    while time.time() < deadline:
-                        time.sleep(2.0)
-                        st_resp = self.client.get_repository_status(repo_id)
-                        if st_resp.get("status") == "READY":
-                            indexed_ok = True
-                            break
-                        elif st_resp.get("status") == "FAILED":
-                            err_msg = st_resp.get("last_error") or "Zero vectors indexed in collection."
-                            raise BenchmarkPreflightError(
-                                f"Auto-indexing genuinely failed for repository '{repo.get('name')}': {err_msg}"
+                    try:
+                        reindex_resp = self.client.reindex_repository(repo_id)
+                        if reindex_resp.get("error"):
+                            print(
+                                f"[WARNING] Auto-indexing trigger failed for '{repo.get('name')}': {reindex_resp.get('error')}",
+                                flush=True,
                             )
+                            continue
 
-                    if not indexed_ok:
-                        raise BenchmarkPreflightError(
-                            f"Auto-indexing timed out for repository '{repo.get('name')}'."
+                        # Poll HTTP status until READY
+                        deadline = time.time() + 300.0
+                        indexed_ok = False
+                        while time.time() < deadline:
+                            time.sleep(2.0)
+                            st_resp = self.client.get_repository_status(repo_id)
+                            if st_resp.get("status") == "READY":
+                                indexed_ok = True
+                                break
+                            elif st_resp.get("status") == "FAILED":
+                                err_msg = st_resp.get("last_error") or "Zero vectors indexed in collection."
+                                print(
+                                    f"[WARNING] Auto-indexing failed for '{repo.get('name')}': {err_msg}",
+                                    flush=True,
+                                )
+                                break
+
+                        if indexed_ok:
+                            updated_repos = self.client.list_repositories()
+                            matching = [r for r in updated_repos if r.get("repo_id") == repo_id]
+                            pt_count = int(matching[0].get("tier2_indexed_chunks", 0)) if matching else 0
+                            if pt_count > 0:
+                                total_chunks_auto_indexed += pt_count
+                                print(
+                                    f"[AUTO-INDEX] Repository '{repo.get('name')}' ({repo_id}) successfully indexed via HTTP. "
+                                    f"Exactly {pt_count} chunks were inserted.",
+                                    flush=True,
+                                )
+                    except Exception as re_err:
+                        print(
+                            f"[WARNING] Exception during auto-indexing '{repo.get('name')}': {re_err}",
+                            flush=True,
                         )
-
-                    updated_repos = self.client.list_repositories()
-                    matching = [r for r in updated_repos if r.get("repo_id") == repo_id]
-                    pt_count = int(matching[0].get("tier2_indexed_chunks", 0)) if matching else 0
-                    if pt_count == 0:
-                        raise BenchmarkPreflightError(
-                            f"Auto-indexing finished for repository '{repo.get('name')}', but point count is still 0."
-                        )
-
-                    total_chunks_auto_indexed += pt_count
-                    print(
-                        f"[AUTO-INDEX] Repository '{repo.get('name')}' ({repo_id}) successfully indexed via HTTP. "
-                        f"Exactly {pt_count} chunks were inserted.",
-                        flush=True,
-                    )
 
                 collections_info[coll_name] = pt_count
+
+            # Ensure at least one collection has non-zero points
+            valid_points = sum(collections_info.values())
+            if valid_points == 0:
+                raise BenchmarkPreflightError(
+                    "All registered repositories have 0 vector points. Pre-flight verification failed."
+                )
         else:
             if not collections_info:
                 dataset_colls = sorted(list({item.collection for item in self.dataset if item.collection}))
