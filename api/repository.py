@@ -71,7 +71,13 @@ def get_repository_status(
     repo = registry.get_repository(repo_id)
     if not repo:
         raise HTTPException(status_code=404, detail="Collection not found")
-    return {"repo_id": repo.repo_id, "status": repo.status}
+    return {
+        "repo_id": repo.repo_id,
+        "name": repo.name,
+        "status": repo.status,
+        "tier2_indexed_chunks": repo.tier2_indexed_chunks,
+        "last_error": repo.last_error,
+    }
 
 
 @router.put("/{repo_id}", response_model=Repository)
@@ -117,6 +123,13 @@ def reindex_repository(
         RepoStatus.UPDATING,
     ]:
         return {"message": "Collection is already indexing", "repo_id": repo_id}
+
+    # Clear snapshot to force full re-parsing and re-embedding of files
+    try:
+        from storage.snapshot import SnapshotManager
+        SnapshotManager().delete_snapshot(repo_id)
+    except Exception:
+        pass
 
     registry.update_status(repo_id, RepoStatus.UPDATING)
     background_tasks.add_task(

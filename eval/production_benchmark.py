@@ -407,8 +407,9 @@ class ProductionBenchmarkRunner:
                             indexed_ok = True
                             break
                         elif st_resp.get("status") == "FAILED":
+                            err_msg = st_resp.get("last_error") or "Zero vectors indexed in collection."
                             raise BenchmarkPreflightError(
-                                f"Auto-indexing genuinely failed for repository '{repo.get('name')}'."
+                                f"Auto-indexing genuinely failed for repository '{repo.get('name')}': {err_msg}"
                             )
 
                     if not indexed_ok:
