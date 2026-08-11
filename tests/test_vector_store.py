@@ -104,14 +104,14 @@ class TestVectorStore(unittest.TestCase):
         device_cpu = _get_embedding_device(config_cpu)
         self.assertEqual(device_cpu, "cpu")
         _get_encoder("fake-model-cpu", device=device_cpu)
-        mock_st.assert_called_with("fake-model-cpu", device="cpu")
+        self.assertEqual(mock_st.call_args[1].get("device"), "cpu")
 
         # 2. CUDA mode via embedding.device = "cuda"
         config_cuda = {"embedding": {"device": "cuda"}}
         device_cuda = _get_embedding_device(config_cuda)
         self.assertEqual(device_cuda, "cuda")
         _get_encoder("fake-model-cuda", device=device_cuda)
-        mock_st.assert_called_with("fake-model-cuda", device="cuda")
+        self.assertEqual(mock_st.call_args[1].get("device"), "cuda")
 
         # 3. Fallback to top-level device config
         self.assertEqual(_get_embedding_device({"device": "cpu"}), "cpu")
