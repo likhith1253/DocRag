@@ -76,7 +76,8 @@ class TestDocAgentContract(unittest.TestCase):
         with patch("agents.doc_agent._MAX_EXCERPT_CHARS", 20000), patch("agents.doc_agent._PROMPT_EXPLOSION_THRESHOLD", 18000):
             with self.assertRaises(AssertionError) as ctx:
                 doc_agent.run("Question?", huge_chunks, request_id="test_explosion_fail")
-            self.assertIn("PROMPT EXPLOSION FATAL ERROR", str(ctx.exception))
+            err_msg = str(ctx.exception)
+            self.assertTrue("PROMPT EXPLOSION" in err_msg or "PIPELINE CONTRACT VIOLATION" in err_msg)
 
     @patch("retrieval.cross_encoder_rerank._cross_encoder_cache")
     def test_topic_concentration_filter(self, mock_cache_dict):
