@@ -60,7 +60,8 @@ class TestDocAgentContract(unittest.TestCase):
             doc_agent.run("Question?", duplicate_chunks, request_id="test_dup_fail")
         self.assertIn("Input valid_chunks contains duplicates", str(ctx.exception))
 
-    def test_prompt_explosion_assertion_failure(self):
+    @patch("agents.doc_agent.generate")
+    def test_prompt_explosion_assertion_failure(self, mock_generate):
         # Massive chunk content exceeding 100k chars total across prompt
         huge_chunks = [
             {
