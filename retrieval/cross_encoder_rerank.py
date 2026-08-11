@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -83,7 +84,6 @@ def rerank_cross_encoder(
             
         chunk["rerank_score"] = float(combined_score)
         # Sigmoid/MinMax Normalization for CrossEncoder logits: 1 / (1 + exp(-x))
-        import math
         chunk["normalized_score"] = float(1.0 / (1.0 + math.exp(-float(combined_score))))
         chunk["score"] = float(combined_score)
         

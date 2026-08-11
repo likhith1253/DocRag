@@ -7,6 +7,7 @@ Detects question types to:
 """
 
 import re
+import functools
 from typing import Dict, Any, List
 
 
@@ -14,6 +15,7 @@ from typing import Dict, Any, List
 # Core type detection
 # ---------------------------------------------------------------------------
 
+@functools.lru_cache(maxsize=256)
 def detect_question_type(question: str) -> Dict[str, Any]:
     """
     Detect the type of question being asked.
@@ -152,6 +154,7 @@ def _detect_answer_depth(question_lower: str) -> str:
 # Chunk type preference (existing — unchanged)
 # ---------------------------------------------------------------------------
 
+@functools.lru_cache(maxsize=32)
 def get_chunk_type_preference(question_type: str) -> List[str]:
     """Return preferred chunk types for a given question type."""
     preferences = {
