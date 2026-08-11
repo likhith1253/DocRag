@@ -73,7 +73,7 @@ class TestDocAgentContract(unittest.TestCase):
             for i in range(1, 8)
         ]
         # Bypass per-excerpt cap and lower threshold to test prompt explosion assertion directly
-        with patch("agents.doc_agent._MAX_EXCERPT_CHARS", 20000), patch("agents.doc_agent._PROMPT_EXPLOSION_THRESHOLD", 10000):
+        with patch("agents.doc_agent._MAX_EXCERPT_CHARS", 20000), patch("agents.doc_agent._PROMPT_EXPLOSION_THRESHOLD", 18000):
             with self.assertRaises(AssertionError) as ctx:
                 doc_agent.run("Question?", huge_chunks, request_id="test_explosion_fail")
             self.assertIn("PROMPT EXPLOSION FATAL ERROR", str(ctx.exception))
