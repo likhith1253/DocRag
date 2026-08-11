@@ -86,13 +86,23 @@ def rerank_cross_encoder(
         # Sigmoid/MinMax Normalization for CrossEncoder logits: 1 / (1 + exp(-x))
         chunk["normalized_score"] = float(1.0 / (1.0 + math.exp(-float(combined_score))))
         chunk["score"] = float(combined_score)
+    # ── Configurable thresholding ──────────────────────────
+    # Retrieve configurable threshold, default 0.0
+    ce_threshold = float(config.get("cross_encoder_threshold", 0.0))
+    
+    # Filter chunks above threshold
+    above_threshold = [c for c in chunks if float(c.get("score", 0.0)) > ce_threshold]
+    
+    # Fail-safe: if filtering removes everything, revert to unfiltered chunks
+    if not above_threshold and chunks:
+        above_threshold = chunks
+        
+    dropped_count = len(chunks) - len(above_threshold)
         
     # Sort descending
-    sorted_chunks = sorted(chunks, key=lambda x: x["score"], reverse=True)
+    sorted_chunks = sorted(above_threshold, key=lambda x: x["score"], reverse=True)
     
-    # Preserve the requested top_k chunks. Earlier pruning heuristics could
-    # shrink the candidate set below the requested count even when valid
-    # evidence existed, which starved the prompt builder and LLM stage.
+    # Preserve the requested top_k chunks.
     out_chunks = sorted_chunks[:top_k]
     kept_set = set(id(c) for c in out_chunks)
 
@@ -100,7 +110,9 @@ def rerank_cross_encoder(
     latency_ms = (t_end - t_start) * 1000
 
     evaluated_log = []
-    for rank, c in enumerate(sorted_chunks, 1):
+    # Note: we iterate over the originally sorted chunks to show dropped chunks in the log too
+    all_sorted = sorted(chunks, key=lambda x: x["score"], reverse=True)
+    for rank, c in enumerate(all_sorted, 1):
         evaluated_log.append({
             "rank": rank,
             "chunk_id": str(c.get("id") or c.get("metadata", {}).get("hash") or "unknown"),
@@ -166,6 +178,9 @@ def rerank_cross_encoder(
         "reranker_model": model_name,
         "question_type_detected": question_type,
         "input_chunks_count": len(chunks),
+        "above_threshold_count": len(above_threshold),
+        "threshold_applied": ce_threshold,
+        "dropped_by_threshold": dropped_count,
         "output_chunks_count": len(out_chunks),
         "retrieval_diagnostics": retrieval_diagnostics,
         "evaluated_chunks": evaluated_log,

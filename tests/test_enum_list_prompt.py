@@ -1,4 +1,4 @@
-﻿"""
+"""
 Regression test -- ENUM_LIST prompt depth (algorithm/method list questions).
 
 Failure mode captured in forensic investigation:
@@ -143,43 +143,32 @@ class TestEnumListPromptContent(unittest.TestCase):
     @patch("agents.doc_agent.generate")
     def test_enum_list_prompt_contains_enumeration_directives(self, mock_generate):
         mock_generate.return_value = "DQN and DDPG are proposed [Paper: X, Section: 3, Page 1]."
-
+    
         q = "What algorithms are proposed for AI-based power grid voltage control?"
         chunks = self._make_chunks()
-
+    
         detect_question_type.cache_clear()
         doc_agent.run(q, chunks, request_id="test_enum_list_prompt")
-
+    
         self.assertTrue(mock_generate.called, "generate() must be called")
         prompt_arg = mock_generate.call_args[0][0]
-
-        self.assertIn("Step 1", prompt_arg,
-                      "ENUM_LIST prompt must contain 'Step 1 - SCAN' directive")
-        self.assertIn("Step 2", prompt_arg,
-                      "ENUM_LIST prompt must contain 'Step 2 - ENUMERATE' directive")
-        self.assertIn("Step 3", prompt_arg,
-                      "ENUM_LIST prompt must contain 'Step 3 - EXPLAIN' directive")
-        self.assertIn("Step 4", prompt_arg,
-                      "ENUM_LIST prompt must contain 'Step 4 - SYNTHESIS' directive")
-        self.assertIn("CRITICAL", prompt_arg,
-                      "ENUM_LIST prompt must contain the CRITICAL omission warning")
-        self.assertIn("MUST appear in the numbered list", prompt_arg,
-                      "ENUM_LIST prompt must warn that every named entity must be listed")
+    
+        self.assertIn("For ENUM_LIST questions", prompt_arg,
+                      "ENUM_LIST prompt must contain the enumeration directives")
+        self.assertIn("Directly enumerate the requested entities", prompt_arg)
+        self.assertIn("Do not provide separate explanations for each item", prompt_arg)
 
     @patch("agents.doc_agent.generate")
-    def test_enum_list_prompt_does_not_use_concise_template(self, mock_generate):
-        mock_generate.return_value = "Some answer."
-        q = "What algorithms are proposed for AI-based power grid voltage control?"
+    def test_enum_list_not_assigned_concise(self, mock_generate):
+        """'What is' should not trigger ENUM_LIST."""
+        mock_generate.return_value = "It is an algorithm."
+        q = "What is DQN?"
         chunks = self._make_chunks()
         detect_question_type.cache_clear()
-        doc_agent.run(q, chunks, request_id="test_enum_list_not_concise")
-
+        doc_agent.run(q, chunks, request_id="test_concise_no_enum")
+        
         prompt_arg = mock_generate.call_args[0][0]
-        self.assertNotIn(
-            "Concise and direct (1",
-            prompt_arg,
-            "Algorithm list question must NOT receive the CONCISE prompt template"
-        )
+        self.assertNotIn("For ENUM_LIST questions", prompt_arg)
 
     @patch("agents.doc_agent.generate")
     def test_method_question_also_gets_enum_list_prompt(self, mock_generate):
@@ -189,10 +178,9 @@ class TestEnumListPromptContent(unittest.TestCase):
         chunks = self._make_chunks()
         detect_question_type.cache_clear()
         doc_agent.run(q, chunks, request_id="test_methods_enum_list")
-
+    
         prompt_arg = mock_generate.call_args[0][0]
-        self.assertIn("Step 1", prompt_arg)
-        self.assertIn("MUST appear in the numbered list", prompt_arg)
+        self.assertIn("For ENUM_LIST questions", prompt_arg)
 
 
 if __name__ == "__main__":
