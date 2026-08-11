@@ -58,10 +58,10 @@ def mmr_rerank(
         log_stage(request_id, 5, "MMR Reranking", stage5_data, latency_ms=0.0)
         return chunks
 
-    from storage.vector_store import _get_encoder, _get_config
+    from storage.vector_store import _get_encoder, _get_config, _get_embedding_device
     config = _get_config()
     embedding_model_name = config.get("embedding_model", "all-MiniLM-L6-v2")
-    device = config.get("device", "auto")
+    device = _get_embedding_device(config)
 
     # Read lambda from config if caller did not override (BUG-6 fix)
     if lambda_param is None:

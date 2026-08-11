@@ -51,21 +51,14 @@ class SimpleRAGSystem(BaseSystem):
         Initializes on first call per process; subsequent calls are instant.
         """
         from qdrant_client import QdrantClient
-        from storage.vector_store import _get_encoder, _get_config, VectorStoreManager
+        from storage.vector_store import _get_encoder, _get_config, _get_embedding_device, VectorStoreManager
         
         if NO_AST_QDRANT_PATH not in VectorStoreManager._clients:
             VectorStoreManager._clients[NO_AST_QDRANT_PATH] = QdrantClient(path=NO_AST_QDRANT_PATH)
 
         cfg = _get_config()
         embedding_model = cfg.get("embedding_model", "intfloat/e5-base-v2")
-        device = cfg.get("device", "cpu")
-        if device == "auto":
-            try:
-                import torch
-                device = "cuda" if torch.cuda.is_available() else "cpu"
-            except ImportError:
-                device = "cpu"
-
+        device = _get_embedding_device(cfg)
         encoder = _get_encoder(embedding_model, device)
         client = VectorStoreManager._clients[NO_AST_QDRANT_PATH]
         return client, encoder, embedding_model

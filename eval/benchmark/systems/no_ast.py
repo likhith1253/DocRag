@@ -74,12 +74,12 @@ class NoASTSystem(BaseSystem):
         """
         import uuid
         from qdrant_client.models import Distance, VectorParams, PointStruct
-        from storage.vector_store import _get_encoder
+        from storage.vector_store import _get_encoder, _get_embedding_device
         from ingestion.loader import load_repository
         from ingestion.language_detect import detect_language
 
         embedding_model = self.config.get("embedding_model", "intfloat/e5-base-v2")
-        device = self.config.get("device", "auto")
+        device = _get_embedding_device(self.config)
         encoder = _get_encoder(embedding_model, device)
         vector_size = encoder.get_sentence_embedding_dimension()
 
@@ -146,13 +146,13 @@ class NoASTSystem(BaseSystem):
 
     def retrieve(self, question: str, top_k: int = 5) -> List[RetrievedChunk]:
         from qdrant_client import QdrantClient
-        from storage.vector_store import _get_encoder
+        from storage.vector_store import _get_encoder, _get_embedding_device
         from retrieval.metadata_filter import filter_chunks
         from retrieval.mmr_rerank import mmr_rerank
         from retrieval.cross_encoder_rerank import rerank_cross_encoder
 
         embedding_model = self.config.get("embedding_model", "intfloat/e5-base-v2")
-        device = self.config.get("device", "auto")
+        device = _get_embedding_device(self.config)
         encoder = _get_encoder(embedding_model, device)
 
         from storage.vector_store import VectorStoreManager

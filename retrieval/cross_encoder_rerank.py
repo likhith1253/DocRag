@@ -8,7 +8,7 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 from sentence_transformers import CrossEncoder
 from typing import List, Dict, Any
-from storage.vector_store import _get_config
+from storage.vector_store import _get_config, _get_embedding_device
 from retrieval.query_analyzer import detect_question_type, score_chunk_for_question
 
 _cross_encoder_cache: Dict[str, CrossEncoder] = {}
@@ -41,13 +41,7 @@ def rerank_cross_encoder(
 
     config = _get_config()
     model_name = config.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2")
-    device = config.get("device", "cpu")
-    if device == "auto":
-        try:
-            import torch
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        except ImportError:
-            device = "cpu"
+    device = _get_embedding_device(config)
             
     cache_key = f"{model_name}::{device}"
     if cache_key not in _cross_encoder_cache:

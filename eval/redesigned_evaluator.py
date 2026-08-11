@@ -31,6 +31,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 from sentence_transformers import SentenceTransformer, util
+from storage.vector_store import _get_embedding_device
 
 # Add parent directory to path
 repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -168,7 +169,8 @@ class RedesignedEvaluator:
         
         # Initialize semantic model (using same model as retrieval for consistency)
         print("Loading semantic similarity model...")
-        self.semantic_model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
+        eval_device = _get_embedding_device()
+        self.semantic_model = SentenceTransformer('all-MiniLM-L6-v2', device=eval_device)
         
         self.orch = Orchestrator()
         self.reports: List[QuestionReport] = []
@@ -478,7 +480,8 @@ Return JSON
     def _compute_text_cosine_similarity(self, query: str, text: str) -> float:
         """Compute real cosine similarity between query and text using SentenceTransformer embedding model."""
         if not hasattr(self, '_embed_model_instance') or self._embed_model_instance is None:
-            self._embed_model_instance = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
+            eval_device = _get_embedding_device()
+            self._embed_model_instance = SentenceTransformer('all-MiniLM-L6-v2', device=eval_device)
         emb1 = self._embed_model_instance.encode(query, convert_to_tensor=True)
         emb2 = self._embed_model_instance.encode(text[:500], convert_to_tensor=True)
         sim = float(util.cos_sim(emb1, emb2).item())

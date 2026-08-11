@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List, Dict, Optional
-from storage.vector_store import _get_encoder, _get_config
+from storage.vector_store import _get_encoder, _get_config, _get_embedding_device
 from storage.registry import RepositoryRegistry, RepoStatus, QUERYABLE_REPO_STATUSES
 
 # Cache: repo_id -> description embedding (numpy array)
@@ -114,7 +114,7 @@ def rank_repositories(query: str, registry: RepositoryRegistry, top_k: int = 1) 
 
     config = _get_config()
     model_name = config.get("embedding_model", "all-MiniLM-L6-v2")
-    device = config.get("device", "auto")
+    device = _get_embedding_device(config)
     encoder = _get_encoder(model_name, device)
 
     if "e5" in model_name.lower():

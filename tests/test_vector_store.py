@@ -85,13 +85,38 @@ class TestVectorStore(unittest.TestCase):
         try:
             os.chdir(temp_dir)
             manager = VectorStoreManager()
+            qdrant_cfg = manager.config.get("qdrant_path", "./qdrant_storage")
+            expected_name = os.path.basename(qdrant_cfg)
             self.assertEqual(
                 Path(manager.qdrant_path).resolve(),
-                (repo_root / "test_qdrant_storage").resolve(),
+                (repo_root / expected_name).resolve(),
             )
         finally:
             os.chdir(original_cwd)
             shutil.rmtree(temp_dir, ignore_errors=True)
+
+    @unittest.mock.patch("storage.vector_store.SentenceTransformer")
+    def test_embedding_device_configuration(self, mock_st):
+        from storage.vector_store import _get_encoder, _get_embedding_device
+
+        # 1. CPU mode via embedding.device = "cpu"
+        config_cpu = {"embedding": {"device": "cpu"}}
+        device_cpu = _get_embedding_device(config_cpu)
+        self.assertEqual(device_cpu, "cpu")
+        _get_encoder("fake-model-cpu", device=device_cpu)
+        mock_st.assert_called_with("fake-model-cpu", device="cpu")
+
+        # 2. CUDA mode via embedding.device = "cuda"
+        config_cuda = {"embedding": {"device": "cuda"}}
+        device_cuda = _get_embedding_device(config_cuda)
+        self.assertEqual(device_cuda, "cuda")
+        _get_encoder("fake-model-cuda", device=device_cuda)
+        mock_st.assert_called_with("fake-model-cuda", device="cuda")
+
+        # 3. Fallback to top-level device config
+        self.assertEqual(_get_embedding_device({"device": "cpu"}), "cpu")
+        self.assertEqual(_get_embedding_device({"device": "cuda"}), "cuda")
+
 
 if __name__ == "__main__":
     unittest.main()

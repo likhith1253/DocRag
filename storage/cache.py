@@ -4,7 +4,7 @@ import json
 import numpy as np
 from typing import Dict, Any, Optional, Tuple
 import threading
-from storage.vector_store import _get_encoder, _get_config
+from storage.vector_store import _get_encoder, _get_config, _get_embedding_device
 
 _thread_local = threading.local()
 
@@ -15,7 +15,7 @@ class SemanticCache:
         
         config = _get_config()
         self.embedding_model_name = config.get("embedding_model", "all-MiniLM-L6-v2")
-        self.device = config.get("device", "auto")
+        self.device = _get_embedding_device(config)
         self.encoder = _get_encoder(self.embedding_model_name, self.device)
         self.similarity_threshold = 0.95
 

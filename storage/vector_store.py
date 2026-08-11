@@ -53,10 +53,50 @@ def _get_config() -> Dict[str, Any]:
     return _config_cache
 
 
-def _get_encoder(model_name: str, device: str = "cpu") -> SentenceTransformer:
+def _get_embedding_device(config: Dict[str, Any] = None) -> str:
+    """
+    Determine the execution device for SentenceTransformer embeddings.
+    Precedence:
+    1. config['embedding']['device'] if set
+    2. config['device'] if set
+    3. Default to 'cpu'
+    Resolves 'auto' to 'cuda' (if torch.cuda.is_available()) or 'cpu'.
+    """
+    if config is None:
+        config = _get_config()
+    device = None
+    emb_cfg = config.get("embedding")
+    if isinstance(emb_cfg, dict):
+        device = emb_cfg.get("device")
+    if not device:
+        device = config.get("device")
+    if not device:
+        device = "cpu"
+
+    device = str(device).lower()
+    if device == "auto":
+        try:
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        except ImportError:
+            device = "cpu"
+    return device
+
+
+def _get_encoder(model_name: str, device: str = None) -> SentenceTransformer:
     """Return a cached SentenceTransformer, creating it only on first use."""
     global _encoder_cache
-    device = "cpu"
+    if device is None:
+        device = _get_embedding_device()
+    elif device == "auto":
+        try:
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        except ImportError:
+            device = "cpu"
+    else:
+        device = str(device).lower()
+
     key = f"{model_name}::{device}"
     if key not in _encoder_cache:
         _encoder_cache[key] = SentenceTransformer(model_name, device=device)
@@ -72,7 +112,7 @@ class VectorStoreManager:
 
         self.qdrant_path = _resolve_storage_path(self.config.get("qdrant_path", "./qdrant_storage"))
         self.embedding_model_name = self.config.get("embedding_model", "all-MiniLM-L6-v2")
-        self.device = "cpu"
+        self.device = _get_embedding_device(self.config)
 
         import threading
         if not hasattr(VectorStoreManager, "_client_lock"):
