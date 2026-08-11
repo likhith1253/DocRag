@@ -232,7 +232,8 @@ class HFTransformersBackend(LLMBackend):
             "tokens_per_sec": round(tokens_per_sec, 2),
             "eos_reached": eos_reached,
             "max_new_tokens_reached": max_tokens_reached,
-            "stop_reason": "EOS token reached" if eos_reached else ("max_new_tokens limit reached" if max_tokens_reached else "completed")
+            "stop_reason": "EOS token reached" if eos_reached else ("max_new_tokens limit reached" if max_tokens_reached else "completed"),
+            "raw_output": response
         }
 
         log_stage(request_id, 10, "HFTransformersBackend.generate", stage10_data, latency_ms=gen_ms)

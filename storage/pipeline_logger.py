@@ -349,9 +349,12 @@ def log_stage(
         forensic_tracer.prompt_chars = data.get("prompt_size_chars", 0)
         forensic_tracer.prompt_tokens = data.get("approx_prompt_token_count", 0)
     elif stage_num == 10:
-        raw_out = data.get("raw_output", "")
-        forensic_tracer.raw_llm_output = raw_out
-        forensic_tracer.record_stage("LLM", "PASS" if raw_out else "FAIL", latency_ms, data, raw_out, f"Generated {len(raw_out)} chars")
+        raw_out = data.get("raw_output") or data.get("raw_llm_output") or data.get("response") or ""
+        if not raw_out and data.get("generated_token_count", 0) > 0:
+            raw_out = f"<generated {data.get('generated_token_count')} tokens>"
+        forensic_tracer.raw_llm_output = str(raw_out)
+        status = "PASS" if (raw_out and str(raw_out).strip()) else "FAIL"
+        forensic_tracer.record_stage("LLM", status, latency_ms, data, raw_out, f"Generated {len(str(raw_out))} chars" if status == "PASS" else "LLM generate() returned empty output")
     elif stage_num == 11:
         forensic_tracer.parsed_llm_output = data.get("raw_llm_output", "")
     elif stage_num == 13:
