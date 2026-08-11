@@ -340,7 +340,28 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
     )
 
     # ── Depth-specific instruction ─────────────────────────────────────────
-    if answer_depth == "EXTRACTION":
+    if answer_depth == "ENUM_LIST":
+        depth_instruction = (
+            "ANSWER FORMAT: Complete Entity Enumeration.\n"
+            "This question asks for a list of named algorithms, methods, approaches, techniques, "
+            "or models. Follow these steps STRICTLY:\n"
+            "Step 1 — SCAN: Read every excerpt and collect the name of every algorithm, method, "
+            "approach, technique, model, framework, strategy, or scheme that is explicitly named "
+            "in the text. Do NOT skip any.\n"
+            "Step 2 — ENUMERATE: Present a numbered list of ALL collected names:\n"
+            "   1. **<Exact Name>** [Citation]\n"
+            "   2. **<Exact Name>** [Citation]\n"
+            "   ... (one entry per distinct named entity found in the excerpts)\n"
+            "Step 3 — EXPLAIN: After the numbered list, add a ## Details section. "
+            "For each item in the list, write one short paragraph describing what it is, "
+            "what role it plays, and any performance details explicitly stated in the excerpts. "
+            "Cite every claim.\n"
+            "Step 4 — SYNTHESIS: Add a brief ## Summary paragraph connecting the listed "
+            "items (e.g. shared goals, contrasting trade-offs) based only on the excerpts.\n"
+            "CRITICAL: Do NOT omit any named entity that appears in the excerpts. "
+            "If an entity is named in the text, it MUST appear in the numbered list.\n"
+        )
+    elif answer_depth == "EXTRACTION":
         depth_instruction = (
             "ANSWER FORMAT: Explicit Parameter & Metric Extraction.\n"
             "1. List every explicit parameter value, hyperparameter, numerical setting, dataset metric, or experimental detail mentioned in the excerpts.\n"

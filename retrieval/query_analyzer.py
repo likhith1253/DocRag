@@ -106,6 +106,7 @@ def _detect_answer_depth(question_lower: str) -> str:
 
     Returns one of:
         EXTRACTION  — hyperparameter, numerical, experimental setup, parameter list questions
+        ENUM_LIST   — enumeration of named entities: algorithms, methods, approaches, techniques, models
         CONCISE     — definition / what-is questions
         DETAILED    — how / why / mechanism / causal questions
         COMPARATIVE — compare / difference / versus questions
@@ -117,6 +118,17 @@ def _detect_answer_depth(question_lower: str) -> str:
         question_lower,
     ):
         return "EXTRACTION"
+
+    # Enum-list: "what algorithms/methods/approaches/techniques/models ..."
+    # Must fire BEFORE the generic CONCISE check because "what are" is also
+    # matched by CONCISE; an enumeration question needs explicit entity listing.
+    # Note: plural forms are explicitly listed so \b word-boundary works correctly
+    # (e.g. "approaches" = approach+es, not approach+s, so s? alone is insufficient).
+    if re.search(
+        r'\b(what|which)\b.{0,60}\b(algorithms?|methods?|approaches?|techniques?|models?|frameworks?|strategies?|schemes?)\b',
+        question_lower,
+    ):
+        return "ENUM_LIST"
 
     # Comparative
     if re.search(
