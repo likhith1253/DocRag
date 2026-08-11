@@ -336,7 +336,12 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
         "4. If information is absent from all excerpts, respond EXACTLY:\n"
         f'   "{CANNOT_FIND_RESPONSE}"\n'
         "5. Never repeat the same sentence. Never pad with filler.\n"
-        "6. Reason across excerpts — connect evidence, explain relationships, identify cause-effect.\n\n"
+        "6. Reason across excerpts — connect evidence, explain relationships, identify cause-effect.\n"
+        "7. EXACT ATTRIBUTION: Do not transfer properties between entities merely because they occur in the same chunk.\n"
+        "8. Distinguish clearly between the current paper's contribution, previous work, follow-up work, and comparison/baseline methods.\n"
+        "9. When describing an entity, only attach properties explicitly supported for THAT entity in the text.\n"
+        "10. Do not infer relationships that the retrieved text does not explicitly establish.\n"
+        "11. If evidence is insufficient for a detail, state that it is not in the text rather than guessing.\n\n"
     )
 
     # ── Depth-specific instruction ─────────────────────────────────────────
@@ -737,6 +742,7 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
             model_key="doc_agent_model",
             chunk_count=len(valid_chunks),
             request_id=request_id,
+            answer_depth=answer_depth,
         )
 
         # Save raw model output artifact

@@ -104,7 +104,7 @@ class HFTransformersBackend(LLMBackend):
                 return {}
         return {}
 
-    def generate(self, prompt: str, model: str = None, request_id: str = "default") -> str:
+    def generate(self, prompt: str, model: str = None, request_id: str = "default", answer_depth: str = None) -> str:
         """
         Generate text response using HuggingFace Transformers model.
         """
@@ -147,6 +147,14 @@ class HFTransformersBackend(LLMBackend):
         top_k_param = int(gen_section.get("top_k", 50))
         repetition_penalty = float(gen_section.get("repetition_penalty", 1.0))
 
+        # Adaptive token limits based on detected question depth
+        if answer_depth == "CONCISE":
+            max_new_tokens = min(max_new_tokens, 256)
+        elif answer_depth == "EXTRACTION":
+            max_new_tokens = min(max_new_tokens, 300)
+        elif answer_depth == "ENUM_LIST":
+            max_new_tokens = min(max_new_tokens, 512)
+        
         gen_kwargs = {
             "max_new_tokens": max_new_tokens,
             "pad_token_id": self.tokenizer.pad_token_id,
@@ -159,6 +167,9 @@ class HFTransformersBackend(LLMBackend):
             gen_kwargs["top_p"] = top_p
         else:
             gen_kwargs["do_sample"] = False
+            # Explicitly override model defaults to avoid warnings when greedy decoding
+            gen_kwargs["temperature"] = None
+            gen_kwargs["top_p"] = None
 
         if repetition_penalty != 1.0:
             gen_kwargs["repetition_penalty"] = repetition_penalty
