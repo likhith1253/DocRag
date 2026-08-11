@@ -170,7 +170,7 @@ class RedesignedEvaluator:
         # Initialize semantic model (using same model as retrieval for consistency)
         print("Loading semantic similarity model...")
         eval_device = _get_embedding_device()
-        self.semantic_model = SentenceTransformer('all-MiniLM-L6-v2', device=eval_device)
+        self.semantic_model = _get_encoder('all-MiniLM-L6-v2', device=eval_device)
         
         self.orch = Orchestrator()
         self.reports: List[QuestionReport] = []
@@ -481,7 +481,7 @@ Return JSON
         """Compute real cosine similarity between query and text using SentenceTransformer embedding model."""
         if not hasattr(self, '_embed_model_instance') or self._embed_model_instance is None:
             eval_device = _get_embedding_device()
-            self._embed_model_instance = SentenceTransformer('all-MiniLM-L6-v2', device=eval_device)
+            self._embed_model_instance = _get_encoder('all-MiniLM-L6-v2', device=eval_device)
         emb1 = self._embed_model_instance.encode(query, convert_to_tensor=True)
         emb2 = self._embed_model_instance.encode(text[:500], convert_to_tensor=True)
         sim = float(util.cos_sim(emb1, emb2).item())
@@ -490,8 +490,9 @@ Return JSON
     def _compute_cross_encoder_score(self, query: str, text: str) -> float:
         """Compute real CrossEncoder rerank score for (query, text) pair."""
         if not hasattr(self, '_cross_encoder_instance') or self._cross_encoder_instance is None:
-            from sentence_transformers import CrossEncoder
-            self._cross_encoder_instance = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+            from retrieval.cross_encoder_rerank import _load_cross_encoder
+            eval_device = _get_embedding_device()
+            self._cross_encoder_instance = _load_cross_encoder('cross-encoder/ms-marco-MiniLM-L-6-v2', device=eval_device)
         score = float(self._cross_encoder_instance.predict([query, text[:500]]))
         return score
 

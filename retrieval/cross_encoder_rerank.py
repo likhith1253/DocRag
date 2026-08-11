@@ -13,6 +13,15 @@ from retrieval.query_analyzer import detect_question_type, score_chunk_for_quest
 
 _cross_encoder_cache: Dict[str, CrossEncoder] = {}
 
+def _load_cross_encoder(model_name: str, device: str) -> CrossEncoder:
+    """
+    Safely load CrossEncoder without creating meta tensors via accelerate/low_cpu_mem_usage.
+    """
+    try:
+        return CrossEncoder(model_name, device=device, automodel_args={"low_cpu_mem_usage": False})
+    except Exception:
+        return CrossEncoder(model_name, device=device)
+
 def rerank_cross_encoder(
     query: str,
     chunks: List[Dict[str, Any]],
@@ -45,7 +54,7 @@ def rerank_cross_encoder(
             
     cache_key = f"{model_name}::{device}"
     if cache_key not in _cross_encoder_cache:
-        _cross_encoder_cache[cache_key] = CrossEncoder(model_name, device=device)
+        _cross_encoder_cache[cache_key] = _load_cross_encoder(model_name, device=device)
     model = _cross_encoder_cache[cache_key]
     
     # Detect question type for intelligent biasing

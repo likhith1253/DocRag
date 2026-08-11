@@ -83,6 +83,24 @@ def _get_embedding_device(config: Dict[str, Any] = None) -> str:
     return device
 
 
+def _load_sentence_transformer(model_name: str, device: str) -> SentenceTransformer:
+    """
+    Safely load SentenceTransformer without creating meta tensors via accelerate/low_cpu_mem_usage.
+    """
+    try:
+        return SentenceTransformer(model_name, device=device, model_kwargs={"low_cpu_mem_usage": False})
+    except TypeError:
+        pass
+
+    try:
+        from sentence_transformers import models
+        word_embedding_model = models.Transformer(model_name, model_args={"low_cpu_mem_usage": False})
+        pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension())
+        return SentenceTransformer(modules=[word_embedding_model, pooling_model], device=device)
+    except Exception:
+        return SentenceTransformer(model_name, device=device)
+
+
 def _get_encoder(model_name: str, device: str = None) -> SentenceTransformer:
     """Return a cached SentenceTransformer, creating it only on first use."""
     global _encoder_cache
@@ -99,7 +117,7 @@ def _get_encoder(model_name: str, device: str = None) -> SentenceTransformer:
 
     key = f"{model_name}::{device}"
     if key not in _encoder_cache:
-        _encoder_cache[key] = SentenceTransformer(model_name, device=device)
+        _encoder_cache[key] = _load_sentence_transformer(model_name, device=device)
     return _encoder_cache[key]
 
 
