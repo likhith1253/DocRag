@@ -64,7 +64,7 @@ def main():
 
     elif stage == "reranker":
         from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer('all-MiniLM-L6-v2')
+        model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
         def dummy_sim(q, t):
             emb1 = model.encode(q, convert_to_tensor=True)
             emb2 = model.encode(t, convert_to_tensor=True)

@@ -168,7 +168,7 @@ class RedesignedEvaluator:
         
         # Initialize semantic model (using same model as retrieval for consistency)
         print("Loading semantic similarity model...")
-        self.semantic_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.semantic_model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
         
         self.orch = Orchestrator()
         self.reports: List[QuestionReport] = []
@@ -478,7 +478,7 @@ Return JSON
     def _compute_text_cosine_similarity(self, query: str, text: str) -> float:
         """Compute real cosine similarity between query and text using SentenceTransformer embedding model."""
         if not hasattr(self, '_embed_model_instance') or self._embed_model_instance is None:
-            self._embed_model_instance = SentenceTransformer('all-MiniLM-L6-v2')
+            self._embed_model_instance = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
         emb1 = self._embed_model_instance.encode(query, convert_to_tensor=True)
         emb2 = self._embed_model_instance.encode(text[:500], convert_to_tensor=True)
         sim = float(util.cos_sim(emb1, emb2).item())

@@ -53,15 +53,10 @@ def _get_config() -> Dict[str, Any]:
     return _config_cache
 
 
-def _get_encoder(model_name: str, device: str = "auto") -> SentenceTransformer:
+def _get_encoder(model_name: str, device: str = "cpu") -> SentenceTransformer:
     """Return a cached SentenceTransformer, creating it only on first use."""
     global _encoder_cache
-    if device == "auto":
-        try:
-            import torch
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        except ImportError:
-            device = "cpu"
+    device = "cpu"
     key = f"{model_name}::{device}"
     if key not in _encoder_cache:
         _encoder_cache[key] = SentenceTransformer(model_name, device=device)
@@ -77,13 +72,7 @@ class VectorStoreManager:
 
         self.qdrant_path = _resolve_storage_path(self.config.get("qdrant_path", "./qdrant_storage"))
         self.embedding_model_name = self.config.get("embedding_model", "all-MiniLM-L6-v2")
-        self.device = self.config.get("device", "auto")
-        if self.device == "auto":
-            try:
-                import torch
-                self.device = "cuda" if torch.cuda.is_available() else "cpu"
-            except ImportError:
-                self.device = "cpu"
+        self.device = "cpu"
 
         import threading
         if not hasattr(VectorStoreManager, "_client_lock"):
