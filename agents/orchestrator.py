@@ -231,8 +231,8 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             v_manager = VectorStoreManager(collection_name=v_coll)
             points_in_coll = v_manager.count()
             if points_in_coll == 0:
-                ready_repos = [r for r in registry.list_repositories() if r.status == "READY" and r.vector_collection]
-                for r in ready_repos:
+                candidate_repos = [r for r in registry.list_repositories() if r.vector_collection]
+                for r in candidate_repos:
                     try:
                         fb_manager = VectorStoreManager(collection_name=r.vector_collection)
                         if fb_manager.count() > 0:
