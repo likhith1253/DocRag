@@ -373,6 +373,17 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                         fb_unique.append(ch)
                 fb_chunks = fb_unique
                 if fb_chunks:
+                    # Apply the same low-value section filter as Stage 4 in the primary path.
+                    # The fallback path previously skipped this, allowing References/Bibliography
+                    # chunks to survive into the LLM context.
+                    fb_filtered = [
+                        c for c in fb_chunks
+                        if not _LOW_VALUE_SECTION_RE.search(
+                            (c.get('metadata', {}).get('section') or '').strip()
+                        )
+                    ]
+                    if fb_filtered:
+                        fb_chunks = fb_filtered
                     qv = fb_timing.pop('query_vector', None)
                     fb_chunks = mmr_rerank(state['question'], fb_chunks, top_k=min(40, len(fb_chunks)), query_vector=qv, request_id=request_id)
                     fb_chunks = rerank_cross_encoder(state['question'], fb_chunks, top_k=rerank_top_k, request_id=request_id)

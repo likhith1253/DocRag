@@ -155,8 +155,12 @@ class TestEnumListPromptContent(unittest.TestCase):
     
         self.assertIn("For ENUM_LIST questions", prompt_arg,
                       "ENUM_LIST prompt must contain the enumeration directives")
-        self.assertIn("Directly enumerate the requested entities", prompt_arg)
-        self.assertIn("Do not provide separate explanations for each item", prompt_arg)
+        # These strings are taken verbatim from the ENUM_LIST branch in
+        # agents/doc_agent._build_adaptive_prompt() (lowercase 'd', "prohibit" phrasing).
+        self.assertIn("directly enumerate the requested entities", prompt_arg,
+                      "ENUM_LIST prompt must instruct the model to enumerate entities")
+        self.assertIn("prohibit separate explanations for every entity", prompt_arg,
+                      "ENUM_LIST prompt must prohibit per-entity explanations")
 
     @patch("agents.doc_agent.generate")
     def test_enum_list_not_assigned_concise(self, mock_generate):
