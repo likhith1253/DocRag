@@ -93,10 +93,6 @@ def rerank_cross_encoder(
     # Filter chunks above threshold
     above_threshold = [c for c in chunks if float(c.get("score", 0.0)) > ce_threshold]
     
-    # Fail-safe: if filtering removes everything, revert to unfiltered chunks
-    if not above_threshold and chunks:
-        above_threshold = chunks
-        
     dropped_count = len(chunks) - len(above_threshold)
         
     # Sort descending

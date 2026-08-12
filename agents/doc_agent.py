@@ -349,14 +349,14 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
         depth_instruction = (
             "ANSWER FORMAT: Complete Entity Enumeration.\n"
             "For ENUM_LIST questions:\n"
-            "- Directly enumerate the requested entities.\n"
-            "- Use a numbered list.\n"
-            "- For each item, give the entity name and at most one short evidence-grounded qualifier when needed.\n"
-            "- Do not provide separate explanations for each item.\n"
-            "- Do not add a synthesis/conclusion.\n"
-            "- Do not introduce entities merely because they appear in the context.\n"
-            "- Distinguish proposed methods from prior work/baselines when the evidence makes that distinction.\n"
-            "- If the evidence does not establish an item's role, say so rather than infer it.\n"
+            "- directly enumerate the requested entities.\n"
+            "- use a numbered list.\n"
+            "- include only a concise identifying phrase when necessary.\n"
+            "- prohibit separate explanations for every entity.\n"
+            "- prohibit a concluding synthesis.\n"
+            "- prohibit repeating retrieved evidence.\n"
+            "- prohibit unsupported entities.\n"
+            "- explicitly say that insufficient evidence must result in an insufficient-evidence response rather than guessing.\n"
         )
     elif answer_depth == "EXTRACTION":
         depth_instruction = (
