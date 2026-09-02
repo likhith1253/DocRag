@@ -182,9 +182,19 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
         current_section: str = ""
         current_page_start: int = 0
         current_page_end: int = 0
+        current_evidence_tags: set = set()
+
+        # Evidence-type flags a merged block might carry (Phase 3 metadata —
+        # see ingestion/doc_chunker.py::_compute_evidence_flags).
+        _EVIDENCE_FLAGS = (
+            ("contains_equation", "equation"),
+            ("contains_table", "table"),
+            ("contains_figure", "figure"),
+            ("contains_algorithm", "algorithm"),
+        )
 
         def _flush_block():
-            nonlocal current_texts, current_meta, current_section, current_page_start, current_page_end
+            nonlocal current_texts, current_meta, current_section, current_page_start, current_page_end, current_evidence_tags
             if current_texts and current_meta is not None:
                 merged_content = "\n\n".join(current_texts)
                 # Cap merged block
@@ -197,12 +207,14 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
                     "metadata": block_meta,
                     "page_start": current_page_start,
                     "page_end": current_page_end,
+                    "evidence_tags": sorted(current_evidence_tags),
                 })
             current_texts = []
             current_meta = None
             current_section = ""
             current_page_start = 0
             current_page_end = 0
+            current_evidence_tags = set()
 
         for chunk in group:
             content = str(chunk.get("content", "")).strip()
@@ -222,6 +234,8 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
 
             sec = _section(chunk)
             pg = _page_int(chunk)
+            chunk_meta = chunk.get("metadata", {})
+            chunk_tags = {label for flag, label in _EVIDENCE_FLAGS if chunk_meta.get(flag)}
 
             # Merge condition: same section, strictly consecutive page (N or N+1)
             can_merge = (
@@ -233,10 +247,12 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
             if can_merge:
                 current_texts.append(content)
                 current_page_end = max(current_page_end, pg)
+                current_evidence_tags |= chunk_tags
             else:
                 _flush_block()
                 current_texts = [content]
-                current_meta = chunk.get("metadata", {})
+                current_meta = chunk_meta
+                current_evidence_tags = set(chunk_tags)
                 current_section = sec
                 current_page_start = pg
                 current_page_end = pg
@@ -266,7 +282,9 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
             else:
                 page_str = "Page unknown"
 
-            excerpt_header = f"[EXCERPT {excerpt_num}] Section: {section_display} | {page_str}"
+            evidence_tags = block.get("evidence_tags") or []
+            evidence_str = f" | Evidence: {', '.join(evidence_tags)}" if evidence_tags else ""
+            excerpt_header = f"[EXCERPT {excerpt_num}] Section: {section_display} | {page_str}{evidence_str}"
             full_text = f"{excerpt_header}\n{block['content']}"
             sep_overhead = 2 if running_len > 0 else 0
             block_len = len(full_text) + sep_overhead
@@ -341,7 +359,16 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
         "8. Distinguish clearly between the current paper's contribution, previous work, follow-up work, and comparison/baseline methods.\n"
         "9. When describing an entity, only attach properties explicitly supported for THAT entity in the text.\n"
         "10. Do not infer relationships that the retrieved text does not explicitly establish.\n"
-        "11. If evidence is insufficient for a detail, state that it is not in the text rather than guessing.\n\n"
+        "11. If evidence is insufficient for a detail, state that it is not in the text rather than guessing.\n"
+        "12. EQUATIONS: Reproduce an equation exactly as it appears in an excerpt marked 'Evidence: equation' — "
+        "do not substitute a remembered/textbook version. If the question asks for an equation that is not present "
+        "in any excerpt, say the exact equation was not found in the retrieved text rather than supplying one from memory.\n"
+        "13. NUMBERS & TABLES: State a numerical value or table result only if it appears verbatim in an excerpt "
+        "(look for 'Evidence: table'). If the specific number requested is not present in the excerpts, say it was "
+        "not found rather than estimating or recalling it.\n"
+        "14. FIGURES: If asked about a figure/diagram, answer only from excerpts marked 'Evidence: figure' (captions "
+        "and surrounding text — no image was analyzed). If no such excerpt exists, say the figure's content is not "
+        "available in the retrieved text.\n\n"
     )
 
     # ── Depth-specific instruction ─────────────────────────────────────────
@@ -847,6 +874,11 @@ def build_citation_list(chunks: List[Dict[str, Any]], request_id: str = "default
             "page_end": page_end,
             "file": meta.get("file", ""),
             "citation": citation,
+            # Traceability for later citation-correctness evaluation — the
+            # exact chunk and its evidence type this citation came from, not
+            # just the paper/page. Additive only; existing fields unchanged.
+            "chunk_id": str(cid),
+            "evidence_type": meta.get("evidence_type") or meta.get("chunk_type", ""),
         }
         citations.append(entry)
         citation_trace.append(f"  EXTRACTED: {citation}")

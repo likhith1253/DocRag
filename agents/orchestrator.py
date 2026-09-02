@@ -52,7 +52,7 @@ from retrieval.paper_matcher import (
     match_papers_in_query,
     classify_paper_scope,
 )
-from retrieval.query_analyzer import decompose_complex_question
+from retrieval.query_analyzer import decompose_complex_question, detect_evidence_intent
 
 import agents.doc_agent as doc_agent
 from agents.doc_agent import CANNOT_FIND_RESPONSE, build_citation_list
@@ -113,6 +113,103 @@ def _dedup_and_filter_chunks(chunks: List[Dict[str, Any]], removed_log: list) ->
         filtered_chunks.append(c)
 
     return filtered_chunks if filtered_chunks else unique_chunks
+
+
+# Maps a detect_evidence_intent() key to the chunk metadata flag it needs
+# (see ingestion/doc_chunker.py::_compute_evidence_flags — Phase 3).
+_EVIDENCE_FLAG_BY_INTENT = {
+    "equation": "contains_equation",
+    "table": "contains_table",
+    "figure": "contains_figure",
+    "algorithm": "contains_algorithm",
+}
+
+
+def _ensure_evidence_coverage(
+    candidate_pool: List[Dict[str, Any]],
+    output_chunks: List[Dict[str, Any]],
+    evidence_intent: Dict[str, bool],
+    max_additions: int = 2,
+) -> List[Dict[str, Any]]:
+    """
+    If the query is sensitive to a specific evidence type (equation/table/
+    figure/algorithm) and a chunk of that type exists somewhere in the
+    broader (post-MMR, pre-CrossEncoder-truncation) candidate pool but
+    didn't survive top_k truncation, swap it in for the current
+    lowest-scoring output chunk — bounded (max_additions) and never larger
+    than the existing output, so this cannot cause context growth. If no
+    matching evidence exists anywhere in the candidate pool, nothing is
+    added — evidence is never fabricated.
+    """
+    needed = [t for t in ("equation", "table", "figure", "algorithm") if evidence_intent.get(t)]
+    if not needed or not candidate_pool:
+        return output_chunks
+
+    result = list(output_chunks)
+    output_hashes = {c.get("metadata", {}).get("hash") for c in result}
+    additions = 0
+
+    for t in needed:
+        if additions >= max_additions:
+            break
+        flag = _EVIDENCE_FLAG_BY_INTENT[t]
+        if any(c.get("metadata", {}).get(flag) for c in result):
+            continue  # already represented in the current output
+
+        best = None
+        for c in candidate_pool:
+            if not c.get("metadata", {}).get(flag):
+                continue
+            if c.get("metadata", {}).get("hash") in output_hashes:
+                continue
+            if best is None or float(c.get("score", 0.0)) > float(best.get("score", 0.0)):
+                best = c
+        if best is None:
+            continue  # this evidence type genuinely isn't available — don't fabricate
+
+        if result:
+            worst_idx = min(range(len(result)), key=lambda i: float(result[i].get("score", 0.0)))
+            result.pop(worst_idx)
+        result.append(best)
+        output_hashes.add(best.get("metadata", {}).get("hash"))
+        additions += 1
+
+    return result
+
+
+def _log_evidence_diagnostics(
+    chunks: List[Dict[str, Any]],
+    evidence_intent: Dict[str, bool],
+    requested_papers: List[str] = None,
+    retrieved_papers: List[str] = None,
+) -> None:
+    """
+    Bounded evidence-coverage diagnostic print — counts and flags only,
+    never full chunk dumps. Exists because "retrieval succeeded" (nonzero
+    chunk count) does not imply "the right evidence was retrieved".
+    """
+    evidence_counts = {"equation": 0, "table": 0, "figure": 0, "algorithm": 0}
+    pages = set()
+    for c in chunks:
+        meta = c.get("metadata", {})
+        for t, flag in _EVIDENCE_FLAG_BY_INTENT.items():
+            if meta.get(flag):
+                evidence_counts[t] += 1
+        pg = meta.get("page_start")
+        if pg:
+            pages.add(pg)
+
+    if requested_papers is not None:
+        print(f"[EVIDENCE DIAGNOSTICS] Requested paper(s): {requested_papers}", flush=True)
+    if retrieved_papers is not None:
+        print(f"[EVIDENCE DIAGNOSTICS] Retrieved paper(s): {retrieved_papers}", flush=True)
+    print(f"[EVIDENCE DIAGNOSTICS] Evidence types retrieved: {evidence_counts}", flush=True)
+    print(f"[EVIDENCE DIAGNOSTICS] Pages represented: {sorted(pages)}", flush=True)
+    for t in ("equation", "table", "figure", "algorithm"):
+        print(f"[EVIDENCE DIAGNOSTICS] {t.capitalize()} evidence: {'yes' if evidence_counts[t] else 'no'}", flush=True)
+
+    missing = [t for t in ("equation", "table", "figure", "algorithm") if evidence_intent.get(t) and evidence_counts[t] == 0]
+    print(f"[EVIDENCE DIAGNOSTICS] Missing requested evidence: {missing if missing else 'none'}", flush=True)
 
 
 def get_process_memory() -> float:
@@ -322,6 +419,11 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         initial_chunk_count = 0
         removed_chunks_log = []
 
+        # Evidence-type sensitivity (equation/table/figure/algorithm/numerical)
+        # — reused by both branches below to preserve the right kind of
+        # evidence during reranking, not just whatever is globally closest.
+        evidence_intent = detect_evidence_intent(state["question"])
+
         if paper_scope == "multi":
             # --------------------------------------------------------------
             # Explicit multi-paper query (e.g. "Compare DQN, A3C and SAC."):
@@ -364,11 +466,14 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                     )
                     latency_breakdown["mmr_ms"] = latency_breakdown.get("mmr_ms", 0.0) + (time.perf_counter() - t0) * 1000
 
+                    pre_ce_pool = p_chunks
                     t0 = time.perf_counter()
                     p_chunks = rerank_cross_encoder(
                         state["question"], p_chunks, top_k=per_paper_rerank_k, request_id=request_id
                     )
                     latency_breakdown["reranker_ms"] = latency_breakdown.get("reranker_ms", 0.0) + (time.perf_counter() - t0) * 1000
+                    if any(evidence_intent.values()):
+                        p_chunks = _ensure_evidence_coverage(pre_ce_pool, p_chunks, evidence_intent)
 
                 if p_chunks:
                     retrieved_titles.append(title)
@@ -461,12 +566,26 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             latency_breakdown["mmr_ms"] = (time.perf_counter() - t0) * 1000
 
             # Step 3: Cross-encoder rerank (Stage 6 logged inside rerank_cross_encoder)
+            pre_ce_pool = chunks
             t0 = time.perf_counter()
             if chunks:
                 chunks = rerank_cross_encoder(
                     state["question"], chunks, top_k=rerank_top_k, request_id=request_id
                 )
             latency_breakdown["reranker_ms"] = (time.perf_counter() - t0) * 1000
+
+            if chunks and any(evidence_intent.values()):
+                chunks = _ensure_evidence_coverage(pre_ce_pool, chunks, evidence_intent)
+
+        _log_evidence_diagnostics(
+            chunks,
+            evidence_intent,
+            requested_papers=[t for t, _ in matched_papers] if matched_papers else None,
+            retrieved_papers=sorted({
+                c.get("metadata", {}).get("paper_title") or c.get("metadata", {}).get("file") or "Unknown"
+                for c in chunks
+            }),
+        )
 
         if f_logger:
             f_logger.set_retrieval(vector_top_k, initial_chunk_count, len(chunks), len(chunks), chunks)

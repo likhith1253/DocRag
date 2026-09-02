@@ -262,3 +262,56 @@ def decompose_complex_question(question: str, max_subqueries: int = 3) -> List[s
 
     top_facets = sorted(scores, key=scores.get, reverse=True)[:max_subqueries]
     return [f"{question} ({_FACET_PHRASES[f]})" for f in top_facets if f in _FACET_PHRASES]
+
+
+# ---------------------------------------------------------------------------
+# Evidence-type intent (Phase 3)
+# ---------------------------------------------------------------------------
+
+# A few additional bounded patterns to catch phrasing the core structural
+# patterns miss (mainly plural forms — e.g. "\bscore\b" doesn't match
+# "scores" — and a handful of evidence-specific words). This SUPPLEMENTS
+# _structural_scores rather than replacing it with a second parser.
+_EVIDENCE_EXTRA_PATTERNS = {
+    "table": [r'\btables?\b', r'\bquantitativ\w*\b'],
+    "figure": [r'\bfigures?\b', r'\bdiagrams?\b', r'\barchitectures?\b', r'\billustrat\w*\b', r'\binformation flow\b'],
+    "equation": [
+        r'\bequations?\b', r'\bobjective function\b', r'\bformulas?\b', r'\bupdate rule\b',
+        r'\b\w+-?entropy\b.{0,40}\bobjective\b',  # e.g. "maximum-entropy objective"
+    ],
+    "algorithm": [r'\balgorithms?\b', r'\bpseudocode\b', r'\bupdate mechanisms?\b'],
+    "numerical": [r'\bscores?\b', r'\bnumbers?\b', r'\bresults?\b', r'\bperformance\b', r'\bimprovements?\b', r'%'],
+}
+
+
+def detect_evidence_intent(question: str) -> Dict[str, bool]:
+    """
+    Determine which evidence types (equation/table/figure/algorithm/
+    numerical) this question is sensitive to. Reuses the existing
+    structural category scores (_structural_scores) as the primary signal
+    and only supplements them with a few bounded extra patterns — this is
+    not a second, independent query parser.
+
+    Returns a dict of {"equation": bool, "table": bool, "figure": bool,
+    "algorithm": bool, "numerical": bool}. Multiple flags can be True.
+    """
+    question_lower = question.lower()
+    scores, _ = _structural_scores(question_lower)
+
+    intent = {
+        "equation": scores.get("EQUATIONS", 0) > 0,
+        "table": scores.get("TABLES", 0) > 0,
+        "figure": scores.get("FIGURES", 0) > 0,
+        "algorithm": scores.get("ALGORITHMS", 0) > 0,
+        "numerical": scores.get("RESULTS", 0) > 0 or scores.get("HYPERPARAMETERS", 0) > 0,
+    }
+
+    for key, patterns in _EVIDENCE_EXTRA_PATTERNS.items():
+        if intent.get(key):
+            continue
+        for p in patterns:
+            if re.search(p, question_lower):
+                intent[key] = True
+                break
+
+    return intent
