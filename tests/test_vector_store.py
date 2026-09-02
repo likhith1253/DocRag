@@ -106,12 +106,24 @@ class TestVectorStore(unittest.TestCase):
         _get_encoder("fake-model-cpu", device=device_cpu)
         self.assertEqual(mock_st.call_args[1].get("device"), "cpu")
 
-        # 2. CUDA mode via embedding.device = "cuda"
+        # 2. CUDA mode via embedding.device = "cuda" — GPU-preferred loading
+        # now genuinely checks torch.cuda.is_available() before attempting a
+        # CUDA load (so a bad/no-GPU environment falls back to CPU instead of
+        # crashing); mock that check here to exercise the "CUDA available"
+        # branch on this CPU-only test machine.
         config_cuda = {"embedding": {"device": "cuda"}}
         device_cuda = _get_embedding_device(config_cuda)
         self.assertEqual(device_cuda, "cuda")
-        _get_encoder("fake-model-cuda", device=device_cuda)
+        with unittest.mock.patch("torch.cuda.is_available", return_value=True), \
+             unittest.mock.patch("torch.cuda.get_device_name", return_value="Fake-GPU"):
+            _get_encoder("fake-model-cuda", device=device_cuda)
         self.assertEqual(mock_st.call_args[1].get("device"), "cuda")
+
+        # 2b. CUDA requested but genuinely unavailable -> falls back to CPU
+        # rather than ever calling SentenceTransformer with device="cuda".
+        with unittest.mock.patch("torch.cuda.is_available", return_value=False):
+            _get_encoder("fake-model-cuda-unavailable", device="cuda")
+        self.assertEqual(mock_st.call_args[1].get("device"), "cpu")
 
         # 3. Fallback to top-level device config
         self.assertEqual(_get_embedding_device({"device": "cpu"}), "cpu")

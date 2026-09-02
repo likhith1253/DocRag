@@ -9,19 +9,25 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 from sentence_transformers import CrossEncoder
 from typing import List, Dict, Any
-from storage.vector_store import _get_config, _get_embedding_device
+from storage.vector_store import _get_config, _get_embedding_device, _load_with_gpu_fallback
 from retrieval.query_analyzer import detect_question_type, score_chunk_for_question
 
 _cross_encoder_cache: Dict[str, CrossEncoder] = {}
 
 def _load_cross_encoder(model_name: str, device: str) -> CrossEncoder:
     """
-    Safely load CrossEncoder without creating meta tensors via accelerate/low_cpu_mem_usage.
+    Safely load CrossEncoder without creating meta tensors via accelerate/low_cpu_mem_usage,
+    preferring CUDA when requested but falling back to CPU on any load failure
+    (same policy as the embedding encoder in storage.vector_store).
     """
-    try:
-        return CrossEncoder(model_name, device=device, automodel_args={"low_cpu_mem_usage": False})
-    except Exception:
-        return CrossEncoder(model_name, device=device)
+    def _loader(d):
+        try:
+            return CrossEncoder(model_name, device=d, automodel_args={"low_cpu_mem_usage": False})
+        except Exception:
+            return CrossEncoder(model_name, device=d)
+
+    model, _actual_device = _load_with_gpu_fallback("CrossEncoder", model_name, device, _loader)
+    return model
 
 def rerank_cross_encoder(
     query: str,

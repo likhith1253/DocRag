@@ -101,6 +101,65 @@ def _load_sentence_transformer(model_name: str, device: str) -> SentenceTransfor
         return SentenceTransformer(model_name, device=device)
 
 
+def _get_embedding_batch_size(config: Dict[str, Any] = None) -> int:
+    """Read config['embedding']['batch_size'], defaulting to 32 (sentence-transformers' own default)."""
+    if config is None:
+        config = _get_config()
+    emb_cfg = config.get("embedding")
+    batch_size = emb_cfg.get("batch_size") if isinstance(emb_cfg, dict) else None
+    try:
+        return max(1, int(batch_size))
+    except (TypeError, ValueError):
+        return 32
+
+
+def _load_with_gpu_fallback(kind: str, model_name: str, preferred_device: str, loader):
+    """
+    Load a model via `loader(device)`, preferring CUDA when requested but
+    falling back to CPU on ANY failure (CUDA missing, driver error, OOM at
+    load time) so a bad/contended GPU environment never crashes the process —
+    it just runs slower. Logs which device ended up being used.
+
+    Returns (model, actual_device).
+    """
+    if preferred_device != "cuda":
+        model = loader(preferred_device)
+        _log_device_selection(kind, model_name, preferred_device)
+        return model, preferred_device
+
+    try:
+        import torch
+        cuda_available = torch.cuda.is_available()
+    except ImportError:
+        cuda_available = False
+
+    if not cuda_available:
+        _log_device_selection(kind, model_name, "cpu", reason="CUDA unavailable")
+        return loader("cpu"), "cpu"
+
+    try:
+        model = loader("cuda")
+        _log_device_selection(kind, model_name, "cuda")
+        return model, "cuda"
+    except Exception as e:
+        print(f"[{kind}] CUDA load failed for '{model_name}': {e}. Falling back to CPU.", flush=True)
+        _log_device_selection(kind, model_name, "cpu", reason=f"CUDA init/load failed: {e}")
+        return loader("cpu"), "cpu"
+
+
+def _log_device_selection(kind: str, model_name: str, device: str, reason: str = None):
+    print(f"{kind} device: {device}", flush=True)
+    print(f"{kind} model: {model_name}", flush=True)
+    if device == "cuda":
+        try:
+            import torch
+            print(f"GPU: {torch.cuda.get_device_name(0)}", flush=True)
+        except Exception:
+            pass
+    elif reason:
+        print(f"Reason: {reason}", flush=True)
+
+
 def _get_encoder(model_name: str, device: str = None) -> SentenceTransformer:
     """Return a cached SentenceTransformer, creating it only on first use."""
     global _encoder_cache
@@ -117,7 +176,18 @@ def _get_encoder(model_name: str, device: str = None) -> SentenceTransformer:
 
     key = f"{model_name}::{device}"
     if key not in _encoder_cache:
-        _encoder_cache[key] = _load_sentence_transformer(model_name, device=device)
+        model, actual_device = _load_with_gpu_fallback(
+            "Embedding", model_name, device,
+            lambda d: _load_sentence_transformer(model_name, d),
+        )
+        print(f"Embedding batch size: {_get_embedding_batch_size()}", flush=True)
+        _encoder_cache[key] = model
+        # If we asked for cuda and fell back to cpu, remember that under the
+        # "cuda" key too so the next caller (e.g. cross-encoder reranker
+        # asking for the same preferred device) doesn't retry a doomed CUDA
+        # init on every call.
+        if actual_device != device:
+            _encoder_cache[f"{model_name}::{actual_device}"] = model
     return _encoder_cache[key]
 
 
@@ -271,7 +341,10 @@ class VectorStoreManager:
                 acquired = _encoder_lock.acquire(timeout=5.0)
                 self._update_progress_heartbeat()
             try:
-                encoded_vectors = self.encoder.encode(missing_texts, show_progress_bar=False).tolist()
+                encoded_vectors = self.encoder.encode(
+                    missing_texts, show_progress_bar=False,
+                    batch_size=_get_embedding_batch_size(self.config),
+                ).tolist()
             finally:
                 _encoder_lock.release()
             self._update_progress_heartbeat()

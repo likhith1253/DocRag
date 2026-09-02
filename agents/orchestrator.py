@@ -47,6 +47,12 @@ from storage.vector_store import VectorStoreManager, _get_config
 from storage.registry import RepositoryRegistry, get_registry
 from retrieval.mmr_rerank import mmr_rerank
 from retrieval.cross_encoder_rerank import rerank_cross_encoder
+from retrieval.paper_matcher import (
+    get_collection_papers,
+    match_papers_in_query,
+    classify_paper_scope,
+)
+from retrieval.query_analyzer import decompose_complex_question
 
 import agents.doc_agent as doc_agent
 from agents.doc_agent import CANNOT_FIND_RESPONSE, build_citation_list
@@ -66,6 +72,47 @@ _LOW_VALUE_SECTION_RE = re.compile(
     r'\b(references?|bibliography|acknowledgements?|acknowledgments?)\b',
     re.IGNORECASE,
 )
+
+
+def _dedup_and_filter_chunks(chunks: List[Dict[str, Any]], removed_log: list) -> List[Dict[str, Any]]:
+    """
+    Shared Stage-4 logic: dedup by content hash, drop low-value sections
+    (References/Bibliography/Acknowledgements). Used by both the normal
+    collection-wide search path and each per-paper sub-search in the
+    explicit multi-paper path, so isolation doesn't lose this filtering.
+    """
+    seen_hashes = set()
+    unique_chunks = []
+    for chunk in chunks:
+        h = chunk.get("metadata", {}).get("hash", "")
+        cid = chunk.get("id") or h or "unknown"
+        doc_name = chunk.get("metadata", {}).get("file") or chunk.get("metadata", {}).get("paper_title") or "Unknown"
+        if h and h in seen_hashes:
+            removed_log.append({
+                "chunk_id": str(cid),
+                "filename": doc_name,
+                "reason_removed": f"Duplicate content hash '{h}'"
+            })
+        else:
+            if h:
+                seen_hashes.add(h)
+            unique_chunks.append(chunk)
+
+    filtered_chunks = []
+    for c in unique_chunks:
+        sec = (c.get("metadata", {}).get("section") or "").strip()
+        cid = c.get("id") or c.get("metadata", {}).get("hash") or "unknown"
+        doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
+        if _LOW_VALUE_SECTION_RE.search(sec):
+            removed_log.append({
+                "chunk_id": str(cid),
+                "filename": doc_name,
+                "reason_removed": f"Low-value section filter ('{sec}')"
+            })
+            continue
+        filtered_chunks.append(c)
+
+    return filtered_chunks if filtered_chunks else unique_chunks
 
 
 def get_process_memory() -> float:
@@ -258,87 +305,168 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         elif retrieval_mode == "corpus":
             filters = {k: v for k, v in filters.items() if k != "paper_title"}
 
-        # Step 1: Vector search (Stage 2 & Stage 3 logged inside search())
-        t0 = time.perf_counter()
-        chunks, vector_timing = v_manager.search(
-            state["question"], top_k=vector_top_k, metadata_filters=filters or None, request_id=request_id
-        )
-        latency_breakdown["embedding_ms"] = vector_timing["embedding_ms"]
-        latency_breakdown["qdrant_ms"] = vector_timing["qdrant_ms"]
-        latency_breakdown["vector_ms"] = (time.perf_counter() - t0) * 1000
+        # ------------------------------------------------------------------
+        # Explicit paper-scope detection: does the query itself name one or
+        # more indexed papers? Only when the caller hasn't already pinned a
+        # paper via filters, and never in corpus mode (isolation is a
+        # single-collection concept). See retrieval/paper_matcher.py.
+        # ------------------------------------------------------------------
+        paper_scope = "collection"
+        matched_papers = []
+        if retrieval_mode != "corpus" and "paper_title" not in filters and "file" not in filters:
+            available_titles = get_collection_papers(v_manager)
+            if available_titles:
+                matched_papers = match_papers_in_query(state["question"], available_titles)
+                paper_scope = classify_paper_scope(matched_papers)
 
-        # Stage 4: FILTERING
-        t_filter_start = time.perf_counter()
-        initial_chunk_count = len(chunks)
+        initial_chunk_count = 0
         removed_chunks_log = []
 
-        # Deduplicate chunks by content hash
-        seen_hashes = set()
-        unique_chunks = []
-        for chunk in chunks:
-            h = chunk.get("metadata", {}).get("hash", "")
-            cid = chunk.get("id") or h or "unknown"
-            doc_name = chunk.get("metadata", {}).get("file") or chunk.get("metadata", {}).get("paper_title") or "Unknown"
-            if h and h in seen_hashes:
-                removed_chunks_log.append({
-                    "chunk_id": str(cid),
-                    "filename": doc_name,
-                    "reason_removed": f"Duplicate content hash '{h}'"
-                })
-            else:
-                if h:
-                    seen_hashes.add(h)
-                unique_chunks.append(chunk)
-        chunks = unique_chunks
+        if paper_scope == "multi":
+            # --------------------------------------------------------------
+            # Explicit multi-paper query (e.g. "Compare DQN, A3C and SAC."):
+            # retrieve + rerank per requested paper independently instead of
+            # one global search, so a paper's evidence can never come from
+            # anywhere but its own filtered sub-search — an unrelated paper
+            # with a high raw similarity score cannot enter the final set.
+            # --------------------------------------------------------------
+            requested_titles = [t for t, _ in matched_papers]
+            print(f"[PAPER ISOLATION] Explicit multi-paper query — requested papers ({len(requested_titles)}):", flush=True)
+            for t in requested_titles:
+                print(f"  - {t}", flush=True)
 
-        # Filter out low-value sections (References, Bibliography, Acknowledgements).
-        filtered_chunks = []
-        for c in chunks:
-            sec = (c.get("metadata", {}).get("section") or "").strip()
-            cid = c.get("id") or c.get("metadata", {}).get("hash") or "unknown"
-            doc_name = c.get("metadata", {}).get("file") or c.get("metadata", {}).get("paper_title") or "Unknown"
-            if _LOW_VALUE_SECTION_RE.search(sec):
-                removed_chunks_log.append({
-                    "chunk_id": str(cid),
-                    "filename": doc_name,
-                    "reason_removed": f"Low-value section filter ('{sec}')"
-                })
-                continue
-            filtered_chunks.append(c)
-        if filtered_chunks:
-            chunks = filtered_chunks
+            per_paper_rerank_k = max(2, rerank_top_k // len(requested_titles))
+            chunks = []
+            retrieved_titles = []
+            missing_titles = []
 
-        t_filter_end = time.perf_counter()
-        filter_ms = (t_filter_end - t_filter_start) * 1000
+            for title in requested_titles:
+                paper_filters = dict(filters)
+                paper_filters["paper_title"] = title
 
-        stage4_data = {
-            "before_count": initial_chunk_count,
-            "after_count": len(chunks),
-            "removed_chunks_count": len(removed_chunks_log),
-            "removed_chunks_details": removed_chunks_log
-        }
-        log_stage(request_id, 4, "Filtering", stage4_data, latency_ms=filter_ms)
+                t0 = time.perf_counter()
+                p_chunks, p_timing = v_manager.search(
+                    state["question"], top_k=vector_top_k, metadata_filters=paper_filters, request_id=request_id
+                )
+                latency_breakdown["embedding_ms"] = latency_breakdown.get("embedding_ms", 0.0) + p_timing.get("embedding_ms", 0.0)
+                latency_breakdown["qdrant_ms"] = latency_breakdown.get("qdrant_ms", 0.0) + p_timing.get("qdrant_ms", 0.0)
+                latency_breakdown["vector_ms"] = latency_breakdown.get("vector_ms", 0.0) + (time.perf_counter() - t0) * 1000
+                initial_chunk_count += len(p_chunks)
 
-        # Step 2: MMR rerank (Stage 5 logged inside mmr_rerank)
-        query_vector_for_mmr = vector_timing.pop("query_vector", None)
-        t0 = time.perf_counter()
-        if chunks:
-            chunks = mmr_rerank(
-                state["question"],
-                chunks,
-                top_k=min(40, len(chunks)),
-                query_vector=query_vector_for_mmr,
-                request_id=request_id,
+                p_chunks = _dedup_and_filter_chunks(p_chunks, removed_chunks_log)
+
+                if p_chunks:
+                    qv = p_timing.get("query_vector")
+                    t0 = time.perf_counter()
+                    p_chunks = mmr_rerank(
+                        state["question"], p_chunks, top_k=min(20, len(p_chunks)),
+                        query_vector=qv, request_id=request_id,
+                    )
+                    latency_breakdown["mmr_ms"] = latency_breakdown.get("mmr_ms", 0.0) + (time.perf_counter() - t0) * 1000
+
+                    t0 = time.perf_counter()
+                    p_chunks = rerank_cross_encoder(
+                        state["question"], p_chunks, top_k=per_paper_rerank_k, request_id=request_id
+                    )
+                    latency_breakdown["reranker_ms"] = latency_breakdown.get("reranker_ms", 0.0) + (time.perf_counter() - t0) * 1000
+
+                if p_chunks:
+                    retrieved_titles.append(title)
+                    chunks.extend(p_chunks)
+                else:
+                    missing_titles.append(title)
+
+            # By construction every chunk above was fetched from a search
+            # filtered to exactly one requested paper_title, so there is no
+            # way for an unrequested paper to appear here.
+            unexpected_titles = [t for t in retrieved_titles if t not in requested_titles]
+
+            print("[PAPER ISOLATION] Retrieved papers:", flush=True)
+            for t in retrieved_titles:
+                print(f"  - {t}", flush=True)
+            print(f"[PAPER ISOLATION] Unexpected papers: {unexpected_titles if unexpected_titles else 'none'}", flush=True)
+            if missing_titles:
+                print(f"[PAPER ISOLATION] Insufficient/no evidence for requested paper(s): {missing_titles}", flush=True)
+
+            stage4_data = {
+                "mode": "multi_paper_isolation",
+                "requested_papers": requested_titles,
+                "retrieved_papers": retrieved_titles,
+                "missing_papers": missing_titles,
+                "unexpected_papers": unexpected_titles,
+                "before_count": initial_chunk_count,
+                "after_count": len(chunks),
+                "removed_chunks_count": len(removed_chunks_log),
+                "removed_chunks_details": removed_chunks_log,
+            }
+            log_stage(request_id, 4, "Filtering", stage4_data, latency_ms=0.0)
+
+        else:
+            if paper_scope == "single":
+                filters = dict(filters)
+                filters["paper_title"] = matched_papers[0][0]
+                print(f"[PAPER ISOLATION] Single-paper query — restricting retrieval to: {matched_papers[0][0]!r}", flush=True)
+
+            # Step 1: Vector search (Stage 2 & Stage 3 logged inside search())
+            t0 = time.perf_counter()
+            chunks, vector_timing = v_manager.search(
+                state["question"], top_k=vector_top_k, metadata_filters=filters or None, request_id=request_id
             )
-        latency_breakdown["mmr_ms"] = (time.perf_counter() - t0) * 1000
+            latency_breakdown["embedding_ms"] = vector_timing["embedding_ms"]
+            latency_breakdown["qdrant_ms"] = vector_timing["qdrant_ms"]
+            latency_breakdown["vector_ms"] = (time.perf_counter() - t0) * 1000
+            query_vector_for_mmr = vector_timing.pop("query_vector", None)
 
-        # Step 3: Cross-encoder rerank (Stage 6 logged inside rerank_cross_encoder)
-        t0 = time.perf_counter()
-        if chunks:
-            chunks = rerank_cross_encoder(
-                state["question"], chunks, top_k=rerank_top_k, request_id=request_id
-            )
-        latency_breakdown["reranker_ms"] = (time.perf_counter() - t0) * 1000
+            # Lightweight decomposition for genuinely multi-facet questions
+            # (e.g. one that asks about architecture AND training AND
+            # results at once) — widen the candidate pool with a few bounded
+            # facet-focused subqueries before reranking, instead of relying
+            # on whatever is globally closest to the raw question alone.
+            subqueries = decompose_complex_question(state["question"], max_subqueries=3)
+            if subqueries:
+                print(f"[QUERY DECOMPOSITION] Complex question — {len(subqueries)} facet subquery(ies) issued.", flush=True)
+                for sq in subqueries:
+                    try:
+                        sq_chunks, _sq_timing = v_manager.search(
+                            sq, top_k=15, metadata_filters=filters or None, request_id=request_id
+                        )
+                        chunks.extend(sq_chunks)
+                    except Exception:
+                        pass
+
+            # Stage 4: FILTERING
+            t_filter_start = time.perf_counter()
+            initial_chunk_count = len(chunks)
+            chunks = _dedup_and_filter_chunks(chunks, removed_chunks_log)
+            filter_ms = (time.perf_counter() - t_filter_start) * 1000
+
+            stage4_data = {
+                "before_count": initial_chunk_count,
+                "after_count": len(chunks),
+                "removed_chunks_count": len(removed_chunks_log),
+                "removed_chunks_details": removed_chunks_log
+            }
+            log_stage(request_id, 4, "Filtering", stage4_data, latency_ms=filter_ms)
+
+            # Step 2: MMR rerank (Stage 5 logged inside mmr_rerank)
+            t0 = time.perf_counter()
+            if chunks:
+                chunks = mmr_rerank(
+                    state["question"],
+                    chunks,
+                    top_k=min(40, len(chunks)),
+                    query_vector=query_vector_for_mmr,
+                    request_id=request_id,
+                )
+            latency_breakdown["mmr_ms"] = (time.perf_counter() - t0) * 1000
+
+            # Step 3: Cross-encoder rerank (Stage 6 logged inside rerank_cross_encoder)
+            t0 = time.perf_counter()
+            if chunks:
+                chunks = rerank_cross_encoder(
+                    state["question"], chunks, top_k=rerank_top_k, request_id=request_id
+                )
+            latency_breakdown["reranker_ms"] = (time.perf_counter() - t0) * 1000
 
         if f_logger:
             f_logger.set_retrieval(vector_top_k, initial_chunk_count, len(chunks), len(chunks), chunks)
