@@ -163,6 +163,63 @@ def _detect_chunk_type(content: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Evidence-type metadata (Phase 3)
+#
+# The parser (ingestion/pdf_parser.py) extracts plain text lines plus
+# PyMuPDF's table detection — there is no image/figure extraction and no
+# LaTeX/MathML reconstruction, so "figure evidence" here means textual
+# figure captions/references, and "equation evidence" means whatever
+# glyph/line-level text PyMuPDF pulled out of the PDF for an equation
+# region, not a verified symbolic transcription. These flags are a bounded,
+# honest signal derived from the same structural heuristics already used
+# for chunk_type — they never fabricate content that wasn't extracted.
+# ---------------------------------------------------------------------------
+
+_FIGURE_REF_RE = re.compile(r'\b(fig(?:ure)?\.?\s*\d+[a-z]?|diagram|illustration)\b', re.IGNORECASE)
+_TABLE_ID_RE = re.compile(r'\btable\s*(\d+)\b', re.IGNORECASE)
+_FIGURE_ID_RE = re.compile(r'\bfig(?:ure)?\.?\s*(\d+)\b', re.IGNORECASE)
+_ALGORITHM_ID_RE = re.compile(r'\balgorithm\s*(\d+)\b', re.IGNORECASE)
+
+
+def _extract_ids(pattern: "re.Pattern", content: str, label: str) -> List[str]:
+    """Return sorted, de-duplicated 'Label N' identifiers actually present in content."""
+    found = set()
+    for m in pattern.findall(content):
+        try:
+            found.add(int(m))
+        except (TypeError, ValueError):
+            continue
+    return [f"{label} {n}" for n in sorted(found)]
+
+
+def _compute_evidence_flags(content: str, chunk_type: str) -> Dict[str, Any]:
+    """
+    Bounded evidence-type signal for a chunk, reusing the same per-line
+    structural detectors as _detect_chunk_type (never a second, separate
+    classifier) plus a lightweight figure-reference/identifier scan.
+    """
+    lines = content.splitlines()
+    has_table_lines = any(_is_table_row(l) for l in lines)
+    has_equation_lines = any(_is_equation_line(l) for l in lines)
+
+    table_ids = _extract_ids(_TABLE_ID_RE, content, "Table")
+    figure_ids = _extract_ids(_FIGURE_ID_RE, content, "Figure")
+    algorithm_ids = _extract_ids(_ALGORITHM_ID_RE, content, "Algorithm")
+    has_figure_ref = bool(figure_ids) or bool(_FIGURE_REF_RE.search(content))
+
+    return {
+        "evidence_type": chunk_type,
+        "contains_table": bool(chunk_type == "TABLE" or has_table_lines or table_ids),
+        "contains_equation": bool(chunk_type == "EQUATION" or has_equation_lines),
+        "contains_figure": has_figure_ref,
+        "contains_algorithm": bool(chunk_type == "ALGORITHM" or algorithm_ids),
+        "table_ids": table_ids,
+        "figure_ids": figure_ids,
+        "algorithm_ids": algorithm_ids,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Sliding window on lines (preserved from original chunker)
 # ---------------------------------------------------------------------------
 
@@ -273,6 +330,15 @@ def chunk_document(
                     "file": str,
                     "hash": str,
                     "timestamp": str,
+                    "chunk_type": str,       # TEXT/TABLE/EQUATION/HYPERPARAMETERS/ALGORITHM/MIXED
+                    "evidence_type": str,    # alias of chunk_type
+                    "contains_table": bool,
+                    "contains_equation": bool,
+                    "contains_figure": bool,
+                    "contains_algorithm": bool,
+                    "table_ids": List[str],      # e.g. ["Table 2"], only if actually present
+                    "figure_ids": List[str],
+                    "algorithm_ids": List[str],
                 }
             }
     """
@@ -363,6 +429,7 @@ def chunk_document(
                 "timestamp": timestamp,
                 "chunk_type": chunk_type,  # NEW: Track chunk type
             }
+            metadata.update(_compute_evidence_flags(chunk_content, chunk_type))
 
             final_chunks.append({
                 "content": chunk_content,
