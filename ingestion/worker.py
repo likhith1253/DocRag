@@ -793,6 +793,15 @@ def background_ingest_repository(
         except Exception:
             pass
 
+        # Invalidate the per-collection paper-title cache used for explicit
+        # paper-isolation matching, so a re-index (new/renamed papers) is
+        # reflected immediately rather than serving a stale title list.
+        try:
+            from retrieval.paper_matcher import invalidate_paper_cache
+            invalidate_paper_cache(repo.vector_collection)
+        except Exception:
+            pass
+
         progress.update(status=RepoStatus.READY, stage="completed", percentage=100.0)
         log_indexing_stage(
             repo_id, "overall", "END",

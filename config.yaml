@@ -7,7 +7,8 @@ device: auto
 doc_agent_model: Qwen/Qwen2.5-3B-Instruct
 hf_model: Qwen/Qwen2.5-3B-Instruct
 embedding:
-  device: cpu
+  device: auto
+  batch_size: 64
 embedding_model: intfloat/e5-base-v2
 generation:
   num_predict: 1024

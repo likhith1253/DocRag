@@ -15,6 +15,78 @@ from typing import Dict, Any, List
 # Core type detection
 # ---------------------------------------------------------------------------
 
+_STRUCTURAL_PATTERNS = {
+    "HYPERPARAMETERS": [
+        r'\b(hyperparameter|parameter|setting|config|learning rate|batch size|dropout|gamma|alpha|beta|epsilon|lambda|momentum|weight decay)\b',
+        r'\b(what is the|what are the|how much|how many|what value|what size)\b.*\b(discount|buffer|window|layer|hidden|embedding)\b',
+        r'\b(set to|initialized to)\b',
+    ],
+    "DATASETS": [
+        r'\b(dataset|data|training data|test data|evaluation data|corpus)\b',
+        r'\b(common crawl|webtext|mnist|cifar|imagenet)\b',
+    ],
+    "EQUATIONS": [
+        r'\b(equation|formula|mathematical|objective function|loss function)\b',
+        r'\b(kl divergence|cross entropy|gradient|derivative)\b',
+    ],
+    "TABLES": [
+        r'\b(table|tabular|row|column)\b',
+    ],
+    "FIGURES": [
+        r'\b(figure|plot|graph|chart|visualization)\b',
+    ],
+    "ALGORITHMS": [
+        r'\b(algorithm|method|approach|technique|procedure)\b',
+        r'\b(cma-es|sgd|adam|rmsprop|adamw)\b',
+    ],
+    "TRAINING": [
+        r'\b(train|training|learn|learning|optimization|optimize)\b',
+        r'\b(epoch|iteration|step|update)\b',
+    ],
+    "RESULTS": [
+        r'\b(result|performance|accuracy|score|metric|benchmark)\b',
+        r'\b(super|glue|sota|state of the art)\b',
+    ],
+    "LIMITATIONS": [
+        r'\b(limitation|weakness|drawback|issue|problem|fail)\b',
+        r'\b(not able|cannot|unable|struggle)\b',
+    ],
+}
+
+# Short natural-language phrase to steer a per-facet retrieval subquery.
+_FACET_PHRASES = {
+    "HYPERPARAMETERS": "hyperparameters and configuration values",
+    "DATASETS": "datasets used",
+    "EQUATIONS": "equations and objective function",
+    "TABLES": "results tables",
+    "FIGURES": "figures and plots",
+    "ALGORITHMS": "algorithm and method description",
+    "TRAINING": "training procedure",
+    "RESULTS": "experimental results and performance",
+    "LIMITATIONS": "limitations and drawbacks",
+}
+
+
+def _structural_scores(question_lower: str):
+    """Shared by detect_question_type() and decompose_complex_question()."""
+    scores: Dict[str, int] = {}
+    matched_keywords: Dict[str, List[str]] = {}
+
+    for qtype, type_patterns in _STRUCTURAL_PATTERNS.items():
+        score = 0
+        keywords: List[str] = []
+        for pattern in type_patterns:
+            matches = re.findall(pattern, question_lower)
+            if matches:
+                score += len(matches)
+                keywords.extend(matches if isinstance(matches[0], str) else [m[0] for m in matches])
+        if score > 0:
+            scores[qtype] = score
+            matched_keywords[qtype] = keywords
+
+    return scores, matched_keywords
+
+
 @functools.lru_cache(maxsize=256)
 def detect_question_type(question: str) -> Dict[str, Any]:
     """
@@ -27,62 +99,7 @@ def detect_question_type(question: str) -> Dict[str, Any]:
         - confidence:    float (0–1)
     """
     question_lower = question.lower()
-
-    # ------------------------------------------------------------------
-    # Structural / retrieval-side patterns (existing, unchanged)
-    # ------------------------------------------------------------------
-    structural_patterns = {
-        "HYPERPARAMETERS": [
-            r'\b(hyperparameter|parameter|setting|config|learning rate|batch size|dropout|gamma|alpha|beta|epsilon|lambda|momentum|weight decay)\b',
-            r'\b(what is the|what are the|how much|how many|what value|what size)\b.*\b(discount|buffer|window|layer|hidden|embedding)\b',
-            r'\b(set to|initialized to)\b',
-        ],
-        "DATASETS": [
-            r'\b(dataset|data|training data|test data|evaluation data|corpus)\b',
-            r'\b(common crawl|webtext|mnist|cifar|imagenet)\b',
-        ],
-        "EQUATIONS": [
-            r'\b(equation|formula|mathematical|objective function|loss function)\b',
-            r'\b(kl divergence|cross entropy|gradient|derivative)\b',
-        ],
-        "TABLES": [
-            r'\b(table|tabular|row|column)\b',
-        ],
-        "FIGURES": [
-            r'\b(figure|plot|graph|chart|visualization)\b',
-        ],
-        "ALGORITHMS": [
-            r'\b(algorithm|method|approach|technique|procedure)\b',
-            r'\b(cma-es|sgd|adam|rmsprop|adamw)\b',
-        ],
-        "TRAINING": [
-            r'\b(train|training|learn|learning|optimization|optimize)\b',
-            r'\b(epoch|iteration|step|update)\b',
-        ],
-        "RESULTS": [
-            r'\b(result|performance|accuracy|score|metric|benchmark)\b',
-            r'\b(super|glue|sota|state of the art)\b',
-        ],
-        "LIMITATIONS": [
-            r'\b(limitation|weakness|drawback|issue|problem|fail)\b',
-            r'\b(not able|cannot|unable|struggle)\b',
-        ],
-    }
-
-    scores: Dict[str, int] = {}
-    matched_keywords: Dict[str, List[str]] = {}
-
-    for qtype, type_patterns in structural_patterns.items():
-        score = 0
-        keywords: List[str] = []
-        for pattern in type_patterns:
-            matches = re.findall(pattern, question_lower)
-            if matches:
-                score += len(matches)
-                keywords.extend(matches if isinstance(matches[0], str) else [m[0] for m in matches])
-        if score > 0:
-            scores[qtype] = score
-            matched_keywords[qtype] = keywords
+    scores, matched_keywords = _structural_scores(question_lower)
 
     structural_type = max(scores, key=scores.get) if scores else "GENERAL"
     structural_confidence = min(scores.get(structural_type, 0) / 3.0, 1.0) if scores else 0.5
@@ -208,3 +225,40 @@ def score_chunk_for_question(chunk: Dict[str, Any], question_type: str) -> float
         type_score += var_bonus
 
     return type_score
+
+
+# ---------------------------------------------------------------------------
+# Lightweight complex-question decomposition
+# ---------------------------------------------------------------------------
+
+# Depths where a genuinely multi-facet question benefits from decomposition.
+# CONCISE/EXTRACTION questions are inherently narrow — decomposing those would
+# just dilute the context with irrelevant subquery hits.
+_DECOMPOSABLE_DEPTHS = {"SURVEY", "DETAILED", "COMPARATIVE"}
+
+
+def decompose_complex_question(question: str, max_subqueries: int = 3) -> List[str]:
+    """
+    For a genuinely multi-facet research question (e.g. one that touches
+    architecture, training procedure, AND numerical results at once), return
+    a small number of facet-focused subqueries to widen the retrieval
+    candidate pool beyond whatever is globally closest to the raw question.
+
+    Returns [] for questions that don't need it — most questions ask about
+    one thing and should not be decomposed.
+    """
+    question_lower = question.lower()
+    scores, _ = _structural_scores(question_lower)
+
+    # Require at least 3 distinct facets to actually be present; a question
+    # that only touches one or two structural categories is not "complex"
+    # in the sense this is meant to help with.
+    if len(scores) < 3:
+        return []
+
+    depth = _detect_answer_depth(question_lower)
+    if depth not in _DECOMPOSABLE_DEPTHS:
+        return []
+
+    top_facets = sorted(scores, key=scores.get, reverse=True)[:max_subqueries]
+    return [f"{question} ({_FACET_PHRASES[f]})" for f in top_facets if f in _FACET_PHRASES]
