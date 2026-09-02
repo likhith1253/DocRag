@@ -263,6 +263,7 @@ def chunk_document(
                 "content": str,
                 "metadata": {
                     "collection_id": str,
+                    "document_id": str,
                     "paper_title": str,
                     "authors": str,
                     "year": str,
@@ -277,6 +278,25 @@ def chunk_document(
     """
     max_chunk_tokens, overlap_tokens = _load_chunking_config()
     timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    # Stable identity for the source document itself (repo/collection-scoped),
+    # independent of any random run-to-run identifier.
+    document_id = hashlib.sha256(
+        (collection_id + "::" + file_path).encode("utf-8")
+    ).hexdigest()
+
+    # Some PDFs repeat byte-identical short text at multiple locations (e.g. a
+    # chart axis label like "Training epochs\n0\n10\n20" printed under several
+    # figures). The chunk hash below is content-based, so two such occurrences
+    # would otherwise produce the exact same hash -> the exact same Qdrant
+    # point ID -> the second upsert silently overwrites the first. Track how
+    # many times each base hash has been seen in *this* document and fold the
+    # occurrence number into the hash for every repeat after the first, so
+    # every physical chunk gets its own point instead of being dropped.
+    # Scoped per-document (not per-collection) and computed in the same
+    # deterministic section/line order the parser always produces, so
+    # re-indexing the same unchanged file reproduces identical hashes.
+    hash_occurrences: Dict[str, int] = {}
 
     final_chunks = []
 
@@ -317,12 +337,21 @@ def chunk_document(
                 chunk_page_start = page_start
                 chunk_page_end = page_end
 
-            content_hash = hashlib.sha256(
+            base_hash = hashlib.sha256(
                 (chunk_content + file_path + collection_id).encode("utf-8")
             ).hexdigest()
+            occurrence = hash_occurrences.get(base_hash, 0)
+            hash_occurrences[base_hash] = occurrence + 1
+            if occurrence == 0:
+                content_hash = base_hash
+            else:
+                content_hash = hashlib.sha256(
+                    f"{base_hash}:dup{occurrence}".encode("utf-8")
+                ).hexdigest()
 
             metadata = {
                 "collection_id": collection_id,
+                "document_id": document_id,
                 "paper_title": paper_title,
                 "authors": authors,
                 "year": year,
