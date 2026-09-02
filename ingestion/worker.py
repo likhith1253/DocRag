@@ -84,6 +84,33 @@ def _batch_chunks(chunks: list, batch_size: int):
         yield chunks[index: index + batch_size]
 
 
+_UPSERT_MAX_RETRIES = 3
+_UPSERT_RETRY_BACKOFF_SECONDS = 1.0
+
+
+def _upsert_batch_with_retry(v_manager, batch: list, repo_id: str) -> bool:
+    """
+    Embed + upsert one batch, retrying transient failures a bounded number of
+    times. Returns True if the batch was accepted, False if all attempts
+    failed (the caller is responsible for recording the batch's chunk hashes
+    as failed and continuing with the rest of the run rather than aborting).
+    """
+    import time
+
+    for attempt in range(1, _UPSERT_MAX_RETRIES + 1):
+        try:
+            v_manager.add_chunks(batch)
+            return True
+        except Exception as e:
+            logger.warning(
+                f"[Worker] Upsert batch failed for repo={repo_id} "
+                f"(attempt {attempt}/{_UPSERT_MAX_RETRIES}, {len(batch)} chunks): {e}"
+            )
+            if attempt < _UPSERT_MAX_RETRIES:
+                time.sleep(_UPSERT_RETRY_BACKOFF_SECONDS * attempt)
+    return False
+
+
 def log_indexing_stage(
     repo_id: str,
     stage: str,
@@ -625,9 +652,21 @@ def background_ingest_repository(
         indexing_config = _load_indexing_config()
         batch_size = indexing_config.get("background_batch_size", 64)
         current_completed = already_embedded_count
+        upload_attempts = 0
+        upload_failures = 0
+        failed_chunk_hashes: list[str] = []
 
         for idx, batch in enumerate(_batch_chunks(chunks_needed, batch_size)):
-            v_manager.add_chunks(batch)
+            upload_attempts += len(batch)
+            ok = _upsert_batch_with_retry(v_manager, batch, repo_id)
+            if not ok:
+                upload_failures += len(batch)
+                failed_chunk_hashes.extend(c["metadata"]["hash"] for c in batch)
+                # Skip marking this batch as embedded — reconciliation below
+                # will detect the gap and the next indexing run will retry it
+                # (its chunk hashes are still absent from embedded_hashes).
+                continue
+
             batch_hashes = {c["metadata"]["hash"] for c in batch}
             for file_path, file_chunks in new_chunks_by_file.items():
                 file_embedded = embedded_hashes.setdefault(file_path, [])
@@ -653,6 +692,34 @@ def background_ingest_repository(
             repo_id, "indexing_tier1", "END",
             duration=duration, items=len(chunks_needed), throughput=throughput,
         )
+        if upload_failures:
+            logger.warning(
+                f"[Worker] {upload_failures}/{upload_attempts} chunk upserts "
+                f"failed after retries for repo={repo_id}"
+            )
+
+        # ----------------------------------------------------------------
+        # Reconciliation: verify every chunk this run intended to have
+        # indexed is actually present in Qdrant. A successful client call
+        # does not by itself prove the data landed (see add_chunks retry
+        # above) — check the real collection state before declaring victory.
+        # ----------------------------------------------------------------
+        expected_hashes = sorted({c["metadata"]["hash"] for c in chunks_to_add})
+        verified_count, missing_hashes = v_manager.verify_points_exist(expected_hashes)
+
+        if missing_hashes:
+            # One bounded recovery pass: re-upsert exactly the missing chunks.
+            hash_to_chunk = {c["metadata"]["hash"]: c for c in chunks_to_add}
+            retry_batch = [hash_to_chunk[h] for h in missing_hashes if h in hash_to_chunk]
+            if retry_batch:
+                logger.warning(
+                    f"[Worker] Reconciliation found {len(missing_hashes)} missing "
+                    f"points for repo={repo_id}; attempting one recovery pass."
+                )
+                _upsert_batch_with_retry(v_manager, retry_batch, repo_id)
+                verified_count, missing_hashes = v_manager.verify_points_exist(expected_hashes)
+
+        reconciliation_passed = not missing_hashes
 
         # ----------------------------------------------------------------
         # Tier 2: finalize
@@ -666,28 +733,58 @@ def background_ingest_repository(
             lambda: snapshot_manager.save_snapshot(repo_id, snapshot),
         )
 
-        # Transition to READY
-        repo.status = RepoStatus.READY
-        repo.indexed_at = datetime.now(timezone.utc)
-        repo.last_error = None
-        registry.register(repo)
-
         final_points = 0
         try:
             final_points = v_manager.count()
         except Exception:
             pass
 
+        documents_parsed_ok = len(files_to_parse) - failed_parse_count
+
         print("=" * 80, flush=True)
-        print(f"[REINDEX DIAGNOSTIC SUMMARY] Repository '{repo_id}'", flush=True)
-        print(f"  [1/7] Source Path         : {target_path} -> Resolved: {resolved_target}", flush=True)
-        print(f"  [2/7] Discovered Files    : {len(all_pdf_files)} PDF files.", flush=True)
-        print(f"  [3/7] Parsed Documents   : {len(new_chunks_by_file)}/{len(files_to_parse)} PDFs parsed ({failed_parse_count} failed).", flush=True)
-        print(f"  [4/7] Chunks Generated   : {total_new_chunks} chunks created.", flush=True)
-        print(f"  [5/7] Chunks Needed Embed: {len(chunks_needed)} chunks needed embedding.", flush=True)
-        print(f"  [6/7] Uploaded to Qdrant : {current_completed} chunks uploaded.", flush=True)
-        print(f"  [7/7] Final Point Count  : {final_points} points in Qdrant.", flush=True)
+        print(f"[INDEXING REPORT] Repository '{repo_id}'", flush=True)
+        print(f"  Source Path : {target_path} -> Resolved: {resolved_target}", flush=True)
+        print("  Documents:", flush=True)
+        print(f"    discovered : {len(all_pdf_files)}", flush=True)
+        print(f"    parsed     : {documents_parsed_ok}", flush=True)
+        print(f"    failed     : {failed_parse_count}", flush=True)
+        print("  Chunks:", flush=True)
+        print(f"    generated  : {total_new_chunks}", flush=True)
+        print(f"    prepared for this run : {len(chunks_to_add)}", flush=True)
+        print(f"    embedded   : {current_completed - already_embedded_count} new ({already_embedded_count} already cached)", flush=True)
+        print("  Qdrant:", flush=True)
+        print(f"    unique points expected : {len(expected_hashes)}", flush=True)
+        print(f"    upload attempts        : {upload_attempts}", flush=True)
+        print(f"    upload failures        : {upload_failures}", flush=True)
+        print(f"    points verified        : {verified_count}", flush=True)
+        print(f"    collection point count : {final_points}", flush=True)
+        print("  Reconciliation:", flush=True)
+        if reconciliation_passed:
+            print("    PASS", flush=True)
+        else:
+            print(f"    RECONCILIATION FAILED — {len(missing_hashes)} expected point(s) not found in Qdrant", flush=True)
+            print(f"    missing hashes (first 10): {missing_hashes[:10]}", flush=True)
         print("=" * 80, flush=True)
+
+        if not reconciliation_passed:
+            error_msg = (
+                f"Reconciliation failed: {len(missing_hashes)}/{len(expected_hashes)} "
+                f"expected chunks are missing from Qdrant after upload + one retry pass."
+            )
+            logger.error(f"[Worker] {error_msg}")
+            repo.status = RepoStatus.FAILED
+            repo.last_error = error_msg
+            registry.register(repo)
+            progress.update(status=RepoStatus.FAILED, stage="reconciliation_failed", percentage=0.0)
+            log_indexing_stage(repo_id, "overall", f"FAILED | {error_msg}")
+            return
+
+        # Transition to READY only after reconciliation confirms the data
+        # this run promised is actually present in Qdrant.
+        repo.status = RepoStatus.READY
+        repo.indexed_at = datetime.now(timezone.utc)
+        repo.last_error = None
+        registry.register(repo)
 
         # Invalidate content-aware router cache so next query uses fresh chunk embeddings
         try:

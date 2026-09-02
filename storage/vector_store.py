@@ -208,6 +208,22 @@ class VectorStoreManager:
             )
         _ensured_collections.add(cache_key)
 
+    def drop_collection(self):
+        """
+        Delete this collection from Qdrant and invalidate the process-wide
+        "already ensured" cache for it. Deleting via the raw Qdrant client
+        alone leaves _ensured_collections stale, so a later VectorStoreManager
+        for the same (qdrant_path, collection_name) would skip recreating it
+        in _ensure_collection() and fail with "Collection not found".
+        """
+        try:
+            if self.client.collection_exists(self.collection_name):
+                self.client.delete_collection(collection_name=self.collection_name)
+        finally:
+            cache_key = f"{self.qdrant_path}::{self.collection_name}"
+            _ensured_collections.discard(cache_key)
+            VectorStoreManager._all_chunks_cache.pop(cache_key, None)
+
     def count(self) -> int:
         """Returns total number of vector points stored in this collection."""
         try:
@@ -298,6 +314,39 @@ class VectorStoreManager:
             pass
 
 
+
+    def verify_points_exist(self, chunk_hashes: List[str]) -> tuple[int, List[str]]:
+        """
+        Confirm that points for the given chunk hashes are actually present in
+        Qdrant, rather than trusting that a prior upsert call succeeded.
+
+        Returns (found_count, missing_hashes).
+        """
+        unique_hashes = list(dict.fromkeys(chunk_hashes))
+        if not unique_hashes:
+            return 0, []
+
+        hash_by_point_id = {
+            str(uuid.uuid5(uuid.NAMESPACE_DNS, h)): h for h in unique_hashes
+        }
+
+        found_point_ids = set()
+        point_ids = list(hash_by_point_id.keys())
+        retrieve_batch_size = 500
+        for i in range(0, len(point_ids), retrieve_batch_size):
+            batch_ids = point_ids[i:i + retrieve_batch_size]
+            records = self.client.retrieve(
+                collection_name=self.collection_name,
+                ids=batch_ids,
+                with_payload=False,
+                with_vectors=False,
+            )
+            found_point_ids.update(str(r.id) for r in records)
+
+        missing_hashes = [
+            h for pid, h in hash_by_point_id.items() if pid not in found_point_ids
+        ]
+        return len(found_point_ids), missing_hashes
 
     def delete_chunks(self, chunk_hashes: List[str]):
         """

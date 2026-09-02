@@ -150,7 +150,7 @@ def delete_repository(
     try:
         from storage.vector_store import VectorStoreManager
         v_manager = VectorStoreManager(collection_name=repo.vector_collection)
-        v_manager.client.delete_collection(collection_name=repo.vector_collection)
+        v_manager.drop_collection()
     except Exception as e:
         print(f"[Delete] Error deleting vector collection: {e}")
 
