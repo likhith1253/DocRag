@@ -484,8 +484,25 @@ if ask_btn:
                                     st.json(meta)
 
                     # 🐛 Debug View (14-Stage Pipeline Breakdown)
-                    from storage.pipeline_logger import is_debug_mode, DEBUG_LOG_PATH
-                    if is_debug_mode():
+                    # NOTE: this import is intentionally isolated in its own
+                    # try/except. It previously lived unguarded inside the
+                    # outer `except Exception as e: st.error(f"Could not
+                    # connect to API: {e}")` block below — a failure here
+                    # (e.g. "No module named 'storage'" when the process's
+                    # working directory/sys.path doesn't include the repo
+                    # root) got mislabeled as an API connection failure even
+                    # though the query above had already succeeded and the
+                    # answer was already rendered. Isolating it keeps a
+                    # debug-panel import failure from masking a successful
+                    # answer as a connection error. (Phase 4: consider making
+                    # the debug panel's import path robust regardless of cwd.)
+                    try:
+                        from storage.pipeline_logger import is_debug_mode, DEBUG_LOG_PATH
+                        debug_panel_available = True
+                    except Exception as debug_import_err:
+                        debug_panel_available = False
+                        st.caption(f"Debug panel unavailable: {debug_import_err}")
+                    if debug_panel_available and is_debug_mode():
                         with st.expander("🐛 Pipeline Debug & Stage Diagnostics"):
                             req_id_resp = data.get("request_id")
                             st.caption(f"Request ID: `{req_id_resp or 'N/A'}`")

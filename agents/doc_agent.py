@@ -15,6 +15,7 @@ Quality upgrades (phases 2–7):
   - Phase 6: Code-side confidence block appended after generation
 """
 
+import re
 import sys
 if hasattr(sys.stdout, "reconfigure"):
     try:
@@ -35,6 +36,42 @@ _MAX_EXCERPT_CHARS = 4000
 
 # Prompt explosion threshold — if context block alone exceeds this, stop and log
 _PROMPT_EXPLOSION_THRESHOLD = 60_000
+
+
+# ---------------------------------------------------------------------------
+# Phase 3 refinement: generic per-equation label extraction
+# ---------------------------------------------------------------------------
+
+# Matches the common academic convention of labeling an equation with the
+# method/algorithm it belongs to, e.g. "Q-learning: r + gamma max_a' Q(s',a')"
+# or "Sarsa update: r + gamma Q(s', a')". Purely a text-pattern heuristic —
+# no hardcoded list of algorithm names — so it generalizes to any paper's own
+# labeling style instead of only ones we've seen before.
+_EQUATION_LABEL_RE = re.compile(r'([A-Z][A-Za-z0-9]*(?:[\s\-][A-Za-z0-9]+){0,3})\s*:\s*')
+_EQUATION_LABEL_STOPWORDS = {
+    "note", "notes", "eq", "eqn", "equation", "equations", "where", "here",
+    "figure", "table", "algorithm", "example", "proof", "definition",
+    "assumption", "remark", "hint", "recall", "then", "thus",
+}
+
+
+def _extract_equation_labels(content: str) -> List[str]:
+    """
+    Heuristically extract the algorithm/method name(s) that label a specific
+    equation in the source text. Used only to help the grounding prompt
+    attribute the right equation to the right name when an excerpt contains
+    more than one — absence of a detected label is never an error, and no
+    label is ever invented if the pattern doesn't match anything.
+    """
+    labels: List[str] = []
+    for m in _EQUATION_LABEL_RE.finditer(content):
+        label = m.group(1).strip()
+        tail = content[m.end():m.end() + 80]
+        looks_equation_like = bool(re.search(r'[=≈+*()]', tail))
+        if looks_equation_like and 1 <= len(label.split()) <= 4:
+            if label.lower() not in _EQUATION_LABEL_STOPWORDS and label not in labels:
+                labels.append(label)
+    return labels
 
 
 # ---------------------------------------------------------------------------
@@ -237,11 +274,23 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
             chunk_meta = chunk.get("metadata", {})
             chunk_tags = {label for flag, label in _EVIDENCE_FLAGS if chunk_meta.get(flag)}
 
-            # Merge condition: same section, strictly consecutive page (N or N+1)
+            # Merge condition: same section, strictly consecutive page (N or N+1).
+            # BUG FIX (A3C regression): never merge two independently-flagged
+            # equation chunks into a single block — doing so let two distinct
+            # equations (e.g. the Q-learning target and the Sarsa target) blend
+            # into one excerpt with no boundary between them, which made it easy
+            # for the model to conflate which equation belongs to which method.
+            # Keeping each equation-bearing chunk as its own excerpt preserves a
+            # clear boundary even when the section/page merge condition would
+            # otherwise combine them.
+            merging_two_equation_chunks = (
+                "equation" in current_evidence_tags and "equation" in chunk_tags
+            )
             can_merge = (
                 current_meta is not None
                 and sec == current_section
                 and pg <= current_page_end + 1
+                and not merging_two_equation_chunks
             )
 
             if can_merge:
@@ -284,7 +333,19 @@ def _build_context_block(chunks: List[Dict[str, Any]], trace_lines: List[str]) -
 
             evidence_tags = block.get("evidence_tags") or []
             evidence_str = f" | Evidence: {', '.join(evidence_tags)}" if evidence_tags else ""
-            excerpt_header = f"[EXCERPT {excerpt_num}] Section: {section_display} | {page_str}{evidence_str}"
+
+            # Phase 3 refinement: when this excerpt is equation evidence,
+            # surface any detected per-equation label (e.g. "Q-learning",
+            # "Sarsa") so the grounding prompt can require the model to
+            # attribute each equation to its own named method instead of
+            # guessing from general RL/ML knowledge.
+            label_str = ""
+            if "equation" in evidence_tags:
+                eq_labels = _extract_equation_labels(block["content"])
+                if eq_labels:
+                    label_str = f" | Equation labels: {', '.join(eq_labels)}"
+
+            excerpt_header = f"[EXCERPT {excerpt_num}] Section: {section_display} | {page_str}{evidence_str}{label_str}"
             full_text = f"{excerpt_header}\n{block['content']}"
             sep_overhead = 2 if running_len > 0 else 0
             block_len = len(full_text) + sep_overhead
@@ -362,7 +423,14 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
         "11. If evidence is insufficient for a detail, state that it is not in the text rather than guessing.\n"
         "12. EQUATIONS: Reproduce an equation exactly as it appears in an excerpt marked 'Evidence: equation' — "
         "do not substitute a remembered/textbook version. If the question asks for an equation that is not present "
-        "in any excerpt, say the exact equation was not found in the retrieved text rather than supplying one from memory.\n"
+        "in any excerpt, say the exact equation was not found in the retrieved text rather than supplying one from memory. "
+        "If an excerpt header shows 'Equation labels: <name>', that equation belongs ONLY to the named method — copy it "
+        "verbatim under that name and do not attach it to, or reuse it for, any other method. When two or more different "
+        "methods are being compared (e.g. one target/update rule per method), each method's equation MUST come from an "
+        "excerpt whose own 'Equation labels' (or surrounding source text) names that exact method — never assume two "
+        "methods share the same equation just because they are structurally similar or commonly confused. If an "
+        "excerpt's equation label does not match the method the question is asking about, do not use that equation "
+        "for that method.\n"
         "13. NUMBERS & TABLES: State a numerical value or table result only if it appears verbatim in an excerpt "
         "(look for 'Evidence: table'). If the specific number requested is not present in the excerpts, say it was "
         "not found rather than estimating or recalling it.\n"
