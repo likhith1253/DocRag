@@ -8,7 +8,7 @@ Detects question types to:
 
 import re
 import functools
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 
 
 # ---------------------------------------------------------------------------
@@ -213,7 +213,9 @@ def get_chunk_type_preference(question_type: str) -> List[str]:
 
 def score_chunk_for_question(chunk: Dict[str, Any], question_type: str) -> float:
     """Score a chunk based on its relevance to the question type."""
-    chunk_type = chunk.get("metadata", {}).get("chunk_type", "TEXT")
+    meta = chunk.get("metadata", {})
+    chunk_type = meta.get("chunk_type", "TEXT")
+    section = (meta.get("section") or "").lower()
     content = chunk.get("content", "").lower()
 
     preferred_types = get_chunk_type_preference(question_type)
@@ -224,7 +226,43 @@ def score_chunk_for_question(chunk: Dict[str, Any], question_type: str) -> float
     except ValueError:
         type_score = 0.5
 
-    if question_type in ["HYPERPARAMETERS", "RESULTS", "TRAINING"]:
+    # Penalize purely generic sections for technical facet queries
+    is_abstract_or_conclusion = any(s in section for s in ["abstract", "conclusion", "introductory", "introduction"])
+
+    if question_type == "PREPROCESSING":
+        # Concrete preprocessing operations/dimensions
+        concrete_matches = sum(1 for w in ["210", "160", "84", "110", "down-sampl", "downsampl", "gray-scale", "grayscale", "crop", "last 4 frames", "stacks them", "history representation"] if w in content)
+        if concrete_matches >= 2:
+            type_score += 1.2
+        elif concrete_matches >= 1:
+            type_score += 0.6
+        if "preprocess" in section or "architecture" in section:
+            type_score += 0.5
+        if is_abstract_or_conclusion and concrete_matches == 0:
+            type_score -= 0.5
+
+    elif question_type == "ARCHITECTURE":
+        arch_matches = sum(1 for w in ["controller", "linear controller", "mdn-rnn", "vae", "latent vector", "convolutional", "hidden units", "hidden layer", "parameters"] if w in content)
+        if arch_matches >= 2:
+            type_score += 1.0
+        elif arch_matches >= 1:
+            type_score += 0.5
+        if "architecture" in section or "model" in section:
+            type_score += 0.4
+        if is_abstract_or_conclusion and arch_matches == 0:
+            type_score -= 0.4
+
+    elif question_type == "EQUATIONS":
+        if meta.get("contains_equation") or any(sym in content for sym in ["\\sum", "\\max", "\\gamma", "\\alpha", "\\theta", "q(s", "j(\\pi)"]):
+            type_score += 1.0
+        if is_abstract_or_conclusion:
+            type_score -= 0.3
+
+    elif question_type == "ALGORITHMS":
+        if meta.get("contains_algorithm") or any(w in content for w in ["algorithm 1", "algorithm s", "target value", "pseudocode", "for each step", "repeat"]):
+            type_score += 1.0
+
+    elif question_type in ["HYPERPARAMETERS", "RESULTS", "TRAINING"]:
         numbers = len(re.findall(r'\d+\.?\d*', content))
         number_bonus = min(numbers * 0.1, 0.8)
         type_score += number_bonus
@@ -234,15 +272,55 @@ def score_chunk_for_question(chunk: Dict[str, Any], question_type: str) -> float
         var_bonus = min(var_pairs * 0.2, 1.0)
         type_score += var_bonus
 
-    if question_type in ["PREPROCESSING"]:
-        if any(w in content for w in ["preprocess", "210", "160", "84", "gray", "crop", "frames", "pixel"]):
-            type_score += 0.4
-
-    if question_type in ["ARCHITECTURE"]:
-        if any(w in content for w in ["controller", "vision", "memory", "rnn", "vae", "layer", "stride"]):
-            type_score += 0.4
-
     return type_score
+
+
+def extract_comparison_facets(question: str) -> List[Tuple[str, str]]:
+    """
+    Extract requested comparison facets from question for multi-paper retrieval.
+    Returns list of (facet_name, facet_query_phrase).
+    """
+    q_lower = question.lower()
+    facets: List[Tuple[str, str]] = []
+
+    # 1. Stability & Convergence
+    if any(k in q_lower for k in ["stability", "stable", "converge", "convergence", "divergence"]):
+        facets.append(("stability", "stability convergence target network training stability"))
+
+    # 2. Sample Efficiency & Data Efficiency
+    if any(k in q_lower for k in ["sample efficiency", "data efficiency", "efficiency", "sample efficient", "data efficient"]):
+        facets.append(("sample_efficiency", "sample efficiency data efficiency training frames epochs"))
+
+    # 3. Architecture & Policy Representation
+    if any(k in q_lower for k in ["architecture", "policy", "value", "network", "representation", "softmax", "linear"]):
+        facets.append(("architecture", "model architecture neural network policy value function layers"))
+
+    # 4. Experience Replay & Memory
+    if any(k in q_lower for k in ["replay", "memory", "buffer", "decorrelat", "minibatch"]):
+        facets.append(("experience_replay", "experience replay memory buffer parallel actor-learners decorrelate"))
+
+    # 5. Exploration
+    if any(k in q_lower for k in ["exploration", "entropy", "epsilon-greedy", "epsilon greedy", "stochastic"]):
+        facets.append(("exploration", "exploration entropy epsilon-greedy policy temperature"))
+
+    # 6. Objectives & Target Equations
+    if any(k in q_lower for k in ["objective", "target", "equation", "loss", "update", "q-learning", "sarsa"]):
+        facets.append(("objective", "objective function target update equation Bellman Q-learning loss"))
+
+    # 7. Performance & Benchmark Evaluation
+    if any(k in q_lower for k in ["results", "evaluation", "games", "benchmark", "performance", "sota"]):
+        facets.append(("evaluation", "experimental results evaluation performance Atari games benchmark"))
+
+    # Fallback to balanced core comparison facets if none detected
+    if not facets:
+        facets = [
+            ("architecture", "model architecture neural network policy value"),
+            ("stability", "stability training target network experience replay"),
+            ("sample_efficiency", "sample efficiency data efficiency performance evaluation"),
+        ]
+
+    return facets
+
 
 
 # ---------------------------------------------------------------------------
