@@ -503,22 +503,52 @@ class VectorStoreManager:
         if metadata_filters:
             conditions = []
             for key, val in metadata_filters.items():
-                conditions.append(
-                    FieldCondition(
-                        key=f"metadata.{key}", 
-                        match=MatchValue(value=val)
+                if key in ("paper_title", "file"):
+                    base_val = str(val)
+                    if base_val.lower().endswith(".pdf"):
+                        base_val = base_val[:-4]
+                    pdf_val = f"{base_val}.pdf"
+                    conditions.append(
+                        Filter(
+                            should=[
+                                FieldCondition(key="metadata.paper_title", match=MatchValue(value=str(val))),
+                                FieldCondition(key="metadata.paper_title", match=MatchValue(value=base_val)),
+                                FieldCondition(key="metadata.file", match=MatchValue(value=str(val))),
+                                FieldCondition(key="metadata.file", match=MatchValue(value=pdf_val)),
+                                FieldCondition(key="metadata.paper", match=MatchValue(value=str(val))),
+                            ]
+                        )
                     )
-                )
+                else:
+                    conditions.append(
+                        FieldCondition(
+                            key=f"metadata.{key}", 
+                            match=MatchValue(value=val)
+                        )
+                    )
             query_filter = Filter(must=conditions)
 
         # with_vectors=True: return stored embeddings so MMR can skip re-encoding
-        results = self.client.query_points(
-            collection_name=self.collection_name,
-            query=query_vector,
-            query_filter=query_filter,
-            limit=top_k,
-            with_vectors=True
-        )
+        try:
+            results = self.client.query_points(
+                collection_name=self.collection_name,
+                query=query_vector,
+                query_filter=query_filter,
+                limit=top_k,
+                with_vectors=True
+            )
+        except Exception as qdrant_err:
+            import traceback
+            tb_str = traceback.format_exc()
+            print(f"[VECTOR SEARCH FATAL ERROR] Failed querying collection '{self.collection_name}':\n{tb_str}", flush=True)
+            try:
+                from storage.pipeline_logger import log_exception
+                log_exception(qdrant_err, f"VectorStoreManager.search({self.collection_name})")
+            except Exception:
+                pass
+            raise RuntimeError(
+                f"Vector search failed in collection '{self.collection_name}' with filter {metadata_filters}: {qdrant_err}"
+            ) from qdrant_err
         t_qdrant_end = time.perf_counter()
         
         retrieved = []
