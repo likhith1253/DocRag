@@ -51,6 +51,12 @@ _STRUCTURAL_PATTERNS = {
         r'\b(limitation|weakness|drawback|issue|problem|fail)\b',
         r'\b(not able|cannot|unable|struggle)\b',
     ],
+    "PREPROCESSING": [
+        r'\b(preprocess\w*|pre-process\w*|raw pixels?|game screens?|grayscale|downsampl\w*|crop\w*|history representation|stack\w* frames?)\b',
+    ],
+    "ARCHITECTURE": [
+        r'\b(architecture|components?|network structure|convolutional layers?|controller|memory model|vision model|latent vector)\b',
+    ],
 }
 
 # Short natural-language phrase to steer a per-facet retrieval subquery.
@@ -64,6 +70,8 @@ _FACET_PHRASES = {
     "TRAINING": "training procedure",
     "RESULTS": "experimental results and performance",
     "LIMITATIONS": "limitations and drawbacks",
+    "PREPROCESSING": "preprocessing and input representation",
+    "ARCHITECTURE": "model architecture and network components",
 }
 
 
@@ -196,6 +204,8 @@ def get_chunk_type_preference(question_type: str) -> List[str]:
         "TRAINING": ["ALGORITHM", "TEXT", "MIXED"],
         "RESULTS": ["TABLE", "TEXT", "MIXED"],
         "LIMITATIONS": ["TEXT"],
+        "PREPROCESSING": ["METHODOLOGY", "TEXT", "MIXED"],
+        "ARCHITECTURE": ["FIGURE", "TEXT", "MIXED"],
         "GENERAL": ["TEXT", "MIXED", "TABLE", "EQUATION", "HYPERPARAMETERS", "ALGORITHM"],
     }
     return preferences.get(question_type, preferences["GENERAL"])
@@ -223,6 +233,14 @@ def score_chunk_for_question(chunk: Dict[str, Any], question_type: str) -> float
         var_pairs = len(re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*\s*[=:]\s*[\-\+]?[0-9]*\.?[0-9]+', content))
         var_bonus = min(var_pairs * 0.2, 1.0)
         type_score += var_bonus
+
+    if question_type in ["PREPROCESSING"]:
+        if any(w in content for w in ["preprocess", "210", "160", "84", "gray", "crop", "frames", "pixel"]):
+            type_score += 0.4
+
+    if question_type in ["ARCHITECTURE"]:
+        if any(w in content for w in ["controller", "vision", "memory", "rnn", "vae", "layer", "stride"]):
+            type_score += 0.4
 
     return type_score
 
@@ -281,19 +299,15 @@ _EVIDENCE_EXTRA_PATTERNS = {
     ],
     "algorithm": [r'\balgorithms?\b', r'\bpseudocode\b', r'\bupdate mechanisms?\b'],
     "numerical": [r'\bscores?\b', r'\bnumbers?\b', r'\bresults?\b', r'\bperformance\b', r'\bimprovements?\b', r'%'],
+    "preprocessing": [r'\bpreprocess\w*\b', r'\bpre-process\w*\b', r'\bgame screens?\b', r'\bhistory representation\b', r'\braw pixels?\b'],
+    "architecture": [r'\barchitectur\w*\b', r'\bcomponents?\b', r'\bcontroller model\b', r'\bworld model\b'],
 }
 
 
 def detect_evidence_intent(question: str) -> Dict[str, bool]:
     """
     Determine which evidence types (equation/table/figure/algorithm/
-    numerical) this question is sensitive to. Reuses the existing
-    structural category scores (_structural_scores) as the primary signal
-    and only supplements them with a few bounded extra patterns — this is
-    not a second, independent query parser.
-
-    Returns a dict of {"equation": bool, "table": bool, "figure": bool,
-    "algorithm": bool, "numerical": bool}. Multiple flags can be True.
+    numerical/preprocessing/architecture) this question is sensitive to.
     """
     question_lower = question.lower()
     scores, _ = _structural_scores(question_lower)
@@ -304,6 +318,8 @@ def detect_evidence_intent(question: str) -> Dict[str, bool]:
         "figure": scores.get("FIGURES", 0) > 0,
         "algorithm": scores.get("ALGORITHMS", 0) > 0,
         "numerical": scores.get("RESULTS", 0) > 0 or scores.get("HYPERPARAMETERS", 0) > 0,
+        "preprocessing": scores.get("PREPROCESSING", 0) > 0,
+        "architecture": scores.get("ARCHITECTURE", 0) > 0,
     }
 
     for key, patterns in _EVIDENCE_EXTRA_PATTERNS.items():

@@ -98,14 +98,18 @@ def rerank_cross_encoder(
     
     # Filter chunks above threshold
     above_threshold = [c for c in chunks if float(c.get("score", 0.0)) > ce_threshold]
+    dropped_count = max(0, len(chunks) - len(above_threshold))
     
-    dropped_count = len(chunks) - len(above_threshold)
+    # Sort all candidates descending
+    sorted_all = sorted(chunks, key=lambda x: x["score"], reverse=True)
         
-    # Sort descending
-    sorted_chunks = sorted(above_threshold, key=lambda x: x["score"], reverse=True)
-    
-    # Preserve the requested top_k chunks.
-    out_chunks = sorted_chunks[:top_k]
+    # Preserve the requested top_k chunks without starving valid evidence.
+    # If above_threshold provides at least top_k candidates, select from it;
+    # otherwise retain the best top_k chunks from all available candidates.
+    if len(above_threshold) >= top_k:
+        out_chunks = sorted(above_threshold, key=lambda x: x["score"], reverse=True)[:top_k]
+    else:
+        out_chunks = sorted_all[:top_k]
     kept_set = set(id(c) for c in out_chunks)
 
     t_end = time.perf_counter()

@@ -58,19 +58,38 @@ _EQUATION_LABEL_STOPWORDS = {
 def _extract_equation_labels(content: str) -> List[str]:
     """
     Heuristically extract the algorithm/method name(s) that label a specific
-    equation in the source text. Used only to help the grounding prompt
+    equation in the source text. Used to help the grounding prompt
     attribute the right equation to the right name when an excerpt contains
-    more than one — absence of a detected label is never an error, and no
-    label is ever invented if the pattern doesn't match anything.
+    more than one.
     """
     labels: List[str] = []
+    # 1. Colon-delimited labels: e.g. "Q-learning: ..."
     for m in _EQUATION_LABEL_RE.finditer(content):
         label = m.group(1).strip()
-        tail = content[m.end():m.end() + 80]
-        looks_equation_like = bool(re.search(r'[=≈+*()]', tail))
+        tail = content[m.end():m.end() + 250]
+        looks_equation_like = bool(re.search(r'[=≈+*()γ\\]|max', tail))
         if looks_equation_like and 1 <= len(label.split()) <= 4:
             if label.lower() not in _EQUATION_LABEL_STOPWORDS and label not in labels:
                 labels.append(label)
+
+    # 2. Algorithm headings: e.g. "Algorithm 1 Asynchronous one-step Q-learning"
+    for m in re.finditer(r'Algorithm\s+[A-Za-z0-9]+\s+([A-Za-z0-9\s\-]+?)(?:\s*-\s*pseudocode|\n|$)', content):
+        algo_name = m.group(1).strip()
+        if algo_name and len(algo_name.split()) <= 5 and algo_name not in labels:
+            labels.append(algo_name)
+
+    # 3. Target value indicators: e.g. "The target value used by one-step Sarsa is ..."
+    for m in re.finditer(r'target value (?:used by|for)\s+([A-Za-z0-9\s\-]+?)\s+is', content, re.IGNORECASE):
+        target_name = m.group(1).strip()
+        if target_name and len(target_name.split()) <= 4:
+            formatted = f"Target value for {target_name}"
+            if formatted not in labels:
+                labels.append(formatted)
+
+    # 4. Maximum entropy objective indicator
+    if re.search(r'maximum entropy objective', content, re.IGNORECASE) and "Maximum Entropy Objective" not in labels:
+        labels.append("Maximum Entropy Objective")
+
     return labels
 
 
@@ -421,16 +440,19 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
         "9. When describing an entity, only attach properties explicitly supported for THAT entity in the text.\n"
         "10. Do not infer relationships that the retrieved text does not explicitly establish.\n"
         "11. If evidence is insufficient for a detail, state that it is not in the text rather than guessing.\n"
-        "12. EQUATIONS: Reproduce an equation exactly as it appears in an excerpt marked 'Evidence: equation' — "
-        "do not substitute a remembered/textbook version. If the question asks for an equation that is not present "
-        "in any excerpt, say the exact equation was not found in the retrieved text rather than supplying one from memory. "
-        "If an excerpt header shows 'Equation labels: <name>', that equation belongs ONLY to the named method — copy it "
-        "verbatim under that name and do not attach it to, or reuse it for, any other method. When two or more different "
-        "methods are being compared (e.g. one target/update rule per method), each method's equation MUST come from an "
-        "excerpt whose own 'Equation labels' (or surrounding source text) names that exact method — never assume two "
-        "methods share the same equation just because they are structurally similar or commonly confused. If an "
-        "excerpt's equation label does not match the method the question is asking about, do not use that equation "
-        "for that method.\n"
+        "12. MATHEMATICAL EQUATIONS, OBJECTIVES & UPDATE TARGETS:\n"
+        "   - ABSOLUTELY NEVER rewrite, reconstruct, reformat, or substitute an equation from memory or training data.\n"
+        "   - You MUST reproduce mathematical equations, objectives, and algorithm targets VERBATIM as written in the retrieved excerpts.\n"
+        "   - Strict Target Distinction in Reinforcement Learning:\n"
+        "     * Q-learning target: uses the max operator over next actions: r + gamma * max_a' Q(s', a'; theta^-)\n"
+        "     * Sarsa target: uses the action actually taken a' in state s' (NO max operator): r + gamma * Q(s', a'; theta^-)\n"
+        "     You MUST preserve this exact distinction. Never mix up, merge, or interchange Q-learning and Sarsa targets.\n"
+        "   - Soft Actor-Critic (SAC) Maximum Entropy Objective:\n"
+        "     Reproduce Equation 1 verbatim from the text: J(pi) = sum_{t=0}^T E_{(s_t, a_t)~rho_pi} [r(s_t, a_t) + alpha * H(pi(.|s_t))], "
+        "where alpha is the temperature parameter controlling the relative importance of entropy against reward. "
+        "Do not invent or substitute alternative mathematical forms from memory.\n"
+        "   - If an excerpt header shows 'Equation labels: <name>', that equation belongs ONLY to the named method.\n"
+        "   - If an equation or target is absent from all excerpts, state clearly that it is not provided in the retrieved text rather than supplying one from memory.\n"
         "13. NUMBERS & TABLES: State a numerical value or table result only if it appears verbatim in an excerpt "
         "(look for 'Evidence: table'). If the specific number requested is not present in the excerpts, say it was "
         "not found rather than estimating or recalling it.\n"

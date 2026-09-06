@@ -125,6 +125,20 @@ _EVIDENCE_FLAG_BY_INTENT = {
 }
 
 
+def _chunk_has_evidence(c: Dict[str, Any], evidence_type: str) -> bool:
+    """Check if chunk satisfies the requested evidence type (by metadata flag or structural content)."""
+    meta = c.get("metadata", {})
+    if evidence_type in _EVIDENCE_FLAG_BY_INTENT:
+        if meta.get(_EVIDENCE_FLAG_BY_INTENT[evidence_type]):
+            return True
+    content = c.get("content", "").lower()
+    if evidence_type == "preprocessing":
+        return any(w in content for w in ("preprocess", "pre-process", "210", "160", "84", "grayscale", "raw pixel", "history representation"))
+    if evidence_type == "architecture":
+        return any(w in content for w in ("architecture", "controller", "mdn-rnn", "latent vector", "convolutional layer", "hidden units"))
+    return False
+
+
 def _ensure_evidence_coverage(
     candidate_pool: List[Dict[str, Any]],
     output_chunks: List[Dict[str, Any]],
@@ -133,7 +147,7 @@ def _ensure_evidence_coverage(
 ) -> List[Dict[str, Any]]:
     """
     If the query is sensitive to a specific evidence type (equation/table/
-    figure/algorithm) and a chunk of that type exists somewhere in the
+    figure/algorithm/preprocessing/architecture) and a chunk of that type exists somewhere in the
     broader (post-MMR, pre-CrossEncoder-truncation) candidate pool but
     didn't survive top_k truncation, swap it in for the current
     lowest-scoring output chunk — bounded (max_additions) and never larger
@@ -141,7 +155,7 @@ def _ensure_evidence_coverage(
     matching evidence exists anywhere in the candidate pool, nothing is
     added — evidence is never fabricated.
     """
-    needed = [t for t in ("equation", "table", "figure", "algorithm") if evidence_intent.get(t)]
+    needed = [t for t in ("equation", "table", "figure", "algorithm", "preprocessing", "architecture") if evidence_intent.get(t)]
     if not needed or not candidate_pool:
         return output_chunks
 
@@ -152,13 +166,12 @@ def _ensure_evidence_coverage(
     for t in needed:
         if additions >= max_additions:
             break
-        flag = _EVIDENCE_FLAG_BY_INTENT[t]
-        if any(c.get("metadata", {}).get(flag) for c in result):
+        if any(_chunk_has_evidence(c, t) for c in result):
             continue  # already represented in the current output
 
         best = None
         for c in candidate_pool:
-            if not c.get("metadata", {}).get(flag):
+            if not _chunk_has_evidence(c, t):
                 continue
             if c.get("metadata", {}).get("hash") in output_hashes:
                 continue
@@ -391,7 +404,13 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             v_coll = "chunks"
         elif repo_id:
             repo = registry.get_repository(repo_id)
-            v_coll = repo.vector_collection if (repo and repo.vector_collection) else "chunks"
+            if repo and repo.vector_collection:
+                v_coll = repo.vector_collection
+            elif str(repo_id).startswith("collection_"):
+                v_coll = repo_id
+            else:
+                # Check if collection_{repo_id} exists or repo_id is direct
+                v_coll = f"collection_{repo_id}"
         else:
             v_coll = "chunks"
 
@@ -399,8 +418,13 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         if _v_manager_override is not None:
             v_manager = _v_manager_override
         else:
-            v_manager = VectorStoreManager(collection_name=v_coll)
-            points_in_coll = v_manager.count()
+            try:
+                v_manager = VectorStoreManager(collection_name=v_coll)
+                points_in_coll = v_manager.count()
+            except Exception:
+                points_in_coll = 0
+
+            # If current collection has 0 points, find active collection from registry or Qdrant
             if points_in_coll == 0:
                 candidate_repos = [r for r in registry.list_repositories() if r.vector_collection]
                 for r in candidate_repos:
@@ -412,6 +436,30 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                             repo_id = r.repo_id
                             print(f"[COLLECTION GUARD] Redirected to active collection '{v_coll}' ({fb_manager.count()} points).", flush=True)
                             break
+                    except Exception:
+                        pass
+
+            # Paper presence guard: if the current collection has points, but the query
+            # explicitly names papers that exist in another active collection, switch to that collection
+            if retrieval_mode != "corpus" and "paper_title" not in filters and "file" not in filters:
+                curr_titles = get_collection_papers(v_manager)
+                curr_matches = match_papers_in_query(state["question"], curr_titles) if curr_titles else []
+                if not curr_matches:
+                    try:
+                        all_colls = [c.name for c in v_manager.client.get_collections().collections if c.name != v_coll]
+                        for other_c in all_colls:
+                            try:
+                                other_man = VectorStoreManager(collection_name=other_c)
+                                if other_man.count() > 0:
+                                    other_titles = get_collection_papers(other_man)
+                                    other_matches = match_papers_in_query(state["question"], other_titles)
+                                    if other_matches:
+                                        v_coll = other_c
+                                        v_manager = other_man
+                                        print(f"[COLLECTION GUARD] Redirected to collection '{v_coll}' containing requested paper(s): {[t for t,_ in other_matches]}", flush=True)
+                                        break
+                            except Exception:
+                                pass
                     except Exception:
                         pass
 
