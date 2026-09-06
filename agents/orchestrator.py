@@ -23,7 +23,7 @@ import time
 import json
 import ctypes
 import yaml
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 try:
     from typing import TypedDict
 except ImportError:
@@ -175,6 +175,33 @@ def _ensure_evidence_coverage(
         additions += 1
 
     return result
+
+
+def _enforce_paper_isolation(
+    chunks: List[Dict[str, Any]],
+    requested_titles: List[str],
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """
+    Hard post-filter for explicit single/multi-paper queries: drop any chunk
+    whose paper does not exactly match one of the requested titles.
+
+    This exists as a defense-in-depth guard, independent of whatever
+    filtering happened upstream (Qdrant metadata filter, per-paper search
+    loop, etc.) — if any upstream path ever lets an unrequested paper's
+    chunk through (e.g. a filter fallback, a caching bug, a title-matching
+    edge case), this still prevents it from reaching the LLM context.
+    Returns (kept_chunks, dropped_chunks) so callers can log what was removed
+    instead of silently discarding it.
+    """
+    if not requested_titles:
+        return chunks, []
+    requested_set = set(requested_titles)
+    kept, dropped = [], []
+    for c in chunks:
+        meta = c.get("metadata", {})
+        title = meta.get("paper_title") or meta.get("file") or "Unknown"
+        (kept if title in requested_set else dropped).append(c)
+    return kept, dropped
 
 
 def _log_evidence_diagnostics(
@@ -577,10 +604,31 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             if chunks and any(evidence_intent.values()):
                 chunks = _ensure_evidence_coverage(pre_ce_pool, chunks, evidence_intent)
 
+        # ------------------------------------------------------------------
+        # Defense-in-depth isolation enforcement: for an explicit single- or
+        # multi-paper query, hard-filter out any chunk whose paper isn't one
+        # of the requested titles, regardless of how it got here (Qdrant
+        # metadata-filter fallback, caching, etc.) — see _enforce_paper_isolation.
+        # ------------------------------------------------------------------
+        requested_titles = [t for t, _ in matched_papers] if matched_papers else []
+        if paper_scope in ("single", "multi") and requested_titles:
+            chunks, unexpected_chunks = _enforce_paper_isolation(chunks, requested_titles)
+            if unexpected_chunks:
+                unexpected_papers_found = sorted({
+                    c.get("metadata", {}).get("paper_title") or c.get("metadata", {}).get("file") or "Unknown"
+                    for c in unexpected_chunks
+                })
+                print(
+                    f"[PAPER ISOLATION] ENFORCEMENT: dropped {len(unexpected_chunks)} chunk(s) "
+                    f"from unrequested paper(s) {unexpected_papers_found} that should never have "
+                    f"reached this point for requested paper(s) {requested_titles}.",
+                    flush=True,
+                )
+
         _log_evidence_diagnostics(
             chunks,
             evidence_intent,
-            requested_papers=[t for t, _ in matched_papers] if matched_papers else None,
+            requested_papers=requested_titles or None,
             retrieved_papers=sorted({
                 c.get("metadata", {}).get("paper_title") or c.get("metadata", {}).get("file") or "Unknown"
                 for c in chunks
@@ -602,10 +650,16 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         }
         log_stage(request_id, 7, "Knowledge Graph", stage7_data, latency_ms=0.0)
 
-        # Fallback only when retrieval produced no chunks at all.
-        # A low score is still evidence, so we keep it and let the grounded
-        # doc agent decide whether the excerpt actually answers the question.
-        if not chunks:
+        # Fallback only when retrieval produced no chunks at all, AND the
+        # query did not explicitly name specific paper(s). An explicit
+        # single/multi-paper query must NEVER fall through to an
+        # unrestricted collection-wide search — that is exactly how an
+        # unrelated paper (e.g. a wrong 4th paper in a 3-paper comparison)
+        # can silently substitute for the evidence that was actually
+        # requested. If the requested paper(s) truly have no matching
+        # evidence, that must be reported as missing, not backfilled from
+        # elsewhere.
+        if not chunks and paper_scope not in ("single", "multi"):
             # Fallback search in global 'chunks'
             try:
                 fb_vman = VectorStoreManager(collection_name='chunks')
@@ -643,6 +697,22 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             except Exception:
                 pass
 
+            return {
+                "retrieved_chunks": [],
+                "citations": [],
+                "error": "Zero chunks retrieved",
+                "latency_breakdown": latency_breakdown,
+            }
+
+        if not chunks:
+            # Reached only for an explicit single/multi-paper query whose
+            # requested paper(s) yielded no evidence at all — report missing,
+            # never substitute an unrestricted collection-wide fallback.
+            print(
+                f"[PAPER ISOLATION] No evidence found for requested paper(s) {requested_titles}. "
+                f"Reporting as missing rather than falling back to unrestricted search.",
+                flush=True,
+            )
             return {
                 "retrieved_chunks": [],
                 "citations": [],
