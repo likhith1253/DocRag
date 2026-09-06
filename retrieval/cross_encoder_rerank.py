@@ -79,10 +79,14 @@ def rerank_cross_encoder(
         # Get chunk type preference score
         type_score = score_chunk_for_question(chunk, question_type)
         
-        # Combine cross-encoder score with type preference
-        # Cross-encoder score is typically 0-1, type_score is 0-1
-        # Weight: 85% cross-encoder (semantic), 15% type preference (structural)
-        combined_score = (score * 0.85) + (type_score * 0.15)
+        # Combine cross-encoder score with type preference.
+        # For technical queries (PREPROCESSING, ARCHITECTURE, EQUATIONS, etc.),
+        # give substantial weight to the structural facet score so concrete methodology
+        # chunks are not overwhelmed by generic vocabulary in abstract/conclusion.
+        if question_type in ["PREPROCESSING", "ARCHITECTURE", "EQUATIONS", "ALGORITHMS", "TABLES"]:
+            combined_score = (score * 0.60) + (type_score * 2.0)
+        else:
+            combined_score = (score * 0.85) + (type_score * 0.50)
         
         # Preserve raw vector similarity score if available
         if "raw_vector_score" not in chunk:

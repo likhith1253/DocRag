@@ -52,7 +52,7 @@ from retrieval.paper_matcher import (
     match_papers_in_query,
     classify_paper_scope,
 )
-from retrieval.query_analyzer import decompose_complex_question, detect_evidence_intent
+from retrieval.query_analyzer import decompose_complex_question, detect_evidence_intent, extract_comparison_facets
 
 import agents.doc_agent as doc_agent
 from agents.doc_agent import CANNOT_FIND_RESPONSE, build_citation_list
@@ -133,9 +133,10 @@ def _chunk_has_evidence(c: Dict[str, Any], evidence_type: str) -> bool:
             return True
     content = c.get("content", "").lower()
     if evidence_type == "preprocessing":
-        return any(w in content for w in ("preprocess", "pre-process", "210", "160", "84", "grayscale", "raw pixel", "history representation"))
+        # Concrete preprocessing methodology required (not merely generic words like 'raw pixel')
+        return any(w in content for w in ("210", "160", "110", "84", "down-sampl", "downsampl", "gray-scale", "grayscale", "crop", "last 4 frames", "stacks them", "history representation"))
     if evidence_type == "architecture":
-        return any(w in content for w in ("architecture", "controller", "mdn-rnn", "latent vector", "convolutional layer", "hidden units"))
+        return any(w in content for w in ("controller", "linear controller", "mdn-rnn", "latent vector", "convolutional", "hidden units", "parameters", "network structure"))
     return False
 
 
@@ -417,6 +418,8 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         global _v_manager_override
         if _v_manager_override is not None:
             v_manager = _v_manager_override
+            v_coll = v_manager.collection_name
+            points_in_coll = v_manager.count()
         else:
             try:
                 v_manager = VectorStoreManager(collection_name=v_coll)
@@ -441,7 +444,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
 
             # Paper presence guard: if the current collection has points, but the query
             # explicitly names papers that exist in another active collection, switch to that collection
-            if retrieval_mode != "corpus" and "paper_title" not in filters and "file" not in filters:
+            if _v_manager_override is None and retrieval_mode != "corpus" and "paper_title" not in filters and "file" not in filters:
                 curr_titles = get_collection_papers(v_manager)
                 curr_matches = match_papers_in_query(state["question"], curr_titles) if curr_titles else []
                 if not curr_matches:
@@ -502,15 +505,20 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         if paper_scope == "multi":
             # --------------------------------------------------------------
             # Explicit multi-paper query (e.g. "Compare DQN, A3C and SAC."):
-            # retrieve + rerank per requested paper independently instead of
-            # one global search, so a paper's evidence can never come from
-            # anywhere but its own filtered sub-search — an unrelated paper
-            # with a high raw similarity score cannot enter the final set.
+            # Multi-paper facet-balanced retrieval:
+            # For comparison queries, retrieve independently by:
+            #     requested paper × requested facet
+            # before final reranking/selection.
+            # Ensure each requested paper receives evidence for as many requested facets as available.
+            # Do not simply allocate two generic chunks per paper.
             # --------------------------------------------------------------
             requested_titles = [t for t, _ in matched_papers]
             print(f"[PAPER ISOLATION] Explicit multi-paper query — requested papers ({len(requested_titles)}):", flush=True)
             for t in requested_titles:
                 print(f"  - {t}", flush=True)
+
+            comparison_facets = extract_comparison_facets(state["question"])
+            print(f"[FACET RETRIEVAL] Requested comparison facets ({len(comparison_facets)}): {[f[0] for f in comparison_facets]}", flush=True)
 
             per_paper_rerank_k = max(2, rerank_top_k // len(requested_titles))
             chunks = []
@@ -521,6 +529,9 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 paper_filters = dict(filters)
                 paper_filters["paper_title"] = title
 
+                paper_candidates: List[Dict[str, Any]] = []
+
+                # 1. Base query search for this paper
                 t0 = time.perf_counter()
                 p_chunks, p_timing = v_manager.search(
                     state["question"], top_k=vector_top_k, metadata_filters=paper_filters, request_id=request_id
@@ -529,30 +540,77 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 latency_breakdown["qdrant_ms"] = latency_breakdown.get("qdrant_ms", 0.0) + p_timing.get("qdrant_ms", 0.0)
                 latency_breakdown["vector_ms"] = latency_breakdown.get("vector_ms", 0.0) + (time.perf_counter() - t0) * 1000
                 initial_chunk_count += len(p_chunks)
+                paper_candidates.extend(p_chunks)
+                qv = p_timing.get("query_vector")
 
-                p_chunks = _dedup_and_filter_chunks(p_chunks, removed_chunks_log)
+                # 2. Facet-specific searches: requested paper × requested facet
+                for facet_name, facet_phrase in comparison_facets:
+                    facet_q = f"{title} {facet_phrase}"
+                    f_chunks, _ = v_manager.search(
+                        facet_q, top_k=15, metadata_filters=paper_filters, request_id=request_id
+                    )
+                    initial_chunk_count += len(f_chunks)
+                    for fc in f_chunks:
+                        fc.setdefault("metadata", {})["_facet"] = facet_name
+                    paper_candidates.extend(f_chunks)
 
-                if p_chunks:
-                    qv = p_timing.get("query_vector")
+                paper_candidates = _dedup_and_filter_chunks(paper_candidates, removed_chunks_log)
+
+                if paper_candidates:
                     t0 = time.perf_counter()
-                    p_chunks = mmr_rerank(
-                        state["question"], p_chunks, top_k=min(20, len(p_chunks)),
+                    p_mmr = mmr_rerank(
+                        state["question"], paper_candidates, top_k=min(30, len(paper_candidates)),
                         query_vector=qv, request_id=request_id,
                     )
                     latency_breakdown["mmr_ms"] = latency_breakdown.get("mmr_ms", 0.0) + (time.perf_counter() - t0) * 1000
 
-                    pre_ce_pool = p_chunks
+                    pre_ce_pool = p_mmr
                     t0 = time.perf_counter()
-                    p_chunks = rerank_cross_encoder(
-                        state["question"], p_chunks, top_k=per_paper_rerank_k, request_id=request_id
+                    p_reranked = rerank_cross_encoder(
+                        state["question"], p_mmr, top_k=len(p_mmr), request_id=request_id
                     )
                     latency_breakdown["reranker_ms"] = latency_breakdown.get("reranker_ms", 0.0) + (time.perf_counter() - t0) * 1000
-                    if any(evidence_intent.values()):
-                        p_chunks = _ensure_evidence_coverage(pre_ce_pool, p_chunks, evidence_intent)
 
-                if p_chunks:
-                    retrieved_titles.append(title)
-                    chunks.extend(p_chunks)
+                    # Select chunks ensuring balanced facet coverage for this paper
+                    selected_for_paper: List[Dict[str, Any]] = []
+                    seen_hashes_paper = set()
+
+                    # First, allocate the top chunk for each requested facet if available
+                    for facet_name, _ in comparison_facets:
+                        if len(selected_for_paper) >= per_paper_rerank_k:
+                            break
+                        facet_keywords = facet_name.split("_")
+                        best_facet_chunk = None
+                        for cand in p_reranked:
+                            c_hash = cand.get("metadata", {}).get("hash")
+                            if c_hash in seen_hashes_paper:
+                                continue
+                            c_text = cand.get("content", "").lower()
+                            c_meta = cand.get("metadata", {})
+                            if c_meta.get("_facet") == facet_name or any(kw in c_text for kw in facet_keywords):
+                                best_facet_chunk = cand
+                                break
+                        if best_facet_chunk is not None:
+                            selected_for_paper.append(best_facet_chunk)
+                            seen_hashes_paper.add(best_facet_chunk.get("metadata", {}).get("hash"))
+
+                    # Fill remaining per_paper_rerank_k slots with highest overall reranked chunks
+                    for cand in p_reranked:
+                        if len(selected_for_paper) >= per_paper_rerank_k:
+                            break
+                        c_hash = cand.get("metadata", {}).get("hash")
+                        if c_hash not in seen_hashes_paper:
+                            selected_for_paper.append(cand)
+                            seen_hashes_paper.add(c_hash)
+
+                    if any(evidence_intent.values()):
+                        selected_for_paper = _ensure_evidence_coverage(pre_ce_pool, selected_for_paper, evidence_intent)
+
+                    if selected_for_paper:
+                        retrieved_titles.append(title)
+                        chunks.extend(selected_for_paper)
+                    else:
+                        missing_titles.append(title)
                 else:
                     missing_titles.append(title)
 
