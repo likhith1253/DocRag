@@ -86,6 +86,24 @@ def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: s
             result = backend.generate(prompt, model)
         backend_ms = (time.perf_counter() - start_backend) * 1000
 
+        try:
+            from llm.transformers_backend import HFTransformersBackend
+            is_hf = isinstance(backend, HFTransformersBackend)
+        except Exception:
+            is_hf = False
+
+        if not is_hf:
+            try:
+                from storage.pipeline_logger import log_stage
+                log_stage(request_id, 10, f"{backend.__class__.__name__}.generate", {
+                    "raw_output": result,
+                    "model": model,
+                    "backend": backend.__class__.__name__,
+                    "latency_ms": backend_ms
+                }, latency_ms=backend_ms)
+            except Exception:
+                pass
+
         # Save to cache (best-effort)
         try:
             cache[key] = result
