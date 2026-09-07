@@ -1220,6 +1220,8 @@ def answer(
     forensic_tracer.returned_answer = ans
     forensic_tracer.citations = citations
     forensic_tracer.response_json = response_obj
+    if forensic_tracer.stages_status.get("LLM") == "PENDING" and ans:
+        forensic_tracer.record_stage("LLM", "PASS", 0.0, {}, ans, f"Completed ({len(ans)} chars)")
     forensic_tracer.write_artifacts()
     forensic_tracer.print_terminal_summary()
 
