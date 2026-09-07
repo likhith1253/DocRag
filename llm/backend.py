@@ -70,6 +70,11 @@ def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: s
         result = cache[key]
         backend_ms = 0.0
         print(f"      ├─ [LLM Cache Hit] Returning prompt response from prompt cache", flush=True)
+        try:
+            from storage.pipeline_logger import log_stage
+            log_stage(request_id, 10, "LLM Prompt Cache Hit", {"raw_output": result, "cache_hit": True}, latency_ms=0.0)
+        except Exception:
+            pass
     else:
         from llm.backend_factory import get_backend
         backend = get_backend()

@@ -356,7 +356,11 @@ def log_stage(
         status = "PASS" if (raw_out and str(raw_out).strip()) else "FAIL"
         forensic_tracer.record_stage("LLM", status, latency_ms, data, raw_out, f"Generated {len(str(raw_out))} chars" if status == "PASS" else "LLM generate() returned empty output")
     elif stage_num == 11:
-        forensic_tracer.parsed_llm_output = data.get("raw_llm_output", "")
+        raw_out = data.get("raw_llm_output", "")
+        forensic_tracer.parsed_llm_output = raw_out
+        if forensic_tracer.stages_status.get("LLM") == "PENDING":
+            status = "PASS" if (raw_out and str(raw_out).strip()) else "FAIL"
+            forensic_tracer.record_stage("LLM", status, latency_ms, data, raw_out, f"Generated {len(str(raw_out))} chars" if status == "PASS" else "LLM output empty")
     elif stage_num == 13:
         cits = data.get("citations", [])
         forensic_tracer.citations = cits
