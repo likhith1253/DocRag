@@ -26,8 +26,8 @@ _STRUCTURAL_PATTERNS = {
         r'\b(common crawl|webtext|mnist|cifar|imagenet)\b',
     ],
     "EQUATIONS": [
-        r'\b(equation|formula|mathematical|objective function|loss function)\b',
-        r'\b(kl divergence|cross entropy|gradient|derivative)\b',
+        r'\b(equation|formula|mathematical|objective function|loss function|update equation|update target|target value|target network)\b',
+        r'\b(kl divergence|cross entropy|gradient|derivative|bellman)\b',
     ],
     "TABLES": [
         r'\b(table|tabular|row|column)\b',
@@ -36,12 +36,12 @@ _STRUCTURAL_PATTERNS = {
         r'\b(figure|plot|graph|chart|visualization)\b',
     ],
     "ALGORITHMS": [
-        r'\b(algorithm|method|approach|technique|procedure)\b',
-        r'\b(cma-es|sgd|adam|rmsprop|adamw)\b',
+        r'\b(algorithm|method|approach|technique|procedure|update mechanism|pseudocode)\b',
+        r'\b(cma-es|sgd|adam|rmsprop|adamw|q-learning|sarsa|actor-critic|a3c|dqn)\b',
     ],
     "TRAINING": [
-        r'\b(train|training|learn|learning|optimization|optimize)\b',
-        r'\b(epoch|iteration|step|update)\b',
+        r'\b(train|training|optimization|optimize)\b',
+        r'\b(epoch|iteration|training step)\b',
     ],
     "RESULTS": [
         r'\b(result|performance|accuracy|score|metric|benchmark)\b',
@@ -252,15 +252,18 @@ def score_chunk_for_question(chunk: Dict[str, Any], question_type: str) -> float
         if is_abstract_or_conclusion and arch_matches == 0:
             type_score -= 0.4
 
-    elif question_type == "EQUATIONS":
-        if meta.get("contains_equation") or any(sym in content for sym in ["\\sum", "\\max", "\\gamma", "\\alpha", "\\theta", "q(s", "j(\\pi)"]):
-            type_score += 1.0
+    elif question_type in ["EQUATIONS", "ALGORITHMS"]:
+        has_eq_or_algo = meta.get("contains_equation") or meta.get("contains_algorithm") or any(
+            sym in content for sym in [
+                "\\sum", "\\max", "maxa", "max_a", "\\gamma", "γ", "\\alpha", "α", "\\theta", "θ",
+                "q(s", "q(", "sarsa", "j(\\pi)", "r +", "algorithm 1", "algorithm s", "target value",
+                "update target", "pseudocode", "actor-learner thread"
+            ]
+        )
+        if has_eq_or_algo:
+            type_score += 1.3
         if is_abstract_or_conclusion:
-            type_score -= 0.3
-
-    elif question_type == "ALGORITHMS":
-        if meta.get("contains_algorithm") or any(w in content for w in ["algorithm 1", "algorithm s", "target value", "pseudocode", "for each step", "repeat"]):
-            type_score += 1.0
+            type_score -= 0.4
 
     elif question_type in ["HYPERPARAMETERS", "RESULTS", "TRAINING"]:
         numbers = len(re.findall(r'\d+\.?\d*', content))

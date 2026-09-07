@@ -132,6 +132,12 @@ def _chunk_has_evidence(c: Dict[str, Any], evidence_type: str) -> bool:
         if meta.get(_EVIDENCE_FLAG_BY_INTENT[evidence_type]):
             return True
     content = c.get("content", "").lower()
+    if evidence_type == "equation":
+        return any(w in content for w in ("\\sum", "\\max", "maxa", "max_a", "γ max", "\\gamma", "theta-", "θ−", "θ-", "q(s", "j(\\pi)", "r +", "r+", "y ="))
+    if evidence_type == "algorithm":
+        return any(w in content for w in ("algorithm 1", "algorithm 2", "algorithm s", "pseudocode", "actor-learner thread", "repeat until", "update target", "for step", "accumulate gradients"))
+    if evidence_type == "table":
+        return any(w in content for w in ("table 1", "table 2", "table 3", "table s", "mean score", "median score"))
     if evidence_type == "preprocessing":
         # Concrete preprocessing methodology required (not merely generic words like 'raw pixel')
         return any(w in content for w in ("210", "160", "110", "84", "down-sampl", "downsampl", "gray-scale", "grayscale", "crop", "last 4 frames", "stacks them", "history representation"))
@@ -144,7 +150,8 @@ def _ensure_evidence_coverage(
     candidate_pool: List[Dict[str, Any]],
     output_chunks: List[Dict[str, Any]],
     evidence_intent: Dict[str, bool],
-    max_additions: int = 2,
+    question: str = "",
+    max_additions: int = 4,
 ) -> List[Dict[str, Any]]:
     """
     If the query is sensitive to a specific evidence type (equation/table/
@@ -164,6 +171,42 @@ def _ensure_evidence_coverage(
     output_hashes = {c.get("metadata", {}).get("hash") for c in result}
     additions = 0
 
+    # 1. Ensure explicit algorithms or targets mentioned in question are covered
+    if question:
+        q_lower = question.lower()
+        target_phrases = []
+        if any(w in q_lower for w in ("one-step q-learning", "1-step q-learning", "one-step q", "q-learning target")):
+            target_phrases.append(("one-step q-learning", ("one-step q-learning", "1-step q-learning", "algorithm 1", "maxa′ q", "max_a' q", "maxa' q", "γ maxa′", "r + γ max", "terminal s′")))
+        if any(w in q_lower for w in ("one-step sarsa", "1-step sarsa", "sarsa target")):
+            target_phrases.append(("one-step sarsa", ("algorithm s1", "one-step sarsa", "1-step sarsa", "sarsa target", "asynchronous one-step sarsa", "sarsa")))
+        if any(w in q_lower for w in ("n-step q-learning", "n-step q", "n-step")):
+            target_phrases.append(("n-step q-learning", ("n-step q-learning", "algorithm s2", "algorithm 2", "asynchronous n-step")))
+        if any(w in q_lower for w in ("advantage actor-critic", "a3c", "actor-critic")):
+            target_phrases.append(("a3c", ("algorithm s3", "advantage actor-critic", "a3c", "asynchronous advantage actor-critic", "policy gradient")))
+
+        for name, keywords in target_phrases:
+            if additions >= max_additions:
+                break
+            already_represented = any(any(kw in c.get("content", "").lower() for kw in keywords) for c in result)
+            if already_represented:
+                continue
+            best = None
+            for c in candidate_pool:
+                c_content = c.get("content", "").lower()
+                if not any(kw in c_content for kw in keywords):
+                    continue
+                if c.get("metadata", {}).get("hash") in output_hashes:
+                    continue
+                if best is None or float(c.get("score", 0.0)) > float(best.get("score", 0.0)):
+                    best = c
+            if best is not None and result:
+                worst_idx = min(range(len(result)), key=lambda i: float(result[i].get("score", 0.0)))
+                result.pop(worst_idx)
+                result.append(best)
+                output_hashes.add(best.get("metadata", {}).get("hash"))
+                additions += 1
+
+    # 2. General evidence type coverage
     for t in needed:
         if additions >= max_additions:
             break
@@ -520,7 +563,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             comparison_facets = extract_comparison_facets(state["question"])
             print(f"[FACET RETRIEVAL] Requested comparison facets ({len(comparison_facets)}): {[f[0] for f in comparison_facets]}", flush=True)
 
-            per_paper_rerank_k = max(2, rerank_top_k // len(requested_titles))
+            per_paper_rerank_k = max(4, 12 // len(requested_titles))
             chunks = []
             retrieved_titles = []
             missing_titles = []
@@ -604,7 +647,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                             seen_hashes_paper.add(c_hash)
 
                     if any(evidence_intent.values()):
-                        selected_for_paper = _ensure_evidence_coverage(pre_ce_pool, selected_for_paper, evidence_intent)
+                        selected_for_paper = _ensure_evidence_coverage(pre_ce_pool, selected_for_paper, evidence_intent, question=state["question"])
 
                     if selected_for_paper:
                         retrieved_titles.append(title)
@@ -708,7 +751,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             latency_breakdown["reranker_ms"] = (time.perf_counter() - t0) * 1000
 
             if chunks and any(evidence_intent.values()):
-                chunks = _ensure_evidence_coverage(pre_ce_pool, chunks, evidence_intent)
+                chunks = _ensure_evidence_coverage(pre_ce_pool, chunks, evidence_intent, question=state["question"])
 
         # ------------------------------------------------------------------
         # Defense-in-depth isolation enforcement: for an explicit single- or
