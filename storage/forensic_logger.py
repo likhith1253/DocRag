@@ -104,41 +104,53 @@ class ForensicLogger:
             "total_latency_ms": round(total_ms, 2),
         }
 
-        # Ensure clean target directory
-        DEBUG_DIR.mkdir(parents=True, exist_ok=True)
+        try:
+            from storage.pipeline_logger import is_debug_mode
+            if not is_debug_mode():
+                return
+        except Exception:
+            pass
 
-        # 1. summary.txt
-        summary_txt = [
-            f"=== DOCUMENTRAG FORENSIC SUMMARY ===",
-            f"Request ID      : {self.request_id}",
-            f"Status          : {self.status}",
-            f"Total Time      : {total_ms:.2f} ms",
-            f"Repo ID         : {self.routing_info.get('repo_id')}",
-            f"Collection      : {self.routing_info.get('collection_name')} ({self.routing_info.get('collection_points_count', 0)} points)",
-            f"Retrieved Chunks: {len(self.retrieval_info.get('final_chunks', []))}",
-            f"Citations Built : {len(self.response_payload.get('citations', []))}",
-            f"LLM Latency     : {self.llm_info.get('llm_latency_ms', 0)} ms",
-            f"Exceptions      : {len(self.exceptions)}",
-        ]
-        (DEBUG_DIR / "summary.txt").write_text("\n".join(summary_txt), encoding="utf-8")
+        # Best-effort diagnostic dump: a disk/permission failure here must
+        # never fail a request whose answer has already been computed.
+        try:
+            # Ensure clean target directory
+            DEBUG_DIR.mkdir(parents=True, exist_ok=True)
 
-        # 2. lifecycle.txt
-        (DEBUG_DIR / "lifecycle.txt").write_text("\n".join(self.lifecycle_events), encoding="utf-8")
+            # 1. summary.txt
+            summary_txt = [
+                f"=== DOCUMENTRAG FORENSIC SUMMARY ===",
+                f"Request ID      : {self.request_id}",
+                f"Status          : {self.status}",
+                f"Total Time      : {total_ms:.2f} ms",
+                f"Repo ID         : {self.routing_info.get('repo_id')}",
+                f"Collection      : {self.routing_info.get('collection_name')} ({self.routing_info.get('collection_points_count', 0)} points)",
+                f"Retrieved Chunks: {len(self.retrieval_info.get('final_chunks', []))}",
+                f"Citations Built : {len(self.response_payload.get('citations', []))}",
+                f"LLM Latency     : {self.llm_info.get('llm_latency_ms', 0)} ms",
+                f"Exceptions      : {len(self.exceptions)}",
+            ]
+            (DEBUG_DIR / "summary.txt").write_text("\n".join(summary_txt), encoding="utf-8")
 
-        # 3. retrieval.txt
-        (DEBUG_DIR / "retrieval.txt").write_text(json.dumps(self.retrieval_info, indent=2), encoding="utf-8")
+            # 2. lifecycle.txt
+            (DEBUG_DIR / "lifecycle.txt").write_text("\n".join(self.lifecycle_events), encoding="utf-8")
 
-        # 4. routing.txt
-        (DEBUG_DIR / "routing.txt").write_text(json.dumps(self.routing_info, indent=2), encoding="utf-8")
+            # 3. retrieval.txt
+            (DEBUG_DIR / "retrieval.txt").write_text(json.dumps(self.retrieval_info, indent=2), encoding="utf-8")
 
-        # 5. llm.txt
-        (DEBUG_DIR / "llm.txt").write_text(json.dumps(self.llm_info, indent=2), encoding="utf-8")
+            # 4. routing.txt
+            (DEBUG_DIR / "routing.txt").write_text(json.dumps(self.routing_info, indent=2), encoding="utf-8")
 
-        # 6. exceptions.txt
-        exc_str = "\n\n".join([f"=== STAGE: {e['stage']} ===\n{e['traceback']}" for e in self.exceptions]) if self.exceptions else "NO EXCEPTIONS LOGGED."
-        (DEBUG_DIR / "exceptions.txt").write_text(exc_str, encoding="utf-8")
+            # 5. llm.txt
+            (DEBUG_DIR / "llm.txt").write_text(json.dumps(self.llm_info, indent=2), encoding="utf-8")
 
-        # 7. response.json
-        (DEBUG_DIR / "response.json").write_text(json.dumps(self.response_payload, indent=2), encoding="utf-8")
+            # 6. exceptions.txt
+            exc_str = "\n\n".join([f"=== STAGE: {e['stage']} ===\n{e['traceback']}" for e in self.exceptions]) if self.exceptions else "NO EXCEPTIONS LOGGED."
+            (DEBUG_DIR / "exceptions.txt").write_text(exc_str, encoding="utf-8")
 
-        print(f"[FORENSIC DEBUG] Successfully wrote 7 diagnostic artifacts to {DEBUG_DIR}", flush=True)
+            # 7. response.json
+            (DEBUG_DIR / "response.json").write_text(json.dumps(self.response_payload, indent=2), encoding="utf-8")
+
+            print(f"[FORENSIC DEBUG] Successfully wrote 7 diagnostic artifacts to {DEBUG_DIR}", flush=True)
+        except Exception as e:
+            print(f"[FORENSIC ERROR] Failed writing forensic artifacts: {e}", flush=True)
