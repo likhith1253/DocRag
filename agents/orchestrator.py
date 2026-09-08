@@ -1293,7 +1293,10 @@ def answer(
     end_mem = get_process_memory()
     memory_diff = max(0.0, end_mem - start_mem)
 
-    f_logger.finalize(ans, citations, latency_breakdown)
+    try:
+        f_logger.finalize(ans, citations, latency_breakdown)
+    except Exception:
+        pass
 
     # STAGE 13: CITATION ASSEMBLY
     t_stage13_start = time.perf_counter()
@@ -1373,15 +1376,22 @@ def answer(
     assert ans is not None, "ASSERTION FAILED: returned_answer is None"
     assert citations is not None, "ASSERTION FAILED: citations is None"
 
-    # Finalize per-query forensic report (.debug/current_query/) & clean terminal output
-    from storage.pipeline_logger import forensic_tracer
-    forensic_tracer.returned_answer = ans
-    forensic_tracer.citations = citations
-    forensic_tracer.response_json = response_obj
-    if forensic_tracer.stages_status.get("LLM") == "PENDING" and ans:
-        forensic_tracer.record_stage("LLM", "PASS", 0.0, {}, ans, f"Completed ({len(ans)} chars)")
-    forensic_tracer.write_artifacts()
-    forensic_tracer.print_terminal_summary()
+    # Finalize per-query forensic report (.debug/current_query/) & clean terminal output.
+    # Wrapped end-to-end: this is best-effort observability computed *after* the
+    # real answer is ready, so a logging/disk failure here must never surface
+    # as a failed request.
+    try:
+        from storage.pipeline_logger import forensic_tracer
+        forensic_tracer.returned_answer = ans
+        forensic_tracer.citations = citations
+        forensic_tracer.response_json = response_obj
+        if forensic_tracer.stages_status.get("LLM") == "PENDING" and ans:
+            forensic_tracer.record_stage("LLM", "PASS", 0.0, {}, ans, f"Completed ({len(ans)} chars)")
+        forensic_tracer.write_artifacts()
+        forensic_tracer.print_terminal_summary()
+    except Exception:
+        pass
+
     # Phase 4 Query Profiling & Observability
     try:
         from storage.device_policy import get_device_policy_manager
@@ -1394,47 +1404,53 @@ def answer(
 
     agent_timings = doc_agent.get_latest_agent_timings(request_id) if hasattr(doc_agent, "get_latest_agent_timings") else {}
 
-    # Phase 5 Multi-Repository Query Profiling & Observability
-    r_id = final_state.get("repo_id") or repo_id or "default"
-    r_obj = get_registry().get_repository(r_id) if r_id != "default" else None
-    r_name = r_obj.name if r_obj else r_id
-    c_id = final_state.get("collection") or (r_obj.collection_id if r_obj else None) or (r_obj.vector_collection if r_obj else None) or "chunks"
+    try:
+        # Phase 5 Multi-Repository Query Profiling & Observability
+        r_id = final_state.get("repo_id") or repo_id or "default"
+        r_obj = get_registry().get_repository(r_id) if r_id != "default" else None
+        r_name = r_obj.name if r_obj else r_id
+        c_id = final_state.get("collection") or (r_obj.collection_id if r_obj else None) or (r_obj.vector_collection if r_obj else None) or "chunks"
 
-    profile_record = {
-        "request_id": request_id,
-        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "repository_id": r_id,
-        "repository_name": r_name,
-        "collection_id": c_id,
-        "collection": c_id,
-        "query": query,
-        "requested_papers": final_state.get("requested_papers", []),
-        "retrieved_papers": final_state.get("retrieved_papers", []),
-        "embedding_device": emb_dev,
-        "reranker_device": ce_dev,
-        "llm_device": llm_dev,
-        "retrieval_candidate_count": final_state.get("retrieval_candidate_count", len(chunks)),
-        "reranker_candidate_count": final_state.get("reranker_candidate_count", len(chunks)),
-        "final_evidence_count": len(chunks),
-        "evidence_types": final_state.get("evidence_types", []),
-        "query_analysis_ms": round(latency_breakdown.get("query_analysis_ms", 0.0), 2),
-        "paper_matching_ms": round(latency_breakdown.get("paper_matching_ms", 0.0), 2),
-        "embedding_ms": round(latency_breakdown.get("embedding_ms", 0.0), 2),
-        "qdrant_ms": round(latency_breakdown.get("qdrant_ms", 0.0), 2),
-        "filtering_ms": round(latency_breakdown.get("filtering_ms", 0.0), 2),
-        "mmr_ms": round(latency_breakdown.get("mmr_ms", 0.0), 2),
-        "reranker_ms": round(latency_breakdown.get("reranker_ms", 0.0), 2),
-        "evidence_selection_ms": round(latency_breakdown.get("evidence_selection_ms", 0.0), 2),
-        "prompt_builder_ms": round(latency_breakdown.get("prompt_builder_ms", 0.0), 2),
-        "llm_ms": round(latency_breakdown.get("llm_ms", 0.0), 2),
-        "verifier_ms": round(latency_breakdown.get("verifier_ms", 0.0), 2),
-        "formatting_ms": round(latency_breakdown.get("formatting_ms", 0.0), 2),
-        "total_ms": round(total_ms, 2),
-        "verifier_status": agent_timings.get("verifier_status", "N/A"),
-    }
-    log_query_profile(profile_record)
+        profile_record = {
+            "request_id": request_id,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "repository_id": r_id,
+            "repository_name": r_name,
+            "collection_id": c_id,
+            "collection": c_id,
+            "query": query,
+            "requested_papers": final_state.get("requested_papers", []),
+            "retrieved_papers": final_state.get("retrieved_papers", []),
+            "embedding_device": emb_dev,
+            "reranker_device": ce_dev,
+            "llm_device": llm_dev,
+            "retrieval_candidate_count": final_state.get("retrieval_candidate_count", len(chunks)),
+            "reranker_candidate_count": final_state.get("reranker_candidate_count", len(chunks)),
+            "final_evidence_count": len(chunks),
+            "evidence_types": final_state.get("evidence_types", []),
+            "query_analysis_ms": round(latency_breakdown.get("query_analysis_ms", 0.0), 2),
+            "paper_matching_ms": round(latency_breakdown.get("paper_matching_ms", 0.0), 2),
+            "embedding_ms": round(latency_breakdown.get("embedding_ms", 0.0), 2),
+            "qdrant_ms": round(latency_breakdown.get("qdrant_ms", 0.0), 2),
+            "filtering_ms": round(latency_breakdown.get("filtering_ms", 0.0), 2),
+            "mmr_ms": round(latency_breakdown.get("mmr_ms", 0.0), 2),
+            "reranker_ms": round(latency_breakdown.get("reranker_ms", 0.0), 2),
+            "evidence_selection_ms": round(latency_breakdown.get("evidence_selection_ms", 0.0), 2),
+            "prompt_builder_ms": round(latency_breakdown.get("prompt_builder_ms", 0.0), 2),
+            "llm_ms": round(latency_breakdown.get("llm_ms", 0.0), 2),
+            "verifier_ms": round(latency_breakdown.get("verifier_ms", 0.0), 2),
+            "formatting_ms": round(latency_breakdown.get("formatting_ms", 0.0), 2),
+            "total_ms": round(total_ms, 2),
+            "verifier_status": agent_timings.get("verifier_status", "N/A"),
+        }
+        log_query_profile(profile_record)
+    except Exception:
+        pass
 
-    _write_log(query, chunks, citations, agent, latency, memory_diff, ans, latency_breakdown)
+    try:
+        _write_log(query, chunks, citations, agent, latency, memory_diff, ans, latency_breakdown)
+    except Exception:
+        pass
     return ans, latency_breakdown, chunks, citations
 
 

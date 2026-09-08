@@ -158,6 +158,8 @@ class ForensicTracker:
             self.pipeline_verification_lines.append(line)
 
     def write_artifacts(self):
+        if not is_debug_mode():
+            return
         with self.lock:
             try:
                 DEBUG_DIR.mkdir(parents=True, exist_ok=True)
@@ -283,7 +285,10 @@ def get_config() -> Dict[str, Any]:
 
 
 def is_debug_mode() -> bool:
-    return True
+    try:
+        return bool(get_config().get("debug_mode", True))
+    except Exception:
+        return True
 
 
 def generate_request_id() -> str:
