@@ -12,10 +12,10 @@ class OllamaBackend(LLMBackend):
         self._session = requests.Session()
         self._gen_config = self._load_gen_config()
         
-        model_name = os.environ.get("LLM_MODEL") or os.environ.get("OLLAMA_MODEL") or "qwen2.5:3b-instruct"
+        self.model_name = os.environ.get("LLM_MODEL") or os.environ.get("OLLAMA_MODEL") or "qwen2.5:3b-instruct"
         print("=" * 40)
         print(f"LLM Backend : ollama")
-        print(f"Model       : {model_name}")
+        print(f"Model       : {self.model_name}")
         print("=" * 40)
 
     def _load_gen_config(self):
@@ -32,21 +32,27 @@ class OllamaBackend(LLMBackend):
         """
         Call local Ollama generate API.
         """
+        target_model = model
+        if not target_model or "/" in target_model:
+            target_model = self.model_name
+
         payload = {
-            "model": model,
+            "model": target_model,
             "prompt": prompt,
             "stream": False,
         }
+        options = {"num_predict": 1024, "temperature": 0.0, "top_p": 0.9}
         if self._gen_config:
             if "num_predict" in self._gen_config:
-                payload["num_predict"] = int(self._gen_config["num_predict"])
+                options["num_predict"] = int(self._gen_config["num_predict"])
             if "temperature" in self._gen_config:
-                payload["temperature"] = float(self._gen_config["temperature"])
+                options["temperature"] = float(self._gen_config["temperature"])
             if "top_p" in self._gen_config:
-                payload["top_p"] = float(self._gen_config["top_p"])
+                options["top_p"] = float(self._gen_config["top_p"])
+        payload["options"] = options
 
         try:
-            response = self._session.post(OLLAMA_URL, json=payload, timeout=300)
+            response = self._session.post(OLLAMA_URL, json=payload, timeout=600)
             response.raise_for_status()
             data = response.json()
             return data.get("response", "")
@@ -57,18 +63,24 @@ class OllamaBackend(LLMBackend):
         """
         Stream text response from local Ollama generate API.
         """
+        target_model = model
+        if not target_model or "/" in target_model:
+            target_model = self.model_name
+
         payload = {
-            "model": model,
+            "model": target_model,
             "prompt": prompt,
             "stream": True,
         }
+        options = {"num_predict": 1024, "temperature": 0.0, "top_p": 0.9}
         if self._gen_config:
             if "num_predict" in self._gen_config:
-                payload["num_predict"] = int(self._gen_config["num_predict"])
+                options["num_predict"] = int(self._gen_config["num_predict"])
             if "temperature" in self._gen_config:
-                payload["temperature"] = float(self._gen_config["temperature"])
+                options["temperature"] = float(self._gen_config["temperature"])
             if "top_p" in self._gen_config:
-                payload["top_p"] = float(self._gen_config["top_p"])
+                options["top_p"] = float(self._gen_config["top_p"])
+        payload["options"] = options
 
         try:
             with self._session.post(OLLAMA_URL, json=payload, stream=True, timeout=300) as response:

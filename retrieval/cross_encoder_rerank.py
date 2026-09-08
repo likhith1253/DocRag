@@ -7,12 +7,71 @@ if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
     except Exception:
         pass
+from collections import OrderedDict
+import threading
 from sentence_transformers import CrossEncoder
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple, Optional
 from storage.vector_store import _get_config, _get_embedding_device, _load_with_gpu_fallback
 from retrieval.query_analyzer import detect_question_type, score_chunk_for_question
 
 _cross_encoder_cache: Dict[str, CrossEncoder] = {}
+
+
+class CrossEncoderScoreCache:
+    """
+    Bounded cache for CrossEncoder similarity scores of (query, chunk_hash).
+    Avoids re-scoring identical query-chunk pairs on multi-subquery passes.
+    """
+    def __init__(self, max_size: int = 1024):
+        self.max_size = max_size
+        self._cache: OrderedDict = OrderedDict()
+        self._lock = threading.Lock()
+        self.hits = 0
+        self.misses = 0
+
+    def get(self, query: str, chunk_hash: str) -> Optional[float]:
+        key = (query.strip(), chunk_hash)
+        with self._lock:
+            if key in self._cache:
+                self.hits += 1
+                self._cache.move_to_end(key)
+                return self._cache[key]
+            self.misses += 1
+            return None
+
+    def put(self, query: str, chunk_hash: str, score: float) -> None:
+        key = (query.strip(), chunk_hash)
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+                self._cache[key] = score
+            else:
+                if len(self._cache) >= self.max_size:
+                    self._cache.popitem(last=False)
+                self._cache[key] = score
+
+    def clear(self) -> None:
+        with self._lock:
+            self._cache.clear()
+            self.hits = 0
+            self.misses = 0
+
+    def stats(self) -> Dict[str, Any]:
+        with self._lock:
+            return {
+                "size": len(self._cache),
+                "max_size": self.max_size,
+                "hits": self.hits,
+                "misses": self.misses,
+            }
+
+
+_ce_score_cache = CrossEncoderScoreCache(max_size=1024)
+
+
+def get_ce_score_cache() -> CrossEncoderScoreCache:
+    return _ce_score_cache
+
 
 def _load_cross_encoder(model_name: str, device: str) -> CrossEncoder:
     """
@@ -36,7 +95,8 @@ def rerank_cross_encoder(
     request_id: str = "default",
 ) -> List[Dict[str, Any]]:
     """
-    Rerank chunks using a Cross-Encoder model with question-type-aware biasing.
+    Rerank chunks using a Cross-Encoder model with question-type-aware biasing,
+    device-policy awareness, duplicate score caching, and explicit batching.
     """
     import time
     from storage.pipeline_logger import log_stage
@@ -57,7 +117,11 @@ def rerank_cross_encoder(
 
     config = _get_config()
     model_name = config.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2")
-    device = _get_embedding_device(config)
+    try:
+        from storage.device_policy import get_device_policy_manager
+        device, _ = get_device_policy_manager().get_reranker_device(config.get("reranker_device") or config.get("device"))
+    except Exception:
+        device = _get_embedding_device(config)
             
     cache_key = f"{model_name}::{device}"
     if cache_key not in _cross_encoder_cache:
@@ -68,11 +132,29 @@ def rerank_cross_encoder(
     question_analysis = detect_question_type(query)
     question_type = question_analysis["question_type"]
     
-    # Form pairs: (query, document_content)
-    pairs = [[query, chunk["content"]] for chunk in chunks]
-    
-    # Predict similarity scores
-    scores = model.predict(pairs, show_progress_bar=False)
+    # Check cache to avoid duplicate scoring
+    ce_cache = get_ce_score_cache()
+    scores = [None] * len(chunks)
+    uncached_indices = []
+    uncached_pairs = []
+
+    for i, chunk in enumerate(chunks):
+        chash = chunk.get("metadata", {}).get("hash") or str(chunk.get("id") or i)
+        cached_val = ce_cache.get(query, chash)
+        if cached_val is not None:
+            scores[i] = cached_val
+        else:
+            uncached_indices.append(i)
+            uncached_pairs.append([query, chunk.get("content", "")])
+
+    if uncached_pairs:
+        batch_sz = 32 if device == "cpu" else 64
+        predicted_scores = model.predict(uncached_pairs, batch_size=batch_sz, show_progress_bar=False)
+        for idx, pscore in zip(uncached_indices, predicted_scores):
+            raw_sc = float(pscore)
+            scores[idx] = raw_sc
+            chash = chunks[idx].get("metadata", {}).get("hash") or str(chunks[idx].get("id") or idx)
+            ce_cache.put(query, chash, raw_sc)
     
     # Update scores with question-type bias
     for chunk, score in zip(chunks, scores):

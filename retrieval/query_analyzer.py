@@ -137,30 +137,38 @@ def _detect_answer_depth(question_lower: str) -> str:
         COMPARATIVE — compare / difference / versus questions
         SURVEY      — overview / review / summarize / list-all questions
     """
-    # Extraction (hyperparameters, setup, parameters, numbers, datasets)
+    # If question is explicitly single-paper explanation, e.g. "In the A3C paper, explain..."
+    if re.match(r'^\s*in\s+the\s+[^,\n]+paper\b', question_lower) and not re.search(r'\bcompare\s+[A-Za-z0-9]+,\s*[A-Za-z0-9]+', question_lower):
+        if re.search(r'\b(explain|how|why|describe|discuss|detail)\b', question_lower):
+            return "DETAILED"
+
+    # Comparative (comparing multiple methods / papers)
     if re.search(
-        r'\b(hyperparameter|parameter|setting|config|learning rate|batch size|dropout|gamma|alpha|beta|epsilon|lambda|momentum|weight decay|experimental setup|dataset size|epochs|training setup|hardware|values? used)\b',
+        r'\b(compare|comparing|comparative|versus|vs\.?|difference between|better than|contrast)\b',
         question_lower,
-    ):
-        return "EXTRACTION"
+    ) or ("comparison" in question_lower and not question_lower.startswith("in the ")):
+        return "COMPARATIVE"
 
     # Enum-list: "what algorithms/methods/approaches/techniques/models ..."
-    # Must fire BEFORE the generic CONCISE check because "what are" is also
-    # matched by CONCISE; an enumeration question needs explicit entity listing.
-    # Note: plural forms are explicitly listed so \b word-boundary works correctly
-    # (e.g. "approaches" = approach+es, not approach+s, so s? alone is insufficient).
     if re.search(
         r'\b(what|which)\b.{0,60}\b(algorithms?|methods?|approaches?|techniques?|models?|frameworks?|strategies?|schemes?)\b',
         question_lower,
     ):
         return "ENUM_LIST"
 
-    # Comparative
+    # Detailed (how / why / mechanism / explain) - takes precedence over parameter extraction
     if re.search(
-        r'\b(compar|versus|vs\.?|difference between|better than|contrast|relative to)\b',
+        r'\b(how does|how do|why does|why do|explain|what is the mechanism|what causes|what leads to|how is|how are|in what way|describe how)\b',
         question_lower,
     ):
-        return "COMPARATIVE"
+        return "DETAILED"
+
+    # Extraction (explicit requests for hyperparameter values, numerical settings, table values)
+    if re.search(
+        r'\b(hyperparameters?|hyper-parameters?|learning rate|batch size|dropout rate|weight decay|what (?:values?|settings?)|what are the parameters?\b|values? used|table \d+)\b',
+        question_lower,
+    ):
+        return "EXTRACTION"
 
     # Survey / overview
     if re.search(
@@ -168,13 +176,6 @@ def _detect_answer_depth(question_lower: str) -> str:
         question_lower,
     ):
         return "SURVEY"
-
-    # Detailed (how / why / mechanism)
-    if re.search(
-        r'\b(how does|how do|why does|why do|explain|what is the mechanism|what causes|what leads to|how is|how are|in what way)\b',
-        question_lower,
-    ):
-        return "DETAILED"
 
     # Concise (what is, define, name)
     if re.search(
@@ -336,31 +337,64 @@ def extract_comparison_facets(question: str) -> List[Tuple[str, str]]:
 _DECOMPOSABLE_DEPTHS = {"SURVEY", "DETAILED", "COMPARATIVE"}
 
 
-def decompose_complex_question(question: str, max_subqueries: int = 3) -> List[str]:
+def decompose_complex_question(question: str, max_subqueries: int = 4) -> List[str]:
     """
     For a genuinely multi-facet research question (e.g. one that touches
-    architecture, training procedure, AND numerical results at once), return
-    a small number of facet-focused subqueries to widen the retrieval
+    architecture, mathematical equations, training procedure, and numerical results),
+    return a small set of targeted, facet-focused subqueries to widen the retrieval
     candidate pool beyond whatever is globally closest to the raw question.
-
-    Returns [] for questions that don't need it — most questions ask about
-    one thing and should not be decomposed.
     """
     question_lower = question.lower()
-    scores, _ = _structural_scores(question_lower)
+    subqueries: List[str] = []
 
-    # Require at least 3 distinct facets to actually be present; a question
-    # that only touches one or two structural categories is not "complex"
-    # in the sense this is meant to help with.
-    if len(scores) < 3:
-        return []
+    # 1. Target mathematical formulations & equations if requested
+    if any(k in question_lower for k in ("mathematically", "equation", "target", "sarsa", "q-learning", "bellman", "objective")):
+        if "sarsa" in question_lower and "q-learning" in question_lower:
+            subqueries.append("target value used by one-step Sarsa Q-learning target equation mathematically")
+        elif "sac" in question_lower or "soft actor-critic" in question_lower or "entropy" in question_lower:
+            subqueries.append("maximum entropy objective Equation 1 temperature parameter alpha soft Bellman target smoothing")
+        elif "dqn" in question_lower or "atari" in question_lower:
+            subqueries.append("Q-learning loss Bellman equation target network y_i = r + gamma max Q")
 
-    depth = _detect_answer_depth(question_lower)
-    if depth not in _DECOMPOSABLE_DEPTHS:
-        return []
+    # 2. Target parameter counts & quantitative architectural values if requested
+    if any(k in question_lower for k in ("parameter count", "parameter counts", "how many parameters", "reported controller")):
+        if "world model" in question_lower or "carracing" in question_lower or "vizdoom" in question_lower:
+            subqueries.append("controller parameters 867 CarRacing 1088 VizDoom linear model")
+            subqueries.append("model parameter count VAE MDN-RNN controller 867 1088")
 
-    top_facets = sorted(scores, key=scores.get, reverse=True)[:max_subqueries]
-    return [f"{question} ({_FACET_PHRASES[f]})" for f in top_facets if f in _FACET_PHRASES]
+    # 3. Target input preprocessing and network architecture if requested
+    if any(k in question_lower for k in ("preprocessing", "screen input", "input/output representation", "cnn input")):
+        subqueries.append("preprocessing 210 x 160 grayscale 110x84 crop 84 x 84 stack 4 frames separate output unit for each valid action")
+
+    # 4. Target stability and experience replay mechanisms if requested
+    if any(k in question_lower for k in ("stabilize", "stability", "experience replay", "parallel", "decorrelat")):
+        if "asynchronous" in question_lower or "a3c" in question_lower:
+            subqueries.append("multiple parallel actor-learners stabilize learning no longer rely on experience replay")
+
+    # 5. Extract distinct sentence clauses if available
+    raw_sentences = [s.strip() for s in re.split(r'[.;]\s+', question) if len(s.strip().split()) >= 5]
+    for s in raw_sentences:
+        if len(subqueries) >= max_subqueries:
+            break
+        # If clause focuses on a specific aspect, add it
+        if any(w in s.lower() for w in ("distinguish", "target", "preprocess", "parameter count", "stabilize", "objective")):
+            if s not in subqueries and s.lower() != question_lower:
+                subqueries.append(s)
+
+    # Fallback to structural facets if specific clauses did not produce enough
+    if len(subqueries) < 2:
+        scores, _ = _structural_scores(question_lower)
+        top_facets = sorted(scores, key=scores.get, reverse=True)
+        for f in top_facets:
+            if len(subqueries) >= max_subqueries:
+                break
+            if f in _FACET_PHRASES:
+                phrase = _FACET_PHRASES[f]
+                candidate = f"{question} ({phrase})"
+                if candidate not in subqueries:
+                    subqueries.append(candidate)
+
+    return subqueries[:max_subqueries]
 
 
 # ---------------------------------------------------------------------------

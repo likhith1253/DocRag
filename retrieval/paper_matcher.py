@@ -20,40 +20,65 @@ _STOPWORDS = {
     "into", "under", "over", "by", "as", "at", "its", "an", "new",
 }
 
-# Cache of distinct paper titles per Qdrant collection name. Invalidated
-# whenever the collection is re-indexed (see invalidate_paper_cache, wired
-# into ingestion/worker.py the same way retrieval/repository_router.py's
-# router cache is invalidated on re-index).
+# Cache of distinct paper titles and collection metadata per Qdrant collection name.
+# Invalidated whenever documents are added, removed, or reindexed.
 _paper_cache: Dict[str, List[str]] = {}
+_collection_metadata_cache: Dict[str, Dict[str, Any]] = {}
 
 
 def invalidate_paper_cache(collection_name: str = None) -> None:
+    """Invalidate cached paper and collection metadata."""
     if collection_name is None:
         _paper_cache.clear()
+        _collection_metadata_cache.clear()
     else:
         _paper_cache.pop(collection_name, None)
+        _collection_metadata_cache.pop(collection_name, None)
 
 
-def get_collection_papers(v_manager) -> List[str]:
-    """Distinct paper_title (or file, if paper_title is missing) values in a collection."""
-    key = v_manager.collection_name
-    if key in _paper_cache:
-        return _paper_cache[key]
+def get_collection_metadata(v_manager) -> Dict[str, Any]:
+    """
+    Return cached structured metadata (paper titles, file names, chunk count)
+    for a collection without repeatedly scrolling Qdrant points.
+    """
+    key = getattr(v_manager, "collection_name", str(v_manager))
+    if key in _collection_metadata_cache:
+        return _collection_metadata_cache[key]
 
     titles = set()
+    files = set()
+    chunk_count = 0
     try:
-        for c in v_manager.get_all_chunks():
+        chunks = v_manager.get_all_chunks() if hasattr(v_manager, "get_all_chunks") else []
+        for c in chunks:
+            chunk_count += 1
             meta = c.get("metadata", {})
             title = meta.get("paper_title") or meta.get("file") or ""
             title = title.strip()
             if title:
                 titles.add(title)
+            f = meta.get("file")
+            if f:
+                files.add(str(f).strip())
     except Exception:
         pass
 
-    result = sorted(titles)
-    _paper_cache[key] = result
-    return result
+    data = {
+        "paper_titles": sorted(titles),
+        "files": sorted(files),
+        "chunk_count": chunk_count,
+    }
+    _collection_metadata_cache[key] = data
+    _paper_cache[key] = data["paper_titles"]
+    return data
+
+
+def get_collection_papers(v_manager) -> List[str]:
+    """Distinct paper_title (or file, if paper_title is missing) values in a collection."""
+    key = getattr(v_manager, "collection_name", str(v_manager))
+    if key in _paper_cache:
+        return _paper_cache[key]
+    return get_collection_metadata(v_manager)["paper_titles"]
 
 
 def _normalize(s: str) -> str:
@@ -106,9 +131,6 @@ _SEMINAL_ALIASES: Dict[str, List[str]] = {
     "proximal policy optimization": ["proximal policy optimization"],
     "world models": ["world models"],
     "world model": ["world models"],
-    "vae": ["auto encoding variational bayes"],
-    "variational autoencoder": ["auto encoding variational bayes"],
-    "variational autoencoders": ["auto encoding variational bayes"],
     "gan": ["generative adversarial nets", "generative adversarial networks"],
     "gpt": ["language models are few shot learners"],
     "gpt 3": ["language models are few shot learners"],

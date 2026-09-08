@@ -11,7 +11,8 @@ embedding:
   batch_size: 64
 embedding_model: intfloat/e5-base-v2
 generation:
-  num_predict: 1024
+  num_predict: 768
+  repetition_penalty: 1.1
   temperature: 0.0
   top_p: 0.9
 indexing:
@@ -25,6 +26,8 @@ reranker_model: cross-encoder/ms-marco-MiniLM-L-6-v2
 retrieval:
   rerank_top_k: 8
   agent_chunk_cap: 8
+  single_paper_rerank_candidates: 20
+  multi_paper_rerank_candidates: 15
   mmr_lambda: 0.7
   use_graph: false
   use_mmr: true
