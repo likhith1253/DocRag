@@ -29,8 +29,8 @@ class CrossEncoderScoreCache:
         self.hits = 0
         self.misses = 0
 
-    def get(self, query: str, chunk_hash: str) -> Optional[float]:
-        key = (query.strip(), chunk_hash)
+    def get(self, query: str, chunk_hash: str, collection_id: str = "") -> Optional[float]:
+        key = (collection_id, query.strip(), chunk_hash)
         with self._lock:
             if key in self._cache:
                 self.hits += 1
@@ -39,8 +39,8 @@ class CrossEncoderScoreCache:
             self.misses += 1
             return None
 
-    def put(self, query: str, chunk_hash: str, score: float) -> None:
-        key = (query.strip(), chunk_hash)
+    def put(self, query: str, chunk_hash: str, score: float, collection_id: str = "") -> None:
+        key = (collection_id, query.strip(), chunk_hash)
         with self._lock:
             if key in self._cache:
                 self._cache.move_to_end(key)
@@ -55,6 +55,12 @@ class CrossEncoderScoreCache:
             self._cache.clear()
             self.hits = 0
             self.misses = 0
+
+    def clear_for_collection(self, collection_id: str) -> None:
+        with self._lock:
+            keys_to_del = [k for k in self._cache if k[0] == collection_id]
+            for k in keys_to_del:
+                del self._cache[k]
 
     def stats(self) -> Dict[str, Any]:
         with self._lock:
@@ -140,7 +146,8 @@ def rerank_cross_encoder(
 
     for i, chunk in enumerate(chunks):
         chash = chunk.get("metadata", {}).get("hash") or str(chunk.get("id") or i)
-        cached_val = ce_cache.get(query, chash)
+        col_id = chunk.get("metadata", {}).get("collection_id") or ""
+        cached_val = ce_cache.get(query, chash, collection_id=col_id)
         if cached_val is not None:
             scores[i] = cached_val
         else:
@@ -154,7 +161,8 @@ def rerank_cross_encoder(
             raw_sc = float(pscore)
             scores[idx] = raw_sc
             chash = chunks[idx].get("metadata", {}).get("hash") or str(chunks[idx].get("id") or idx)
-            ce_cache.put(query, chash, raw_sc)
+            col_id = chunks[idx].get("metadata", {}).get("collection_id") or ""
+            ce_cache.put(query, chash, raw_sc, collection_id=col_id)
     
     # Update scores with question-type bias
     for chunk, score in zip(chunks, scores):

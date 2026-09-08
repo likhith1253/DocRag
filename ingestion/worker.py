@@ -400,10 +400,11 @@ def background_ingest_repository(
 
         # Qdrant zero-point guard: if Qdrant collection is currently empty, force full re-indexing of all PDFs
         repo = registry.get_repository(repo_id)
-        coll_name = repo.vector_collection if (repo and repo.vector_collection) else f"collection_{repo_id}"
+        coll_name = (repo.collection_id or repo.vector_collection) if repo else f"collection_{repo_id}"
+        assert coll_name != "chunks", f"CRITICAL ISOLATION ERROR: Worker attempted to index repo '{repo_id}' into generic 'chunks' collection!"
         try:
             from storage.vector_store import VectorStoreManager
-            vm = VectorStoreManager(collection_name=coll_name)
+            vm = VectorStoreManager(collection_name=coll_name, repository_id=repo_id)
             if vm.count() == 0 and all_pdf_files:
                 added_files = list(all_pdf_files.keys())
                 modified_files = []
@@ -601,7 +602,8 @@ def background_ingest_repository(
         # ----------------------------------------------------------------
         # 5. Initialize vector store and find already-embedded chunks
         # ----------------------------------------------------------------
-        v_manager = VectorStoreManager(collection_name=repo.vector_collection)
+        v_manager = VectorStoreManager(collection_name=coll_name, repository_id=repo_id)
+        assert v_manager.collection_name == coll_name, f"Collection guard failed: worker expected {coll_name}, got {v_manager.collection_name}"
 
         embedded_hashes_set = set()
         for hashes in snapshot.embedded_chunk_hashes.values():
@@ -783,6 +785,11 @@ def background_ingest_repository(
         # this run promised is actually present in Qdrant.
         repo.status = RepoStatus.READY
         repo.indexed_at = datetime.now(timezone.utc)
+        repo.updated_at = datetime.now(timezone.utc)
+        repo.document_count = documents_parsed_ok
+        repo.chunk_count = final_points
+        repo.tier2_total_chunks = final_points
+        repo.tier2_indexed_chunks = final_points
         repo.last_error = None
         registry.register(repo)
 
@@ -799,6 +806,13 @@ def background_ingest_repository(
         try:
             from retrieval.paper_matcher import invalidate_paper_cache
             invalidate_paper_cache(repo.vector_collection)
+        except Exception:
+            pass
+
+        # Invalidate cross-encoder score cache for this collection
+        try:
+            from retrieval.cross_encoder_rerank import get_ce_score_cache
+            get_ce_score_cache().clear_for_collection(repo.vector_collection)
         except Exception:
             pass
 

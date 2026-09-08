@@ -253,8 +253,9 @@ class VectorStoreManager:
     _clients = {}
     _all_chunks_cache = {}
 
-    def __init__(self, collection_name: str = "chunks"):
+    def __init__(self, collection_name: str = "chunks", repository_id: Optional[str] = None):
         self.config = _get_config()
+        self.repository_id = repository_id
 
         self.qdrant_path = _resolve_storage_path(self.config.get("qdrant_path", "./qdrant_storage"))
         self.embedding_model_name = self.config.get("embedding_model", "all-MiniLM-L6-v2")
@@ -536,11 +537,33 @@ class VectorStoreManager:
             
         return all_chunks
 
-    def search(self, query: str, top_k: int = 30, metadata_filters: Dict[str, Any] = None, request_id: str = "default") -> tuple[List[Dict[str, Any]], Dict[str, float]]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 30,
+        metadata_filters: Dict[str, Any] = None,
+        request_id: str = "default",
+        repository_id: Optional[str] = None,
+    ) -> tuple[List[Dict[str, Any]], Dict[str, float]]:
         """
-        Search for top_k similar chunks with optional metadata filtering.
+        Search for top_k similar chunks with optional metadata filtering and repository verification.
         Returns (results, timing_dict) where timing_dict has "embedding_ms" and "qdrant_ms".
         """
+        active_repo_id = repository_id or self.repository_id
+        if active_repo_id:
+            from storage.registry import get_registry
+            repo = get_registry().get_repository(active_repo_id)
+            if not repo:
+                raise ValueError(f"Repository '{active_repo_id}' does not exist in registry.")
+            expected_coll = getattr(repo, "collection_id", None) or getattr(repo, "vector_collection", None)
+            if expected_coll and expected_coll != self.collection_name:
+                raise ValueError(
+                    f"Repository '{active_repo_id}' collection mismatch: expected '{expected_coll}', got '{self.collection_name}'"
+                )
+
+        if not self.client.collection_exists(self.collection_name):
+            raise RuntimeError(f"Vector search failed: Collection '{self.collection_name}' does not exist.")
+
         import time
         import numpy as np
         from qdrant_client.models import Filter, FieldCondition, MatchValue

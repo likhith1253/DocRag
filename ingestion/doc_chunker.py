@@ -416,6 +416,7 @@ def chunk_document(
                 ).hexdigest()
 
             metadata = {
+                "repository_id": collection_id,
                 "collection_id": collection_id,
                 "document_id": document_id,
                 "paper_title": paper_title,
