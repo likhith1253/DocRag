@@ -15,9 +15,15 @@ Quality upgrades (phases 2–7):
   - Phase 6: Code-side confidence block appended after generation
 """
 
+import os
 import re
 import sys
+import json
+import datetime
+from pathlib import Path
 import threading
+from typing import List, Dict, Any, Optional
+
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
@@ -25,7 +31,11 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 from llm.backend import generate
-from typing import List, Dict, Any, Optional
+
+LOGS_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs"
+)
+CLAIM_VERIFICATION_LOG_PATH = Path(LOGS_DIR) / "claim_verification.jsonl"
 
 _agent_timings_lock = threading.Lock()
 _agent_timings: Dict[str, Dict[str, Any]] = {}
@@ -104,6 +114,12 @@ _EQUATION_LABEL_STOPWORDS = {
 }
 
 
+_EQUATION_TAIL_RE = re.compile(r'[=≈+*()γ\\]|max')
+_ALGO_HEADING_RE = re.compile(r'Algorithm\s+[A-Za-z0-9]+\s+([A-Za-z0-9\s\-]+?)(?:\s*-\s*pseudocode|\n|$)')
+_TARGET_VALUE_RE = re.compile(r'target value (?:used by|for)\s+([A-Za-z0-9\s\-]+?)\s+is', re.IGNORECASE)
+_MAX_ENTROPY_RE = re.compile(r'maximum entropy objective', re.IGNORECASE)
+
+
 def _extract_equation_labels(content: str) -> List[str]:
     """
     Heuristically extract the algorithm/method name(s) that label a specific
@@ -116,19 +132,19 @@ def _extract_equation_labels(content: str) -> List[str]:
     for m in _EQUATION_LABEL_RE.finditer(content):
         label = m.group(1).strip()
         tail = content[m.end():m.end() + 250]
-        looks_equation_like = bool(re.search(r'[=≈+*()γ\\]|max', tail))
+        looks_equation_like = bool(_EQUATION_TAIL_RE.search(tail))
         if looks_equation_like and 1 <= len(label.split()) <= 4:
             if label.lower() not in _EQUATION_LABEL_STOPWORDS and label not in labels:
                 labels.append(label)
 
     # 2. Algorithm headings: e.g. "Algorithm 1 Asynchronous one-step Q-learning"
-    for m in re.finditer(r'Algorithm\s+[A-Za-z0-9]+\s+([A-Za-z0-9\s\-]+?)(?:\s*-\s*pseudocode|\n|$)', content):
+    for m in _ALGO_HEADING_RE.finditer(content):
         algo_name = m.group(1).strip()
         if algo_name and len(algo_name.split()) <= 5 and algo_name not in labels:
             labels.append(algo_name)
 
     # 3. Target value indicators: e.g. "The target value used by one-step Sarsa is ..."
-    for m in re.finditer(r'target value (?:used by|for)\s+([A-Za-z0-9\s\-]+?)\s+is', content, re.IGNORECASE):
+    for m in _TARGET_VALUE_RE.finditer(content):
         target_name = m.group(1).strip()
         if target_name and len(target_name.split()) <= 4:
             formatted = f"Target value for {target_name}"
@@ -136,7 +152,7 @@ def _extract_equation_labels(content: str) -> List[str]:
                 labels.append(formatted)
 
     # 4. Maximum entropy objective indicator
-    if re.search(r'maximum entropy objective', content, re.IGNORECASE) and "Maximum Entropy Objective" not in labels:
+    if _MAX_ENTROPY_RE.search(content) and "Maximum Entropy Objective" not in labels:
         labels.append("Maximum Entropy Objective")
 
     return labels
@@ -772,9 +788,32 @@ def _build_source_extracted_evidence(chunks: List[Dict[str, Any]], question: str
         return "\n\n## Supporting Evidence\n*Technical evidence was unavailable in the retrieved excerpts.*"
 
 
-# ---------------------------------------------------------------------------
-# Phase 3/Fix B: True Claim-to-Evidence Verification Layer
-# ---------------------------------------------------------------------------
+# Precompiled verification patterns to eliminate per-claim regex compilation overhead
+_SUPPORTING_EVIDENCE_SEARCH_RE = re.compile(r'##\s*Supporting Evidence', re.IGNORECASE)
+_SUPPORTING_EVIDENCE_SUB_RE = re.compile(r'##\s*Supporting Evidence[\s\S]*?(?=(?:##|\Z))', re.IGNORECASE)
+_VISUAL_FIGURE_RE = re.compile(r'visual figure itself was not inspected', re.IGNORECASE)
+_SARSA_DEF_SEARCH_1 = re.compile(r'SARSA\s*\(\s*(?:Synchronous\s+Advantage\s+Actor[- ]Critic|Advantage\s+Actor[- ]Critic|Synchronous\s+Actor[- ]Critic)\s*\)', re.IGNORECASE)
+_SARSA_DEF_SEARCH_2 = re.compile(r'\bSynchronous\s+Advantage\s+Actor[- ]Critic\b', re.IGNORECASE)
+_SARSA_DEF_SUB_3 = re.compile(r'SARSA\s*stands\s+for\s+Synchronous[^.\n]*', re.IGNORECASE)
+_SARSA_MAX_PAT_1 = re.compile(r'(?:The\s+target\s+(?:value\s+)?(?:used\s+by\s+|for\s+)?(?:1-step\s+)?Sarsa[\s\S]{0,350}?\\\[\s*(?:\\hat\{Q\}|Q|y)[^]]*?\\max[^]]*?\\\])', re.IGNORECASE)
+_SARSA_MAX_PAT_2 = re.compile(r'(?:Sarsa|SARSA)[\s\S]{0,300}?(?:target|update)[\s\S]{0,200}?\\?max(?:_\{?a\'?\}?)?\s*Q', re.IGNORECASE)
+_QL_TARGET_PAT = re.compile(r'(?:In\s+contrast,\s+)?Q-learning\s+uses\s+the\s+target:[\s\S]{0,100}?\\\[\s*\\hat\{Q\}\(s,\s*a\)\s*=\s*r\s*\+\s*\\gamma\s*\\max_\{?a\'\}?\s*Q\(s\',\s*a\'\)\s*-\s*Q\(s,\s*a\)\s*\\\]', re.IGNORECASE)
+_QL_SARSA_TARGET_PAT = re.compile(r'(?:For\s+)?(?:1-step\s+)?Q-learning\s+and\s+(?:1-step\s+)?(?:SARSA|Sarsa)[\s\S]{0,150}?(?:target|core equation|update|Bellman)[\s\S]{0,250}?(?:\\?\[\s*Q\([^]]*\\max[^]]*\\?\]|r\s*\+\s*(?:\\gamma|gamma)\s*\\?max[^\n.\]]*\\?\]?)', re.IGNORECASE)
+_QL_TARGET_NO_MAX = re.compile(r'(\bQ-learning\s+target\s+is\s+r\s*\+\s*(?:gamma|\\gamma)\s*)(?:Q\(s\'?,\s*a\'?;\s*\\?theta[-−]?\))', re.IGNORECASE)
+_THETA_PAREN_CLEANUP = re.compile(r'\\theta\^-\)_\{a\'\}\s*Q\([^]]*\)\s*\\?\]')
+_A3C_FAKE_PAT = re.compile(r'(?:The\s+update\s+for\s+the\s+actor\s+is:?[\s\S]{0,120}?\\\[\s*\\pi\(a\|s\)[\s\S]*?\\\][\s\S]*?(?=\n\n###|\n\n##|\Z)|\\\[\s*\\hat\{A\}\(s,\s*a\)\s*=\s*V\(s,\s*a\)\s*-\s*Q\(s,\s*a\)\s*\\\])', re.IGNORECASE)
+_A3C_NABLA_SEARCH = re.compile(r'(?:nabla|\\nabla|∇)[^.]*(?:log|\\log)[^.]*(?:\\pi|π)', re.IGNORECASE)
+_TARGET_NET_THETA = re.compile(r'(?:The\s+)?target\s+network\s+θ[-−]\s+is\s+used\s+to\s+(?:approximate\s+the\s+Q-values|stabilize\s+training)[^.\n]*', re.IGNORECASE)
+_A3C_REPLAY_1 = re.compile(r'(?:For\s+A3C,\s+)?experience\s+replay\s+is\s+not\s+explicitly\s+mentioned[^.\n]*', re.IGNORECASE)
+_A3C_REPLAY_2 = re.compile(r'\bA3C\s+(?:also\s+)?uses\s+experience\s+replay\b', re.IGNORECASE)
+_A3C_MODEL_BASED = re.compile(r'\bA3C[^.\n]*?\bis\s+a\s+model-based\s+approach\b', re.IGNORECASE)
+_DQN_84_FRAMES_1 = re.compile(r'\b(?:stacking|stacks?)\s+84\s+(?:consecutive\s+)?frames\b', re.IGNORECASE)
+_DQN_84_FRAMES_2 = re.compile(r'\b84\s+consecutive\s+frames\b', re.IGNORECASE)
+_DQN_1X1X1_SEARCH = re.compile(r'(?:output\s+is\s+a\s+)?1\s*x\s*1\s*x\s*1\s+(?:vector|output|scalar)[^.\n]*', re.IGNORECASE)
+_DQN_1X1X1_SCALAR = re.compile(r'\b1\s*x\s*1\s*x\s*1\b', re.IGNORECASE)
+_DQN_1X1_VECTOR = re.compile(r'\b1\s*x\s*1\s+vector\b', re.IGNORECASE)
+_PONG_BEAM_RIDER = re.compile(r'human\s+performance\s+in\s+(?:the\s+game\s+of\s+)?Pong[^.\n]*?4,?092', re.IGNORECASE)
+
 
 class ClaimEvidenceVerifier:
     """
@@ -791,8 +830,6 @@ class ClaimEvidenceVerifier:
         self.records = []
 
     def log_claim(self, claim_type: str, claim_text: str, supported: bool, status: str, evidence_excerpt: str, paper: str = "", page: str = ""):
-        import datetime
-        import json
         record = {
             "timestamp": datetime.datetime.now().isoformat(),
             "question_type": self.question[:60] + "...",
@@ -806,10 +843,7 @@ class ClaimEvidenceVerifier:
         }
         self.records.append(record)
         try:
-            from pathlib import Path
-            from storage.pipeline_logger import LOGS_DIR
-            log_file = Path(LOGS_DIR) / "claim_verification.jsonl"
-            with open(log_file, "a", encoding="utf-8") as f:
+            with open(CLAIM_VERIFICATION_LOG_PATH, "a", encoding="utf-8") as f:
                 f.write(json.dumps(record) + "\n")
         except Exception:
             pass
@@ -818,12 +852,12 @@ class ClaimEvidenceVerifier:
         ans = answer
 
         # 1. Strip any hallucinated/manufactured ## Supporting Evidence generated by the LLM
-        if re.search(r'##\s*Supporting Evidence', ans, re.IGNORECASE):
-            ans = re.sub(r'##\s*Supporting Evidence[\s\S]*?(?=(?:##|\Z))', '', ans, flags=re.IGNORECASE).strip()
+        if _SUPPORTING_EVIDENCE_SEARCH_RE.search(ans):
+            ans = _SUPPORTING_EVIDENCE_SUB_RE.sub('', ans).strip()
 
         # 2. Figure Grounding Caveat
         is_figure_q = any(w in self.question.lower() for w in ["figure", "diagram", "plot", "visualization"])
-        if is_figure_q and not re.search(r'visual figure itself was not inspected', ans, re.IGNORECASE):
+        if is_figure_q and not _VISUAL_FIGURE_RE.search(ans):
             caveat = (
                 "\n\n*Note on Figure Grounding: This architecture description is based on the paper's extracted textual "
                 "and caption evidence; the visual figure itself was not inspected, and precise visual-layout details "
@@ -836,26 +870,10 @@ class ClaimEvidenceVerifier:
             self.log_claim("figure_caveat", "Visual layout details caveat", True, "CAVEAT_APPLIED", "Grounding contract for uninspected visual diagrams")
 
         # 3. Sarsa Algorithm Naming
-        if re.search(r'SARSA\s*\(\s*(?:Synchronous\s+Advantage\s+Actor[- ]Critic|Advantage\s+Actor[- ]Critic|Synchronous\s+Actor[- ]Critic)\s*\)', ans, re.IGNORECASE) or \
-           re.search(r'\bSynchronous\s+Advantage\s+Actor[- ]Critic\b', ans, re.IGNORECASE):
-            ans = re.sub(
-                r'SARSA\s*\(\s*(?:Synchronous\s+Advantage\s+Actor[- ]Critic|Advantage\s+Actor[- ]Critic|Synchronous\s+Actor[- ]Critic)\s*\)',
-                'one-step Sarsa (State-Action-Reward-State-Action)',
-                ans,
-                flags=re.IGNORECASE
-            )
-            ans = re.sub(
-                r'\bSynchronous\s+Advantage\s+Actor[- ]Critic\b',
-                'one-step Sarsa (State-Action-Reward-State-Action)',
-                ans,
-                flags=re.IGNORECASE
-            )
-            ans = re.sub(
-                r'SARSA\s*stands\s+for\s+Synchronous[^.\n]*',
-                'SARSA stands for State-Action-Reward-State-Action',
-                ans,
-                flags=re.IGNORECASE
-            )
+        if _SARSA_DEF_SEARCH_1.search(ans) or _SARSA_DEF_SEARCH_2.search(ans):
+            ans = _SARSA_DEF_SEARCH_1.sub('one-step Sarsa (State-Action-Reward-State-Action)', ans)
+            ans = _SARSA_DEF_SEARCH_2.sub('one-step Sarsa (State-Action-Reward-State-Action)', ans)
+            ans = _SARSA_DEF_SUB_3.sub('SARSA stands for State-Action-Reward-State-Action', ans)
             self.log_claim(
                 "sarsa_definition",
                 "Sarsa expansion to Synchronous Advantage Actor-Critic",
@@ -871,21 +889,18 @@ class ClaimEvidenceVerifier:
         # 4. Sarsa vs Q-learning Target Equations
         # Sarsa must NOT have max_{a'} over next action: y = r + \gamma Q(s', a'; \theta^-)
         # Q-learning must have max_{a'}: y = r + \gamma \max_{a'} Q(s', a'; \theta^-)
-        sarsa_max_pat = r'(?:The\s+target\s+(?:value\s+)?(?:used\s+by\s+|for\s+)?(?:1-step\s+)?Sarsa[\s\S]{0,350}?\\\[\s*(?:\\hat\{Q\}|Q|y)[^]]*?\\max[^]]*?\\\])'
-        if re.search(sarsa_max_pat, ans, re.I) or re.search(r'(?:Sarsa|SARSA)[\s\S]{0,300}?(?:target|update)[\s\S]{0,200}?\\?max(?:_\{?a\'?\}?)?\s*Q', ans, re.I):
+        if _SARSA_MAX_PAT_1.search(ans) or _SARSA_MAX_PAT_2.search(ans):
             replacement_sarsa = (
                 "For one-step Sarsa, the target value is:\n"
                 r"\[ y = r + \gamma Q(s', a'; \theta^-) \]" + "\n"
                 r"where $a'$ is the action actually taken in state $s'$ (without the max operator), and $\theta^-$ is the target network parameter snapshot."
             )
-            if re.search(sarsa_max_pat, ans, re.I):
-                ans = re.sub(sarsa_max_pat, lambda _: replacement_sarsa, ans, flags=re.I)
+            if _SARSA_MAX_PAT_1.search(ans):
+                ans = _SARSA_MAX_PAT_1.sub(lambda _: replacement_sarsa, ans)
             else:
-                ans = re.sub(
-                    r'(?:Sarsa|SARSA)[\s\S]{0,300}?(?:target|update)[\s\S]{0,200}?\\?max(?:_\{?a\'?\}?)?\s*Q',
+                ans = _SARSA_MAX_PAT_2.sub(
                     lambda _: "Sarsa target uses the action a' actually taken: y = r + \\gamma Q(s', a'; \\theta^-) (without the max operator)",
-                    ans,
-                    flags=re.IGNORECASE
+                    ans
                 )
             self.log_claim(
                 "sarsa_target_equation",
@@ -897,25 +912,22 @@ class ClaimEvidenceVerifier:
                 page="4"
             )
 
-        ql_target_pat = r'(?:In\s+contrast,\s+)?Q-learning\s+uses\s+the\s+target:[\s\S]{0,100}?\\\[\s*\\hat\{Q\}\(s,\s*a\)\s*=\s*r\s*\+\s*\\gamma\s*\\max_\{?a\'\}?\s*Q\(s\',\s*a\'\)\s*-\s*Q\(s,\s*a\)\s*\\\]'
-        if re.search(ql_target_pat, ans, re.I):
+        if _QL_TARGET_PAT.search(ans):
             replacement_ql = (
                 "In contrast, one-step Q-learning uses the target:\n"
                 r"\[ y = r + \gamma \max_{a'} Q(s', a'; \theta^-) \]" + "\n"
                 r"which maximizes over all possible next-state actions $a'$."
             )
-            ans = re.sub(ql_target_pat, lambda _: replacement_ql, ans, flags=re.I)
+            ans = _QL_TARGET_PAT.sub(lambda _: replacement_ql, ans)
 
-        ans = re.sub(
-            r'(?:For\s+)?(?:1-step\s+)?Q-learning\s+and\s+(?:1-step\s+)?(?:SARSA|Sarsa)[\s\S]{0,150}?(?:target|core equation|update|Bellman)[\s\S]{0,250}?(?:\\?\[\s*Q\([^]]*\\max[^]]*\\?\]|r\s*\+\s*(?:\\gamma|gamma)\s*\\?max[^\n.\]]*\\?\]?)',
+        ans = _QL_SARSA_TARGET_PAT.sub(
             lambda _: (
                 "For 1-step Q-learning, the target equation uses the maximum over next-state actions: "
                 "y = r + \\gamma \\max_{a'} Q(s', a'; \\theta^-). "
                 "For 1-step Sarsa, the target equation uses the action a' actually selected by the current policy rather than the maximum: "
                 "y = r + \\gamma Q(s', a'; \\theta^-)"
             ),
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
         ans = re.sub(
             r'(\bQ-learning\s+target\s+is\s+r\s*\+\s*(?:gamma|\\gamma)\s*)(?:Q\(s\'?,\s*a\'?;\s*\\?theta[-−]?\))',
@@ -926,15 +938,14 @@ class ClaimEvidenceVerifier:
         ans = re.sub(r'\\theta\^-\)_\{a\'\}\s*Q\([^]]*\)\s*\\?\]', r'\\theta^-)', ans)
 
         # Advantage Actor-Critic policy gradient alignment
-        a3c_fake_pat = r'(?:The\s+update\s+for\s+the\s+actor\s+is:?[\s\S]{0,120}?\\\[\s*\\pi\(a\|s\)[\s\S]*?\\\][\s\S]*?(?=\n\n###|\n\n##|\Z)|\\\[\s*\\hat\{A\}\(s,\s*a\)\s*=\s*V\(s,\s*a\)\s*-\s*Q\(s,\s*a\)\s*\\\])'
-        if re.search(a3c_fake_pat, ans, re.I):
+        if _A3C_FAKE_PAT.search(ans):
             replacement_a3c = (
                 "The policy and value parameters are updated using n-step returns:\n"
                 r"- Policy parameter update: $\nabla_{\theta'} \log \pi(a_t|s_t; \theta') (R_t - V(s_t; \theta_v)) + \beta \nabla_{\theta'} H(\pi(s_t; \theta'))$" + "\n"
                 r"- Value parameter update: $\nabla_{\theta_v} (R_t - V(s_t; \theta_v))^2$" + "\n"
                 r"where $R_t = \sum_{i=0}^{k-1} \gamma^i r_{t+i} + \gamma^k V(s_{t+k}; \theta_v)$ is the n-step return estimate, and $\beta$ is the entropy regularization weight."
             )
-            ans = re.sub(a3c_fake_pat, lambda _: replacement_a3c, ans, flags=re.I)
+            ans = _A3C_FAKE_PAT.sub(lambda _: replacement_a3c, ans)
             self.log_claim(
                 "a3c_parameter_updates",
                 "A3C parameter updates missing policy gradient equation",
@@ -946,7 +957,7 @@ class ClaimEvidenceVerifier:
             )
 
         is_a3c_question = any(k in self.question.lower() for k in ("asynchronous", "a3c", "advantage actor-critic"))
-        if is_a3c_question and not re.search(r'(?:nabla|\\nabla|∇)[^.]*(?:log|\\log)[^.]*(?:\\pi|π)', ans, re.I):
+        if is_a3c_question and not _A3C_NABLA_SEARCH.search(ans):
             if "### Advantage Actor-Critic" in ans:
                 hdr = "### Advantage Actor-Critic"
                 hdr_pos = ans.find(hdr)
@@ -971,56 +982,42 @@ class ClaimEvidenceVerifier:
                 )
 
         # Target network usage distinction (Q-learning/Sarsa use theta^-, A3C does not)
-        ans = re.sub(
-            r'(?:The\s+)?target\s+network\s+θ[-−]\s+is\s+used\s+to\s+(?:approximate\s+the\s+Q-values|stabilize\s+training)[^.\n]*',
+        ans = _TARGET_NET_THETA.sub(
             lambda _: (
                 "In asynchronous 1-step Q-learning, 1-step Sarsa, and n-step Q-learning, a target network θ- is periodically updated "
                 "(copied from current parameters θ every I_target steps) to stabilize off-policy and value updates without replay memory. "
                 "In contrast, A3C does not use a target network θ-; it directly updates policy and value parameters using n-step returns"
             ),
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
 
         # 5. A3C Replay Replacement & Model-Free Paradigm
-        ans = re.sub(
-            r'(?:For\s+A3C,\s+)?experience\s+replay\s+is\s+not\s+explicitly\s+mentioned[^.\n]*',
+        ans = _A3C_REPLAY_1.sub(
             "For A3C, parallel asynchronous actor-learners replace reliance on experience replay to decorrelate updates and stabilize learning.",
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
-        ans = re.sub(
-            r'\bA3C\s+(?:also\s+)?uses\s+experience\s+replay\b',
+        ans = _A3C_REPLAY_2.sub(
             lambda _: "A3C explicitly does not use experience replay; instead, multiple asynchronous actor-learners run in parallel across CPU threads to decorrelate data and stabilize training without replay",
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
-        ans = re.sub(
-            r'\bA3C[^.\n]*?\bis\s+a\s+model-based\s+approach\b',
+        ans = _A3C_MODEL_BASED.sub(
             lambda _: "A3C is a model-free actor-critic approach",
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
 
         # 6. DQN CNN Output Representation & Preprocessing
-        ans = re.sub(
-            r'\b(?:stacking|stacks?)\s+84\s+(?:consecutive\s+)?frames\b',
+        ans = _DQN_84_FRAMES_1.sub(
             lambda _: "stacking the last 4 consecutive frames (preprocessed to 84 × 84 pixels)",
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
-        ans = re.sub(
-            r'\b84\s+consecutive\s+frames\b',
+        ans = _DQN_84_FRAMES_2.sub(
             lambda _: "4 consecutive frames (preprocessed to 84 × 84 pixels)",
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
-        if re.search(r'(?:output\s+is\s+a\s+)?1\s*x\s*1\s*x\s*1\s+(?:vector|output|scalar)[^.\n]*', ans, re.IGNORECASE):
-            ans = re.sub(
-                r'(?:output\s+is\s+a\s+)?1\s*x\s*1\s*x\s*1\s+(?:vector|output|scalar)[^.\n]*',
+        if _DQN_1X1X1_SEARCH.search(ans):
+            ans = _DQN_1X1X1_SEARCH.sub(
                 lambda _: 'output layer has a separate output unit for each valid action, computing the estimated Q-value for every action in a single forward pass',
-                ans,
-                flags=re.IGNORECASE
+                ans
             )
             self.log_claim(
                 "dqn_output_representation",
@@ -1032,23 +1029,17 @@ class ClaimEvidenceVerifier:
                 page="4-5"
             )
 
-        ans = re.sub(
-            r'\b1\s*x\s*1\s*x\s*1\b',
+        ans = _DQN_1X1X1_SCALAR.sub(
             lambda _: 'vector with a separate output unit for each valid action',
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
-        ans = re.sub(
-            r'\b1\s*x\s*1\s+vector\b',
+        ans = _DQN_1X1_VECTOR.sub(
             lambda _: 'vector with a separate output unit for each valid action',
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
-        ans = re.sub(
-            r'human\s+performance\s+in\s+(?:the\s+game\s+of\s+)?Pong[^.\n]*?4,?092',
+        ans = _PONG_BEAM_RIDER.sub(
             lambda _: 'Beam Rider (DQN score: 4,092, human score: 5,784), while on Pong DQN scored 20 (human score: -3)',
-            ans,
-            flags=re.IGNORECASE
+            ans
         )
         ans = re.sub(
             r'Pong[^.\n]*?4,?092',

@@ -94,6 +94,22 @@ def _load_cross_encoder(model_name: str, device: str) -> CrossEncoder:
     model, _actual_device = _load_with_gpu_fallback("CrossEncoder", model_name, device, _loader)
     return model
 
+def prewarm_cross_encoder(config: Dict[str, Any] = None) -> None:
+    """Pre-warm CrossEncoder model in memory to eliminate first-query cold-start latency."""
+    global _cross_encoder_cache
+    if config is None:
+        config = _get_config()
+    model_name = config.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+    try:
+        from storage.device_policy import get_device_policy_manager
+        device, _ = get_device_policy_manager().get_reranker_device(config.get("reranker_device") or config.get("device"))
+    except Exception:
+        device = _get_embedding_device(config)
+    cache_key = f"{model_name}::{device}"
+    if cache_key not in _cross_encoder_cache:
+        _cross_encoder_cache[cache_key] = _load_cross_encoder(model_name, device=device)
+
+
 def rerank_cross_encoder(
     query: str,
     chunks: List[Dict[str, Any]],
@@ -142,27 +158,49 @@ def rerank_cross_encoder(
     ce_cache = get_ce_score_cache()
     scores = [None] * len(chunks)
     uncached_indices = []
-    uncached_pairs = []
+    uncached_texts = []
 
     for i, chunk in enumerate(chunks):
         chash = chunk.get("metadata", {}).get("hash") or str(chunk.get("id") or i)
-        col_id = chunk.get("metadata", {}).get("collection_id") or ""
+        col_id = (
+            chunk.get("metadata", {}).get("collection_id")
+            or chunk.get("metadata", {}).get("collection")
+            or chunk.get("metadata", {}).get("repository_id")
+            or ""
+        )
         cached_val = ce_cache.get(query, chash, collection_id=col_id)
         if cached_val is not None:
             scores[i] = cached_val
         else:
             uncached_indices.append(i)
-            uncached_pairs.append([query, chunk.get("content", "")])
+            # Bound input content to 2048 chars for CPU tokenization efficiency (model limit is 512 tokens)
+            c_text = chunk.get("content", "")[:2048]
+            uncached_texts.append(c_text)
 
-    if uncached_pairs:
+    if uncached_indices:
+        # Deduplicate identical uncached texts to avoid redundant scoring
+        unique_pair_map: Dict[str, List[int]] = {}
+        for idx, text in zip(uncached_indices, uncached_texts):
+            if text not in unique_pair_map:
+                unique_pair_map[text] = []
+            unique_pair_map[text].append(idx)
+
+        unique_pairs = [[query, text] for text in unique_pair_map.keys()]
         batch_sz = 32 if device == "cpu" else 64
-        predicted_scores = model.predict(uncached_pairs, batch_size=batch_sz, show_progress_bar=False)
-        for idx, pscore in zip(uncached_indices, predicted_scores):
+        predicted_scores = model.predict(unique_pairs, batch_size=batch_sz, show_progress_bar=False)
+
+        for text, pscore in zip(unique_pair_map.keys(), predicted_scores):
             raw_sc = float(pscore)
-            scores[idx] = raw_sc
-            chash = chunks[idx].get("metadata", {}).get("hash") or str(chunks[idx].get("id") or idx)
-            col_id = chunks[idx].get("metadata", {}).get("collection_id") or ""
-            ce_cache.put(query, chash, raw_sc, collection_id=col_id)
+            for idx in unique_pair_map[text]:
+                scores[idx] = raw_sc
+                chash = chunks[idx].get("metadata", {}).get("hash") or str(chunks[idx].get("id") or idx)
+                col_id = (
+                    chunks[idx].get("metadata", {}).get("collection_id")
+                    or chunks[idx].get("metadata", {}).get("collection")
+                    or chunks[idx].get("metadata", {}).get("repository_id")
+                    or ""
+                )
+                ce_cache.put(query, chash, raw_sc, collection_id=col_id)
     
     # Update scores with question-type bias
     for chunk, score in zip(chunks, scores):

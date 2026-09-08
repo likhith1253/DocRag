@@ -30,6 +30,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _encoder_cache: Dict[str, SentenceTransformer] = {}
 _config_cache: Dict[str, Any] = {}
 _ensured_collections = set()
+_verified_collections = set()
 _encoder_lock = threading.Lock()
 
 
@@ -144,11 +145,13 @@ def _get_embedding_device(config: Dict[str, Any] = None) -> str:
 def _load_sentence_transformer(model_name: str, device: str) -> SentenceTransformer:
     """
     Safely load SentenceTransformer without creating meta tensors via accelerate/low_cpu_mem_usage.
+    Attempts local cache first to avoid slow DNS timeouts in offline/restricted environments.
     """
-    try:
-        return SentenceTransformer(model_name, device=device, model_kwargs={"low_cpu_mem_usage": False})
-    except TypeError:
-        pass
+    for local_only in (True, False):
+        try:
+            return SentenceTransformer(model_name, device=device, model_kwargs={"low_cpu_mem_usage": False}, local_files_only=local_only)
+        except (TypeError, Exception):
+            pass
 
     try:
         from sentence_transformers import models
@@ -351,6 +354,7 @@ class VectorStoreManager:
         finally:
             cache_key = f"{self.qdrant_path}::{self.collection_name}"
             _ensured_collections.discard(cache_key)
+            _verified_collections.discard(self.collection_name)
             VectorStoreManager._all_chunks_cache.pop(cache_key, None)
             try:
                 from retrieval.paper_matcher import invalidate_paper_cache
@@ -561,18 +565,22 @@ class VectorStoreManager:
                     f"Repository '{active_repo_id}' collection mismatch: expected '{expected_coll}', got '{self.collection_name}'"
                 )
 
-        if not self.client.collection_exists(self.collection_name):
-            raise RuntimeError(f"Vector search failed: Collection '{self.collection_name}' does not exist.")
+        cache_key = f"{self.qdrant_path}::{self.collection_name}"
+        if self.collection_name not in _verified_collections and cache_key not in _ensured_collections:
+            if not self.client.collection_exists(self.collection_name):
+                raise RuntimeError(f"Vector search failed: Collection '{self.collection_name}' does not exist.")
+            _verified_collections.add(self.collection_name)
 
         import time
         import numpy as np
         from qdrant_client.models import Filter, FieldCondition, MatchValue
         from storage.pipeline_logger import log_stage
         
+        clean_query = query.strip()
         if "e5" in self.embedding_model_name.lower():
-            query_for_encode = f"query: {query}"
+            query_for_encode = f"query: {clean_query}"
         else:
-            query_for_encode = query
+            query_for_encode = clean_query
 
         t_embed_start = time.perf_counter()
         q_cache = get_query_embedding_cache()

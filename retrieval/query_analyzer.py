@@ -75,16 +75,22 @@ _FACET_PHRASES = {
 }
 
 
+_COMPILED_STRUCTURAL_PATTERNS = {
+    qtype: [re.compile(p) for p in patterns]
+    for qtype, patterns in _STRUCTURAL_PATTERNS.items()
+}
+
+
 def _structural_scores(question_lower: str):
     """Shared by detect_question_type() and decompose_complex_question()."""
     scores: Dict[str, int] = {}
     matched_keywords: Dict[str, List[str]] = {}
 
-    for qtype, type_patterns in _STRUCTURAL_PATTERNS.items():
+    for qtype, type_patterns in _COMPILED_STRUCTURAL_PATTERNS.items():
         score = 0
         keywords: List[str] = []
         for pattern in type_patterns:
-            matches = re.findall(pattern, question_lower)
+            matches = pattern.findall(question_lower)
             if matches:
                 score += len(matches)
                 keywords.extend(matches if isinstance(matches[0], str) else [m[0] for m in matches])
