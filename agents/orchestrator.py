@@ -412,11 +412,13 @@ def route_node(state: AgentState) -> Dict[str, Any]:
         # Corpus mode bypasses repository routing explicitly
         if retrieval_mode == "corpus":
             pass
+        elif repo_id:
+            updates["repo_id"] = repo_id
         # If repo_id is specified in filters, use it
         elif not repo_id and ("paper_title" in filters or "file" in filters):
             registry = get_registry()
             for rid, repo in registry.repositories.items():
-                if repo.status == "READY" and repo.vector_collection:
+                if repo.status in ("READY", RepoStatus.READY) and repo.vector_collection:
                     try:
                         v_manager = VectorStoreManager(collection_name=repo.vector_collection)
                         chunks, _ = v_manager.search(state["question"], top_k=5, metadata_filters=filters, request_id=state.get("request_id", "default"))
@@ -426,7 +428,7 @@ def route_node(state: AgentState) -> Dict[str, Any]:
                     except Exception:
                         pass
         # Otherwise if no repo_id supplied, invoke semantic router
-        if not updates.get("repo_id") and not repo_id:
+        if not updates.get("repo_id") and not repo_id and retrieval_mode != "corpus":
             from retrieval.repository_router import rank_repositories
             registry = get_registry()
             top_repos = rank_repositories(state["question"], registry, top_k=3)
@@ -482,73 +484,133 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
 
         registry = get_registry()
 
-        # EXPLICIT RETRIEVAL BRANCHING
-        if retrieval_mode == "corpus":
-            v_coll = "chunks"
-        elif repo_id:
-            repo = registry.get_repository(repo_id)
-            if repo and repo.vector_collection:
-                v_coll = repo.vector_collection
-            elif str(repo_id).startswith("collection_"):
-                v_coll = repo_id
-            else:
-                # Check if collection_{repo_id} exists or repo_id is direct
-                v_coll = f"collection_{repo_id}"
-        else:
-            v_coll = "chunks"
-
+        # EXPLICIT RETRIEVAL BRANCHING & ISOLATION
         global _v_manager_override
+        repo_obj = None
         if _v_manager_override is not None:
             v_manager = _v_manager_override
             v_coll = v_manager.collection_name
             points_in_coll = v_manager.count()
+            repo_obj = registry.get_repository(repo_id) if repo_id else None
+        elif retrieval_mode == "corpus":
+            v_coll = "chunks"
+        elif repo_id:
+            repo_obj = registry.get_repository(repo_id)
+            if not repo_obj:
+                err_msg = f"Repository '{repo_id}' not found in registry."
+                return {
+                    "agent": "doc_agent",
+                    "error": err_msg,
+                    "status": "NOT_FOUND",
+                    "retrieved_chunks": [],
+                    "answer": f"Error: {err_msg}",
+                    "citations": [],
+                    "claim_verification": {},
+                    "latency_breakdown": latency_breakdown,
+                    "collection": "",
+                    "repo_id": repo_id,
+                }
+            status_val = repo_obj.status.value if hasattr(repo_obj.status, "value") else str(repo_obj.status)
+            if status_val == "INDEXING":
+                msg = f"Repository '{repo_obj.name}' (ID: {repo_id}) is currently indexing. Please wait until indexing completes."
+                return {
+                    "agent": "doc_agent",
+                    "error": msg,
+                    "status": "INDEXING",
+                    "retrieved_chunks": [],
+                    "answer": msg,
+                    "citations": [],
+                    "claim_verification": {},
+                    "latency_breakdown": latency_breakdown,
+                    "collection": repo_obj.collection_id or repo_obj.vector_collection,
+                    "repo_id": repo_id,
+                }
+            elif status_val == "FAILED":
+                msg = f"Repository '{repo_obj.name}' (ID: {repo_id}) indexing failed: {repo_obj.last_error or 'indexing error'}. Please reindex the repository."
+                return {
+                    "agent": "doc_agent",
+                    "error": msg,
+                    "status": "FAILED",
+                    "retrieved_chunks": [],
+                    "answer": msg,
+                    "citations": [],
+                    "claim_verification": {},
+                    "latency_breakdown": latency_breakdown,
+                    "collection": repo_obj.collection_id or repo_obj.vector_collection,
+                    "repo_id": repo_id,
+                }
+            elif status_val in ("DELETING", "DELETED"):
+                msg = f"Repository '{repo_obj.name}' (ID: {repo_id}) has been deleted."
+                return {
+                    "agent": "doc_agent",
+                    "error": msg,
+                    "status": status_val,
+                    "retrieved_chunks": [],
+                    "answer": msg,
+                    "citations": [],
+                    "claim_verification": {},
+                    "latency_breakdown": latency_breakdown,
+                    "collection": repo_obj.collection_id or repo_obj.vector_collection,
+                    "repo_id": repo_id,
+                }
+            elif status_val == "CREATED":
+                msg = f"Repository '{repo_obj.name}' (ID: {repo_id}) has not been indexed yet."
+                return {
+                    "agent": "doc_agent",
+                    "error": msg,
+                    "status": "CREATED",
+                    "retrieved_chunks": [],
+                    "answer": msg,
+                    "citations": [],
+                    "claim_verification": {},
+                    "latency_breakdown": latency_breakdown,
+                    "collection": repo_obj.collection_id or repo_obj.vector_collection,
+                    "repo_id": repo_id,
+                }
+            v_coll = repo_obj.collection_id or repo_obj.vector_collection
         else:
+            ready_repos = [r for r in registry.list_repositories() if (r.status.value if hasattr(r.status, "value") else str(r.status)) == "READY"]
+            if ready_repos:
+                repo_obj = ready_repos[0]
+                repo_id = repo_obj.repo_id
+                v_coll = repo_obj.collection_id or repo_obj.vector_collection
+            else:
+                v_coll = "chunks"
+
+        if _v_manager_override is None:
             try:
-                v_manager = VectorStoreManager(collection_name=v_coll)
+                v_manager = VectorStoreManager(collection_name=v_coll, repository_id=repo_id if repo_obj else None)
+                if not v_manager.client.collection_exists(v_coll):
+                    err_msg = f"Collection '{v_coll}' for repository '{repo_id}' does not exist in vector store."
+                    return {
+                        "agent": "doc_agent",
+                        "error": err_msg,
+                        "status": "NOT_FOUND",
+                        "retrieved_chunks": [],
+                        "answer": f"Error: {err_msg}",
+                        "citations": [],
+                        "claim_verification": {},
+                        "latency_breakdown": latency_breakdown,
+                        "collection": v_coll,
+                        "repo_id": repo_id,
+                    }
                 points_in_coll = v_manager.count()
-            except Exception:
-                points_in_coll = 0
+            except Exception as e:
+                err_msg = f"Vector storage error for collection '{v_coll}': {e}"
+                return {
+                    "agent": "doc_agent",
+                    "error": err_msg,
+                    "status": "ERROR",
+                    "retrieved_chunks": [],
+                    "answer": f"Error: {err_msg}",
+                    "citations": [],
+                    "claim_verification": {},
+                    "latency_breakdown": latency_breakdown,
+                    "collection": v_coll,
+                    "repo_id": repo_id,
+                }
 
-            # If current collection has 0 points, find active collection from registry or Qdrant
-            if points_in_coll == 0:
-                candidate_repos = [r for r in registry.list_repositories() if r.vector_collection]
-                for r in candidate_repos:
-                    try:
-                        fb_manager = VectorStoreManager(collection_name=r.vector_collection)
-                        if fb_manager.count() > 0:
-                            v_coll = r.vector_collection
-                            v_manager = fb_manager
-                            repo_id = r.repo_id
-                            print(f"[COLLECTION GUARD] Redirected to active collection '{v_coll}' ({fb_manager.count()} points).", flush=True)
-                            break
-                    except Exception:
-                        pass
-
-            # Paper presence guard: if the current collection has points, but the query
-            # explicitly names papers that exist in another active collection, switch to that collection
-            if _v_manager_override is None and retrieval_mode != "corpus" and "paper_title" not in filters and "file" not in filters:
-                curr_titles = get_collection_papers(v_manager)
-                curr_matches = match_papers_in_query(state["question"], curr_titles) if curr_titles else []
-                if not curr_matches:
-                    try:
-                        all_colls = [c.name for c in v_manager.client.get_collections().collections if c.name != v_coll]
-                        for other_c in all_colls:
-                            try:
-                                other_man = VectorStoreManager(collection_name=other_c)
-                                if other_man.count() > 0:
-                                    other_titles = get_collection_papers(other_man)
-                                    other_matches = match_papers_in_query(state["question"], other_titles)
-                                    if other_matches:
-                                        v_coll = other_c
-                                        v_manager = other_man
-                                        print(f"[COLLECTION GUARD] Redirected to collection '{v_coll}' containing requested paper(s): {[t for t,_ in other_matches]}", flush=True)
-                                        break
-                            except Exception:
-                                pass
-                    except Exception:
-                        pass
-
-        print(f"[RETRIEVAL] Collection passed into vector search : '{v_coll}' (Points: {v_manager.count()})", flush=True)
+        print(f"[RETRIEVAL] Collection passed into vector search : '{v_coll}' (Points: {points_in_coll})", flush=True)
 
         from storage.forensic_logger import ForensicLogger
         f_logger = state.get("f_logger")
@@ -857,74 +919,20 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         }
         log_stage(request_id, 7, "Knowledge Graph", stage7_data, latency_ms=0.0)
 
-        # Fallback only when retrieval produced no chunks at all, AND the
-        # query did not explicitly name specific paper(s). An explicit
-        # single/multi-paper query must NEVER fall through to an
-        # unrestricted collection-wide search — that is exactly how an
-        # unrelated paper (e.g. a wrong 4th paper in a 3-paper comparison)
-        # can silently substitute for the evidence that was actually
-        # requested. If the requested paper(s) truly have no matching
-        # evidence, that must be reported as missing, not backfilled from
-        # elsewhere.
-        if not chunks and paper_scope not in ("single", "multi"):
-            # Fallback search in global 'chunks'
-            try:
-                fb_vman = VectorStoreManager(collection_name='chunks')
-                fb_chunks, fb_timing = fb_vman.search(state['question'], top_k=vector_top_k, metadata_filters=None, request_id=request_id)
-                latency_breakdown['fallback_vector_ms'] = fb_timing.get('qdrant_ms', 0.0)
-                seen = set()
-                fb_unique = []
-                for ch in fb_chunks:
-                    h = ch.get('metadata',{}).get('hash','')
-                    if h and h not in seen:
-                        seen.add(h)
-                        fb_unique.append(ch)
-                fb_chunks = fb_unique
-                if fb_chunks:
-                    # Apply the same low-value section filter as Stage 4 in the primary path.
-                    # The fallback path previously skipped this, allowing References/Bibliography
-                    # chunks to survive into the LLM context.
-                    fb_filtered = [
-                        c for c in fb_chunks
-                        if not _LOW_VALUE_SECTION_RE.search(
-                            (c.get('metadata', {}).get('section') or '').strip()
-                        )
-                    ]
-                    if fb_filtered:
-                        fb_chunks = fb_filtered
-                    qv = fb_timing.pop('query_vector', None)
-                    fb_chunks = mmr_rerank(state['question'], fb_chunks, top_k=min(40, len(fb_chunks)), query_vector=qv, request_id=request_id)
-                    fb_chunks = rerank_cross_encoder(state['question'], fb_chunks, top_k=rerank_top_k, request_id=request_id)
-                    if fb_chunks:
-                        return {
-                            "retrieved_chunks": fb_chunks,
-                            "citations": build_citation_list(fb_chunks, request_id=request_id),
-                            "latency_breakdown": latency_breakdown,
-                        }
-            except Exception:
-                pass
-
-            return {
-                "retrieved_chunks": [],
-                "citations": [],
-                "error": "Zero chunks retrieved",
-                "latency_breakdown": latency_breakdown,
-            }
-
         if not chunks:
-            # Reached only for an explicit single/multi-paper query whose
-            # requested paper(s) yielded no evidence at all — report missing,
-            # never substitute an unrestricted collection-wide fallback.
-            print(
-                f"[PAPER ISOLATION] No evidence found for requested paper(s) {requested_titles}. "
-                f"Reporting as missing rather than falling back to unrestricted search.",
-                flush=True,
-            )
+            if paper_scope in ("single", "multi"):
+                print(
+                    f"[PAPER ISOLATION] No evidence found for requested paper(s) {requested_titles}. "
+                    f"Reporting as missing rather than falling back to unrestricted search.",
+                    flush=True,
+                )
             return {
                 "retrieved_chunks": [],
                 "citations": [],
                 "error": "Zero chunks retrieved",
                 "latency_breakdown": latency_breakdown,
+                "collection": v_coll,
+                "repo_id": repo_id,
             }
 
         from storage.pipeline_logger import save_retrieval_json_artifact, log_exception
@@ -993,6 +1001,14 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
     request_id = state.get("request_id", "default")
     latency_breakdown = state.get("latency_breakdown", {})
 
+    # If a controlled answer was already generated (e.g. repo lifecycle or error), return it
+    if state.get("answer"):
+        return {
+            "answer": state.get("answer"),
+            "citations": [],
+            "latency_breakdown": latency_breakdown,
+        }
+
     # Safe infrastructure failure handling
     if state.get("error") == "Zero chunks retrieved":
         log_grounding_exit(
@@ -1021,6 +1037,8 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             ans = "Embedding service unavailable."
         elif "Vector search failed" in err_detail:
             ans = "Vector search failed."
+        elif "Repository" in err_detail or "Collection" in err_detail:
+            ans = err_detail
         else:
             ans = CANNOT_FIND_RESPONSE
         return {
@@ -1248,6 +1266,10 @@ def answer(
             ans = "Vector search failed."
         elif "timed out" in err_str.lower() or "timeout" in err_str.lower():
             ans = "LLM generation timed out."
+        elif "Repository" in err_str and ("not found" in err_str or "does not exist" in err_str or "collection mismatch" in err_str):
+            ans = f"Error: {err_str}"
+        elif "Collection" in err_str and ("does not exist" in err_str or "not found" in err_str):
+            ans = f"Error: {err_str}"
         else:
             ans = CANNOT_FIND_RESPONSE
         final_state = initial_state
@@ -1362,10 +1384,19 @@ def answer(
 
     agent_timings = doc_agent.get_latest_agent_timings(request_id) if hasattr(doc_agent, "get_latest_agent_timings") else {}
 
+    # Phase 5 Multi-Repository Query Profiling & Observability
+    r_id = final_state.get("repo_id") or repo_id or "default"
+    r_obj = get_registry().get_repository(r_id) if r_id != "default" else None
+    r_name = r_obj.name if r_obj else r_id
+    c_id = final_state.get("collection") or (r_obj.collection_id if r_obj else None) or (r_obj.vector_collection if r_obj else None) or "chunks"
+
     profile_record = {
         "request_id": request_id,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "collection": final_state.get("collection") or repo_id or "default",
+        "repository_id": r_id,
+        "repository_name": r_name,
+        "collection_id": c_id,
+        "collection": c_id,
         "query": query,
         "requested_papers": final_state.get("requested_papers", []),
         "retrieved_papers": final_state.get("retrieved_papers", []),

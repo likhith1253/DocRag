@@ -51,6 +51,12 @@ class SemanticCache:
         cursor.execute("VACUUM")
         conn.commit()
 
+    def clear_for_repo(self, repo_id: str):
+        conn = self._get_conn()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM cache WHERE repo_id = ?", (repo_id,))
+        conn.commit()
+
     def get_cached_answer(self, query: str, repo_id: str) -> Optional[Dict[str, Any]]:
         conn = self._get_conn()
         cursor = conn.cursor()

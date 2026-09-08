@@ -383,14 +383,18 @@ if ready_repos:
     col_q1, col_q2 = st.columns([3, 1])
     with col_q1:
         selected_repo_name = st.selectbox(
-            "Select collection to query",
+            "Current Repository:",
             list(repo_options.keys()),
             key="collection_select",
         )
         selected_repo_id = repo_options[selected_repo_name]
+        cur_repo = next((r for r in ready_repos if r["repo_id"] == selected_repo_id), {})
     with col_q2:
         st.write("")
-        st.caption(f"ID: `{selected_repo_id}`")
+        st.markdown(f"**Status:** `{cur_repo.get('status', 'READY')}`")
+        doc_c = cur_repo.get('document_count', 0)
+        chk_c = cur_repo.get('chunk_count', 0) or cur_repo.get('tier2_indexed_chunks', 0)
+        st.caption(f"📚 {doc_c} doc(s) · 🧩 {chk_c} chunk(s)")
 else:
     st.info("No indexed collections available. Index a folder above to get started.")
 
@@ -560,37 +564,53 @@ if all_repos:
         status = repo.get("status", "")
         icon = STATUS_ICON.get(status, "❓")
 
-        col_a, col_b, col_c = st.columns([4, 3, 1])
+        col_a, col_b, col_c = st.columns([4, 2, 2])
         with col_a:
+            doc_c = repo.get('document_count', 0)
+            chk_c = repo.get('chunk_count', 0) or repo.get('tier2_indexed_chunks', 0)
             st.markdown(
                 f"{icon} **{repo['name']}**  \n"
                 f"<small>ID: `{repo['repo_id']}`&nbsp;&nbsp;·&nbsp;&nbsp;"
                 f"Status: **{status}**&nbsp;&nbsp;·&nbsp;&nbsp;"
-                f"Indexed: {repo.get('indexed_at', 'N/A')}</small>",
+                f"Docs: **{doc_c}** · Chunks: **{chk_c}**</small>",
                 unsafe_allow_html=True,
             )
         with col_b:
             src = repo.get("source_path", "")
             if src:
-                # Truncate very long paths gracefully
-                display_src = src if len(src) <= 60 else "…" + src[-57:]
+                display_src = src if len(src) <= 45 else "…" + src[-42:]
                 st.markdown(
                     f"<small style='word-break:break-all'>`{display_src}`</small>",
                     unsafe_allow_html=True,
                 )
         with col_c:
-            if st.button("🗑 Delete", key=f"del_{repo['repo_id']}"):
-                try:
-                    del_res = requests.delete(
-                        f"{API_URL}/repository/{repo['repo_id']}", timeout=10
-                    )
-                    if del_res.status_code == 200:
-                        st.success(f"Deleted '{repo['name']}'.")
-                        st.rerun()
-                    else:
-                        st.error(f"Delete failed: {del_res.text}")
-                except Exception as e:
-                    st.error(f"Error: {e}")
+            btn_c1, btn_c2 = st.columns(2)
+            with btn_c1:
+                if st.button("🔄 Index", key=f"reindex_{repo['repo_id']}", help="Reindex this repository"):
+                    try:
+                        re_res = requests.post(f"{API_URL}/repository/{repo['repo_id']}/reindex", timeout=10)
+                        if re_res.status_code == 200:
+                            st.session_state["indexing_repo_id"] = repo['repo_id']
+                            st.session_state["indexing_repo_name"] = repo['name']
+                            st.success("Reindexing started.")
+                            st.rerun()
+                        else:
+                            st.error(f"Failed: {re_res.text}")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+            with btn_c2:
+                if st.button("🗑 Delete", key=f"del_{repo['repo_id']}", help="Delete this repository"):
+                    try:
+                        del_res = requests.delete(
+                            f"{API_URL}/repository/{repo['repo_id']}", timeout=10
+                        )
+                        if del_res.status_code == 200:
+                            st.success(f"Deleted '{repo['name']}'.")
+                            st.rerun()
+                        else:
+                            st.error(f"Delete failed: {del_res.text}")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
         st.divider()
 else:
     st.info("No collections found. Index a folder above.")

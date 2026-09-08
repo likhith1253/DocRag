@@ -74,7 +74,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(repository_router)
+app.include_router(repository_router, prefix="/repository")
+app.include_router(repository_router, prefix="/repositories")
 
 
 def _backend_health_payload():
