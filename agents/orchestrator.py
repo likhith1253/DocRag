@@ -77,15 +77,17 @@ _LOW_VALUE_SECTION_RE = re.compile(
 
 def _dedup_and_filter_chunks(chunks: List[Dict[str, Any]], removed_log: list) -> List[Dict[str, Any]]:
     """
-    Shared Stage-4 logic: dedup by content hash, drop low-value sections
-    (References/Bibliography/Acknowledgements). Used by both the normal
+    Shared Stage-4 logic: dedup by content hash and normalized text content,
+    drop low-value sections (References/Bibliography/Acknowledgements). Used by both the normal
     collection-wide search path and each per-paper sub-search in the
     explicit multi-paper path, so isolation doesn't lose this filtering.
     """
     seen_hashes = set()
+    seen_texts = set()
     unique_chunks = []
     for chunk in chunks:
         h = chunk.get("metadata", {}).get("hash", "")
+        norm_text = re.sub(r'\s+', ' ', chunk.get("content", "").strip())
         cid = chunk.get("id") or h or "unknown"
         doc_name = chunk.get("metadata", {}).get("file") or chunk.get("metadata", {}).get("paper_title") or "Unknown"
         if h and h in seen_hashes:
@@ -94,9 +96,17 @@ def _dedup_and_filter_chunks(chunks: List[Dict[str, Any]], removed_log: list) ->
                 "filename": doc_name,
                 "reason_removed": f"Duplicate content hash '{h}'"
             })
+        elif norm_text and norm_text in seen_texts:
+            removed_log.append({
+                "chunk_id": str(cid),
+                "filename": doc_name,
+                "reason_removed": "Duplicate chunk content text"
+            })
         else:
             if h:
                 seen_hashes.add(h)
+            if norm_text:
+                seen_texts.add(norm_text)
             unique_chunks.append(chunk)
 
     filtered_chunks = []
