@@ -13,23 +13,81 @@ if hasattr(sys.stdout, "reconfigure"):
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from sentence_transformers import SentenceTransformer
-from typing import List, Dict, Any
+from collections import OrderedDict
+from typing import List, Dict, Any, Tuple, Optional
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml")
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ---------------------------------------------------------------------------
-# Module-level singletons
+# Module-level singletons & Caches
 # ---------------------------------------------------------------------------
 # SentenceTransformer and QdrantClient are expensive to initialize (8+ seconds
 # each on CPU). Constructing them once per process and reusing them is a safe
 # engineering optimization: it does NOT change embeddings, rankings, metrics,
-# or any experimental result.  It only eliminates repeated model loading.
+# or any experimental result. It only eliminates repeated model loading.
 # ---------------------------------------------------------------------------
 _encoder_cache: Dict[str, SentenceTransformer] = {}
 _config_cache: Dict[str, Any] = {}
 _ensured_collections = set()
 _encoder_lock = threading.Lock()
+
+
+class QueryEmbeddingCache:
+    """
+    Thread-safe bounded query embedding cache.
+    Avoids re-encoding identical queries across repeated searches or decomposed subqueries.
+    Uses LRU eviction when reaching max_size.
+    """
+    def __init__(self, max_size: int = 512):
+        self.max_size = max_size
+        self._cache: OrderedDict = OrderedDict()
+        self._lock = threading.Lock()
+        self.hits = 0
+        self.misses = 0
+
+    def get(self, model_name: str, query: str) -> Optional[Any]:
+        key = (model_name, query.strip())
+        with self._lock:
+            if key in self._cache:
+                self.hits += 1
+                self._cache.move_to_end(key)
+                return self._cache[key]
+            self.misses += 1
+            return None
+
+    def put(self, model_name: str, query: str, vector: Any) -> None:
+        key = (model_name, query.strip())
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+                self._cache[key] = vector
+            else:
+                if len(self._cache) >= self.max_size:
+                    self._cache.popitem(last=False)
+                self._cache[key] = vector
+
+    def clear(self) -> None:
+        with self._lock:
+            self._cache.clear()
+            self.hits = 0
+            self.misses = 0
+
+    def stats(self) -> Dict[str, Any]:
+        with self._lock:
+            return {
+                "size": len(self._cache),
+                "max_size": self.max_size,
+                "hits": self.hits,
+                "misses": self.misses,
+            }
+
+
+_query_embedding_cache = QueryEmbeddingCache(max_size=512)
+
+
+def get_query_embedding_cache() -> QueryEmbeddingCache:
+    return _query_embedding_cache
 
 
 def _resolve_storage_path(path_value: str) -> str:
@@ -56,11 +114,7 @@ def _get_config() -> Dict[str, Any]:
 def _get_embedding_device(config: Dict[str, Any] = None) -> str:
     """
     Determine the execution device for SentenceTransformer embeddings.
-    Precedence:
-    1. config['embedding']['device'] if set
-    2. config['device'] if set
-    3. Default to 'cpu'
-    Resolves 'auto' to 'cuda' (if torch.cuda.is_available()) or 'cpu'.
+    Queries DevicePolicyManager to respect GPU memory constraints and safe margins.
     """
     if config is None:
         config = _get_config()
@@ -70,17 +124,21 @@ def _get_embedding_device(config: Dict[str, Any] = None) -> str:
         device = emb_cfg.get("device")
     if not device:
         device = config.get("device")
-    if not device:
-        device = "cpu"
 
-    device = str(device).lower()
-    if device == "auto":
-        try:
-            import torch
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        except ImportError:
-            device = "cpu"
-    return device
+    try:
+        from storage.device_policy import get_device_policy_manager
+        mgr = get_device_policy_manager()
+        dev, _ = mgr.get_embedding_device(device)
+        return dev
+    except Exception:
+        dev = str(device or "cpu").lower()
+        if dev == "auto":
+            try:
+                import torch
+                return "cuda" if torch.cuda.is_available() else "cpu"
+            except ImportError:
+                return "cpu"
+        return dev
 
 
 def _load_sentence_transformer(model_name: str, device: str) -> SentenceTransformer:
@@ -293,6 +351,11 @@ class VectorStoreManager:
             cache_key = f"{self.qdrant_path}::{self.collection_name}"
             _ensured_collections.discard(cache_key)
             VectorStoreManager._all_chunks_cache.pop(cache_key, None)
+            try:
+                from retrieval.paper_matcher import invalidate_paper_cache
+                invalidate_paper_cache(self.collection_name)
+            except Exception:
+                pass
 
     def count(self) -> int:
         """Returns total number of vector points stored in this collection."""
@@ -376,6 +439,11 @@ class VectorStoreManager:
         cache_key = f"{self.qdrant_path}::{self.collection_name}"
         if cache_key in VectorStoreManager._all_chunks_cache:
             del VectorStoreManager._all_chunks_cache[cache_key]
+        try:
+            from retrieval.paper_matcher import invalidate_paper_cache
+            invalidate_paper_cache(self.collection_name)
+        except Exception:
+            pass
 
     def _update_progress_heartbeat(self):
         try:
@@ -439,6 +507,11 @@ class VectorStoreManager:
         cache_key = f"{self.qdrant_path}::{self.collection_name}"
         if cache_key in VectorStoreManager._all_chunks_cache:
             del VectorStoreManager._all_chunks_cache[cache_key]
+        try:
+            from retrieval.paper_matcher import invalidate_paper_cache
+            invalidate_paper_cache(self.collection_name)
+        except Exception:
+            pass
 
     def get_all_chunks(self) -> List[Dict[str, Any]]:
         """Retrieve all chunks from Qdrant, using memory cache to avoid repeated DB scans."""
@@ -479,8 +552,20 @@ class VectorStoreManager:
             query_for_encode = query
 
         t_embed_start = time.perf_counter()
-        # Store numpy array so callers (e.g. MMR) can reuse it without re-encoding
-        query_vector_np = self.encoder.encode(query_for_encode, show_progress_bar=False)
+        q_cache = get_query_embedding_cache()
+        cached_vec = q_cache.get(self.embedding_model_name, query_for_encode)
+        if cached_vec is not None:
+            query_vector_np = cached_vec
+            is_cache_hit = True
+        else:
+            try:
+                query_vector_np = self.encoder.encode(query_for_encode, show_progress_bar=False)
+                q_cache.put(self.embedding_model_name, query_for_encode, query_vector_np)
+                is_cache_hit = False
+            except Exception as enc_err:
+                print(f"[EMBEDDING FATAL ERROR] Failed encoding query: {enc_err}", flush=True)
+                raise RuntimeError(f"Embedding service unavailable: {enc_err}") from enc_err
+
         query_vector = query_vector_np.tolist()
         t_embed_end = time.perf_counter()
         
@@ -494,7 +579,8 @@ class VectorStoreManager:
             "embedding_dimension": self.vector_size,
             "latency_ms": round(embed_time_ms, 2),
             "vector_norm": round(vector_norm, 6),
-            "vector_preview": vector_preview
+            "vector_preview": vector_preview,
+            "cache_hit": is_cache_hit,
         }
         log_stage(request_id, 2, "Embedding", stage2_data, latency_ms=embed_time_ms)
 
@@ -547,7 +633,7 @@ class VectorStoreManager:
             except Exception:
                 pass
             raise RuntimeError(
-                f"Vector search failed in collection '{self.collection_name}' with filter {metadata_filters}: {qdrant_err}"
+                f"Vector search failed: {qdrant_err}"
             ) from qdrant_err
         t_qdrant_end = time.perf_counter()
         

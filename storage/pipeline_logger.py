@@ -452,3 +452,20 @@ def log_exception(e: Exception, context: str = ""):
         logger.error(msg)
     except Exception:
         pass
+
+
+QUERY_PROFILE_LOG_PATH = LOGS_DIR / "query_profile.jsonl"
+
+
+def log_query_profile(profile_data: Dict[str, Any]) -> None:
+    """
+    Append a structured query profile record to logs/query_profile.jsonl.
+    Captures end-to-end stage timings, candidates, tokens, and hardware allocations.
+    """
+    try:
+        with _log_lock:
+            with open(QUERY_PROFILE_LOG_PATH, "a", encoding="utf-8") as f:
+                f.write(json.dumps(profile_data) + "\n")
+    except Exception as e:
+        print(f"[QUERY PROFILER] Failed writing query profile: {e}", flush=True)
+

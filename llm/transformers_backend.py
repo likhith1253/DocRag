@@ -154,8 +154,11 @@ class HFTransformersBackend(LLMBackend):
             max_new_tokens = min(max_new_tokens, 300)
         elif answer_depth == "ENUM_LIST":
             # A numbered algorithm/method list with citations typically needs ~150–200 tokens.
-            # 512 caused the model to run to the hard limit (~22 seconds wasted at 14 tok/sec).
             max_new_tokens = min(max_new_tokens, 200)
+        elif answer_depth == "DETAILED":
+            max_new_tokens = min(max_new_tokens, 700)
+        elif answer_depth == "COMPARATIVE":
+            max_new_tokens = min(max_new_tokens, 800)
         
         gen_kwargs = {
             "max_new_tokens": max_new_tokens,

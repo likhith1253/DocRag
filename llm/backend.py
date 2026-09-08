@@ -79,7 +79,7 @@ def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: s
         from llm.backend_factory import get_backend
         backend = get_backend()
         start_backend = time.perf_counter()
-        print("CALLING HFTransformersBackend.generate()", flush=True)
+        print(f"CALLING {backend.__class__.__name__}.generate()", flush=True)
         try:
             result = backend.generate(prompt, model, request_id=request_id, answer_depth=answer_depth)
         except TypeError:
