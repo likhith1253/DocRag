@@ -250,7 +250,14 @@ def match_papers_in_query(
     if not available_titles:
         return []
 
-    acronym_tokens = re.findall(r"\b[A-Za-z0-9]{2,6}\b", query)
+    # Only genuine acronym-cased tokens (e.g. "VAE", "MDN", "SAC", "GPT3") —
+    # NOT any short lowercase word. The previous [A-Za-z0-9]{2,6} pattern
+    # matched ordinary words like "of"/"the"/"role", which could coincide
+    # with the computed prefix-initials of a completely unrelated title
+    # (e.g. "of" == initials of "Overview_of_FPGA_deep_learning..."),
+    # producing a false 0.95-confidence paper match. See score_title_match
+    # step 4 (acronym initials matching).
+    acronym_tokens = re.findall(r"\b[A-Z][A-Z0-9]{1,5}\b", query)
     word_weights = _compute_word_weights(available_titles)
 
     scored = []

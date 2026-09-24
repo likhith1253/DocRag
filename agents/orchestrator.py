@@ -53,6 +53,14 @@ from retrieval.paper_matcher import (
     classify_paper_scope,
 )
 from retrieval.query_analyzer import decompose_complex_question, detect_evidence_intent, extract_comparison_facets
+from ingestion.doc_chunker import (
+    _is_equation_line,
+    _is_table_row,
+    _TABLE_ID_RE,
+    _FIGURE_ID_RE,
+    _ALGORITHM_ID_RE,
+    _FIGURE_REF_RE,
+)
 
 import agents.doc_agent as doc_agent
 from agents.doc_agent import CANNOT_FIND_RESPONSE, build_citation_list
@@ -137,23 +145,42 @@ _EVIDENCE_FLAG_BY_INTENT = {
 
 
 def _chunk_has_evidence(c: Dict[str, Any], evidence_type: str) -> bool:
-    """Check if chunk satisfies the requested evidence type (by metadata flag or structural content)."""
+    """
+    Check if chunk satisfies the requested evidence type, by metadata flag
+    OR by re-running the same paper-agnostic structural detectors the
+    chunker uses (ingestion/doc_chunker.py) directly against the chunk's
+    raw content.
+
+    The content-level fallback exists for two reasons: (1) it must stay in
+    sync with whatever the chunker currently detects, and (2) it must work
+    on chunks indexed before a chunker detection fix ships, without
+    requiring a reindex. A hardcoded per-paper keyword list (e.g. matching
+    only DQN/SAC-style RL notation) would defeat both — it silently misses
+    equations/tables/algorithms in every other paper.
+    """
     meta = c.get("metadata", {})
     if evidence_type in _EVIDENCE_FLAG_BY_INTENT:
         if meta.get(_EVIDENCE_FLAG_BY_INTENT[evidence_type]):
             return True
-    content = c.get("content", "").lower()
+    content = c.get("content", "")
+    lines = content.splitlines()
     if evidence_type == "equation":
-        return any(w in content for w in ("\\sum", "\\max", "maxa", "max_a", "γ max", "\\gamma", "theta-", "θ−", "θ-", "q(s", "j(\\pi)", "r +", "r+", "y ="))
-    if evidence_type == "algorithm":
-        return any(w in content for w in ("algorithm 1", "algorithm 2", "algorithm s", "pseudocode", "actor-learner thread", "repeat until", "update target", "for step", "accumulate gradients"))
+        return any(_is_equation_line(l) for l in lines)
     if evidence_type == "table":
-        return any(w in content for w in ("table 1", "table 2", "table 3", "table s", "mean score", "median score"))
+        return bool(_TABLE_ID_RE.search(content)) or any(_is_table_row(l) for l in lines)
+    if evidence_type == "figure":
+        return bool(_FIGURE_ID_RE.search(content)) or bool(_FIGURE_REF_RE.search(content))
+    if evidence_type == "algorithm":
+        content_lower = content.lower()
+        return bool(_ALGORITHM_ID_RE.search(content)) or any(
+            w in content_lower for w in ("pseudocode", "actor-learner thread", "repeat until", "for each step", "accumulate gradients")
+        )
+    content_lower = content.lower()
     if evidence_type == "preprocessing":
         # Concrete preprocessing methodology required (not merely generic words like 'raw pixel')
-        return any(w in content for w in ("210", "160", "110", "84", "down-sampl", "downsampl", "gray-scale", "grayscale", "crop", "last 4 frames", "stacks them", "history representation"))
+        return any(w in content_lower for w in ("210", "160", "110", "84", "down-sampl", "downsampl", "gray-scale", "grayscale", "crop", "last 4 frames", "stacks them", "history representation"))
     if evidence_type == "architecture":
-        return any(w in content for w in ("controller", "linear controller", "mdn-rnn", "latent vector", "convolutional", "hidden units", "parameters", "network structure"))
+        return any(w in content_lower for w in ("controller", "linear controller", "mdn-rnn", "latent vector", "convolutional", "hidden units", "parameters", "network structure"))
     return False
 
 
@@ -304,12 +331,18 @@ def _enforce_paper_isolation(
 
 
 def _compute_evidence_counts(chunks: List[Dict[str, Any]]) -> Dict[str, int]:
-    """Count chunks carrying each evidence-type flag (see ingestion/doc_chunker.py::_compute_evidence_flags)."""
+    """
+    Count chunks carrying each evidence-type, via _chunk_has_evidence (metadata
+    flag from ingestion/doc_chunker.py, OR a content-level fallback re-run at
+    query time). The fallback matters here specifically: this count feeds the
+    hard evidence gate in agent_node, and gating a real answer off on a stale
+    ingestion-time flag (from before a chunker detection fix, with no reindex
+    yet run) would produce a false "cannot answer" refusal.
+    """
     evidence_counts = {"equation": 0, "table": 0, "figure": 0, "algorithm": 0}
     for c in chunks:
-        meta = c.get("metadata", {})
-        for t, flag in _EVIDENCE_FLAG_BY_INTENT.items():
-            if meta.get(flag):
+        for t in evidence_counts:
+            if _chunk_has_evidence(c, t):
                 evidence_counts[t] += 1
     return evidence_counts
 
@@ -354,6 +387,22 @@ def _log_evidence_diagnostics(
 
     missing = _missing_requested_evidence(chunks, evidence_intent)
     print(f"[EVIDENCE DIAGNOSTICS] Missing requested evidence: {missing if missing else 'none'}", flush=True)
+
+
+_REFUSAL_PREFIXES = (
+    CANNOT_FIND_RESPONSE,
+    "Embedding service unavailable.",
+    "Vector search failed.",
+    "LLM generation timed out.",
+    "I cannot answer this reliably from the retrieved evidence",
+)
+
+
+def _is_refusal_answer(ans_str: str) -> bool:
+    """True for CANNOT_FIND_RESPONSE, infra-failure messages, and the evidence-gate refusal (Fix #1)."""
+    if not ans_str:
+        return True
+    return any(ans_str.startswith(p) for p in _REFUSAL_PREFIXES)
 
 
 def _missing_evidence_response(missing_types: List[str]) -> str:
@@ -1592,7 +1641,7 @@ class Orchestrator:
 
         ans_str, latency_breakdown, chunks, citations = answer(query, repo_id, filters)
 
-        agent = "doc_agent" if ans_str != CANNOT_FIND_RESPONSE else "doc_agent"
+        agent = "doc_agent"
         latency = latency_breakdown.get("total_ms", 0.0) / 1000.0
         memory = 0.0
         seen_files = set()
@@ -1603,7 +1652,13 @@ class Orchestrator:
                 sources.append(fp)
                 seen_files.add(fp)
 
-        if repo_id and agent != "error":
+        # Never cache a refusal/negative answer: caching CANNOT_FIND_RESPONSE
+        # (or any other "could not answer" message) would keep serving that
+        # exact refusal for this query forever, even after retrieval or
+        # generation later improves — the cache has no way to invalidate
+        # itself just because the code changed. Only a genuine answer is
+        # worth memoizing.
+        if repo_id and not _is_refusal_answer(ans_str):
             cache.set_cached_answer(query, repo_id, ans_str, sources)
 
         return {
