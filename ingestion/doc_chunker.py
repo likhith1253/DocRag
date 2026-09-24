@@ -74,14 +74,21 @@ def _is_bullet_point(line: str) -> bool:
 def _is_equation_line(line: str) -> bool:
     """
     Detect lines that are part of equations.
+
+    The identifier=expression pattern is deliberately unanchored and allows
+    multi-character identifiers: PyMuPDF extracts each visual PDF line as-is,
+    so a rendered equation may be a standalone line ("at = Wc[zt, ht] + bc")
+    or embedded mid-sentence ("...define our controller as at = Wc zt + bc.").
+    An anchored, single-character-identifier pattern misses both.
     """
     patterns = [
         r'\\[a-zA-Z]+\{',  # LaTeX commands
         r'\$.*\$',  # Inline math
-        r'^\s*[a-zA-Z_]\s*[=+\-*/]\s*[a-zA-Z0-9_]',  # Simple equations
+        r'\b[a-zA-Z_][a-zA-Z0-9_]*\s*[+\-*/]?=\s*\S',  # identifier = expression, anywhere in the line
         r'^\s*\(?\d+\)?\s*$',  # Equation numbers like (1) or 1
         r'(?i)equation\s*\(\d+\)', # Mentions like Equation (1)
-        r'^\s*[∑∏∫]\s*', # Math symbols
+        r'[∑∏∫∇≈≤≥←→∈√±×÷]',  # Math operators/relations, anywhere in the line
+        r'[γθπαβλμσΓΘΠΣΦΨΩ]',  # Greek letters commonly used in ML/RL equations
     ]
     return any(re.search(p, line) for p in patterns)
 

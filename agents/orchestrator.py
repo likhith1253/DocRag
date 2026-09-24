@@ -303,6 +303,32 @@ def _enforce_paper_isolation(
     return kept, dropped
 
 
+def _compute_evidence_counts(chunks: List[Dict[str, Any]]) -> Dict[str, int]:
+    """Count chunks carrying each evidence-type flag (see ingestion/doc_chunker.py::_compute_evidence_flags)."""
+    evidence_counts = {"equation": 0, "table": 0, "figure": 0, "algorithm": 0}
+    for c in chunks:
+        meta = c.get("metadata", {})
+        for t, flag in _EVIDENCE_FLAG_BY_INTENT.items():
+            if meta.get(flag):
+                evidence_counts[t] += 1
+    return evidence_counts
+
+
+def _missing_requested_evidence(
+    chunks: List[Dict[str, Any]], evidence_intent: Dict[str, bool]
+) -> List[str]:
+    """
+    Evidence types the question asked for (equation/table/figure/algorithm)
+    that are not present in ANY retrieved chunk, by metadata flag. Used to
+    hard-stop generation before it reaches the LLM — see agent_node().
+    """
+    evidence_counts = _compute_evidence_counts(chunks)
+    return [
+        t for t in ("equation", "table", "figure", "algorithm")
+        if evidence_intent.get(t) and evidence_counts[t] == 0
+    ]
+
+
 def _log_evidence_diagnostics(
     chunks: List[Dict[str, Any]],
     evidence_intent: Dict[str, bool],
@@ -314,16 +340,8 @@ def _log_evidence_diagnostics(
     never full chunk dumps. Exists because "retrieval succeeded" (nonzero
     chunk count) does not imply "the right evidence was retrieved".
     """
-    evidence_counts = {"equation": 0, "table": 0, "figure": 0, "algorithm": 0}
-    pages = set()
-    for c in chunks:
-        meta = c.get("metadata", {})
-        for t, flag in _EVIDENCE_FLAG_BY_INTENT.items():
-            if meta.get(flag):
-                evidence_counts[t] += 1
-        pg = meta.get("page_start")
-        if pg:
-            pages.add(pg)
+    evidence_counts = _compute_evidence_counts(chunks)
+    pages = {c.get("metadata", {}).get("page_start") for c in chunks if c.get("metadata", {}).get("page_start")}
 
     if requested_papers is not None:
         print(f"[EVIDENCE DIAGNOSTICS] Requested paper(s): {requested_papers}", flush=True)
@@ -334,8 +352,25 @@ def _log_evidence_diagnostics(
     for t in ("equation", "table", "figure", "algorithm"):
         print(f"[EVIDENCE DIAGNOSTICS] {t.capitalize()} evidence: {'yes' if evidence_counts[t] else 'no'}", flush=True)
 
-    missing = [t for t in ("equation", "table", "figure", "algorithm") if evidence_intent.get(t) and evidence_counts[t] == 0]
+    missing = _missing_requested_evidence(chunks, evidence_intent)
     print(f"[EVIDENCE DIAGNOSTICS] Missing requested evidence: {missing if missing else 'none'}", flush=True)
+
+
+def _missing_evidence_response(missing_types: List[str]) -> str:
+    """
+    Canonical refusal for Fix #1: when the question explicitly asks about an
+    equation/table/figure/algorithm and NONE of the retrieved chunks carry
+    that evidence type, the question must never reach the LLM as if it were
+    an ordinary technical question — that is what let the model answer from
+    pretrained knowledge instead of the paper (the Q2 failure). This is a
+    hard, code-level stop, not a prompt instruction.
+    """
+    joined = " and ".join(missing_types) if len(missing_types) <= 2 else ", ".join(missing_types[:-1]) + f", and {missing_types[-1]}"
+    verb = "were" if len(missing_types) > 1 else "was"
+    return (
+        f"I cannot answer this reliably from the retrieved evidence because the requested "
+        f"{joined} {verb} not retrieved from the specified paper."
+    )
 
 
 def get_process_memory() -> float:
@@ -385,6 +420,7 @@ class AgentState(TypedDict, total=False):
     retrieval_candidate_count: int
     reranker_candidate_count: int
     evidence_types: List[str]
+    missing_evidence_types: List[str]
     subqueries_count: int
 
 
@@ -971,6 +1007,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             "retrieval_candidate_count": initial_chunk_count,
             "reranker_candidate_count": reranker_candidate_count,
             "evidence_types": [t for t, act in evidence_intent.items() if act],
+            "missing_evidence_types": _missing_requested_evidence(chunks, evidence_intent),
             "subqueries_count": len(subqueries) if 'subqueries' in locals() and subqueries else 0,
         }
     except Exception as e:
@@ -1053,6 +1090,36 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             ans = CANNOT_FIND_RESPONSE
         return {
             "answer": ans,
+            "citations": [],
+            "latency_breakdown": latency_breakdown,
+        }
+
+    # ------------------------------------------------------------------
+    # Fix #1 — hard evidence gate (code-level, not a prompt instruction).
+    # If the question required equation/table/figure/algorithm evidence and
+    # retrieval found none of that type anywhere in the retrieved chunks,
+    # never send the question to the LLM as an ordinary technical question:
+    # that is exactly how the model ends up answering from pretrained
+    # knowledge instead of the paper. Refuse explicitly instead.
+    # ------------------------------------------------------------------
+    missing_evidence_types = state.get("missing_evidence_types") or []
+    if missing_evidence_types:
+        print(
+            f"[EVIDENCE GATE] Refusing to generate: requested evidence type(s) "
+            f"{missing_evidence_types} were not found in any retrieved chunk.",
+            flush=True,
+        )
+        log_grounding_exit(
+            request_id=request_id,
+            file_path="agents/orchestrator.py",
+            function_name="agent_node",
+            line_number=0,
+            reason="Requested evidence type(s) absent from all retrieved chunks",
+            condition="state.get('missing_evidence_types') is non-empty",
+            evidence={"missing_evidence_types": missing_evidence_types}
+        )
+        return {
+            "answer": _missing_evidence_response(missing_evidence_types),
             "citations": [],
             "latency_breakdown": latency_breakdown,
         }

@@ -492,6 +492,11 @@ def _build_adaptive_prompt(question: str, context_block: str, answer_depth: str,
     # ── Common grounding header ────────────────────────────────────────────
     grounding_header = (
         "You are a research assistant answering questions STRICTLY from the retrieved document excerpts below.\n\n"
+        "The retrieved context is the only authoritative source. Do not answer from pretrained knowledge. "
+        "Every factual claim, equation, numerical value, algorithm step, architectural component, and experimental "
+        "result must be supported by the supplied context. If the required evidence is absent, state that the "
+        "information cannot be determined from the retrieved documents. Do not reconstruct missing equations or "
+        "technical details from general knowledge.\n\n"
         "ABSOLUTE RULES — violating any rule makes your answer wrong:\n"
         "1. Use ONLY information present in the excerpts. Zero outside knowledge.\n"
         "2. Never invent facts, methods, numbers, or results.\n"
