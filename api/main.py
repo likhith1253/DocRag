@@ -12,6 +12,17 @@ Endpoints:
 """
 
 import os
+
+# Must be set before any module imports torch / initializes a CUDA context
+# (transitively via storage.vector_store, llm.transformers_backend, etc.).
+# PyTorch's default caching allocator fragments over a long-running process
+# as prompt lengths vary request to request; once fragmented, a genuinely
+# larger allocation (e.g. this process's biggest prompt so far) can raise
+# "CUDA out of memory" even though nvidia-smi shows plenty of free memory in
+# aggregate, just not in one contiguous block. expandable_segments avoids
+# that by letting a segment grow instead of requiring a fresh contiguous one.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 import json
 import threading
 import time
