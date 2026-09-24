@@ -200,8 +200,35 @@ class HFTransformersBackend(LLMBackend):
         ticker = threading.Thread(target=_heartbeat, daemon=True)
         ticker.start()
         try:
-            with torch.inference_mode():
-                output_ids = self.model.generate(**inputs, **gen_kwargs)
+            # Release any cached-but-unused allocator blocks from earlier work
+            # in this process (embedding encoding, CrossEncoder scoring, prior
+            # requests) before the LLM's own allocation, to maximize the
+            # contiguous free memory available to it.
+            if self.device == "cuda":
+                try:
+                    torch.cuda.empty_cache()
+                except Exception:
+                    pass
+            try:
+                with torch.inference_mode():
+                    output_ids = self.model.generate(**inputs, **gen_kwargs)
+            except torch.cuda.OutOfMemoryError:
+                # Graceful degradation: retry once with half the token budget
+                # after clearing the cache, rather than failing a genuinely
+                # answerable question outright just because the *ideal*
+                # answer length didn't fit under current memory pressure.
+                torch.cuda.empty_cache()
+                retry_max_new_tokens = max(64, max_new_tokens // 2)
+                print(
+                    f"[LLM GENERATION] CUDA OOM at max_new_tokens={max_new_tokens} — "
+                    f"retrying once with max_new_tokens={retry_max_new_tokens}.",
+                    flush=True,
+                )
+                retry_kwargs = dict(gen_kwargs)
+                retry_kwargs["max_new_tokens"] = retry_max_new_tokens
+                max_new_tokens = retry_max_new_tokens
+                with torch.inference_mode():
+                    output_ids = self.model.generate(**inputs, **retry_kwargs)
         except torch.cuda.OutOfMemoryError as oom:
             # Never let this surface as an empty/ambiguous result — doc_agent.run()
             # would otherwise treat "generation produced nothing" the same as "the
