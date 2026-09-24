@@ -230,13 +230,22 @@ def score_title_match(
 
 
 def match_papers_in_query(
-    query: str, available_titles: List[str], threshold: float = 0.55
+    query: str, available_titles: List[str], threshold: float = 0.55,
+    dominant_gap: float = 0.25,
 ) -> List[Tuple[str, float]]:
     """
     Return (title, score) pairs for indexed papers explicitly named in the
     query, sorted by descending confidence. Empty if none clear enough —
     callers should treat that as "no explicit paper requested" (general
     collection-wide search), not an error.
+
+    If the top match is a strong/verbatim hit (score >= 0.9) and every other
+    match trails it by more than `dominant_gap`, those trailing matches are
+    dropped: a single dominant title match should not be diluted into a
+    "multi-paper" query by a title that merely shares a few generic words
+    (e.g. "World Models" weakly overlapping "Auto-Encoding Variational
+    Bayes" on words like "model"/"variational"). This directly protects
+    single-paper retrieval isolation — see classify_paper_scope().
     """
     if not available_titles:
         return []
@@ -251,6 +260,13 @@ def match_papers_in_query(
             scored.append((title, score))
 
     scored.sort(key=lambda x: -x[1])
+
+    if len(scored) > 1 and scored[0][1] >= 0.9:
+        top_score = scored[0][1]
+        scored = [scored[0]] + [
+            (t, s) for t, s in scored[1:] if (top_score - s) <= dominant_gap
+        ]
+
     return scored
 
 
