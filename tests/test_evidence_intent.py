@@ -24,10 +24,18 @@ class TestEvidenceIntent(unittest.TestCase):
     def test_figure_sensitive_query(self):
         for q in [
             "Explain Figure 1.",
-            "What is the architecture?",
             "Describe the information flow shown in the diagram.",
         ]:
             self.assertTrue(detect_evidence_intent(q)["figure"], q)
+
+    def test_architecture_query_does_not_demand_figure_evidence(self):
+        # An architecture question is answered from prose describing the
+        # components, not necessarily from a figure. Mapping architecture ->
+        # figure made the hard evidence gate refuse groundable architecture
+        # answers when no "Figure N" text happened to be retrieved.
+        intent = detect_evidence_intent("What is the architecture?")
+        self.assertTrue(intent["architecture"])
+        self.assertFalse(intent["figure"])
 
     def test_algorithm_sensitive_query(self):
         for q in [
