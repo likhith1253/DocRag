@@ -8,6 +8,28 @@ from storage.vector_store import _get_encoder, _get_config, _get_embedding_devic
 
 _thread_local = threading.local()
 
+# A cached answer starting with any of these is a refusal/negative response
+# (grounding failure or an infrastructure error), never a real answer to the
+# question asked. It must never be served as a cache hit: a stale refusal
+# cached before a retrieval/generation fix would otherwise keep being
+# replayed for that exact query forever, since nothing here expires or
+# invalidates it. Kept in sync with agents/orchestrator.py::_REFUSAL_PREFIXES
+# (duplicated rather than imported to avoid storage -> agents import cycle).
+_CACHE_REFUSAL_PREFIXES = (
+    "I cannot find this information in the uploaded documents.",
+    "Embedding service unavailable.",
+    "Vector search failed.",
+    "LLM generation timed out.",
+    "I cannot answer this reliably from the retrieved evidence",
+)
+
+
+def _is_cache_refusal_answer(answer: str) -> bool:
+    if not answer:
+        return True
+    return any(answer.startswith(p) for p in _CACHE_REFUSAL_PREFIXES)
+
+
 class SemanticCache:
     def __init__(self, db_path: str = "./semantic_cache.db"):
         self.db_path = db_path
@@ -83,6 +105,8 @@ class SemanticCache:
         
         for row in rows:
             cached_query, emb_str, answer, sources_str = row
+            if _is_cache_refusal_answer(answer):
+                continue
             # Exact match short-circuit
             if query.strip().lower() == cached_query.strip().lower():
                 return {
@@ -90,7 +114,7 @@ class SemanticCache:
                     "sources": json.loads(sources_str),
                     "cached": True
                 }
-                
+
             cached_vector = np.array(json.loads(emb_str))
             # norm is already 1 if we normalized before saving, but let's be safe
             norm = np.linalg.norm(cached_vector)
