@@ -347,18 +347,25 @@ def _compute_evidence_counts(chunks: List[Dict[str, Any]]) -> Dict[str, int]:
     return evidence_counts
 
 
+_GATE_EVIDENCE_TYPES = ("equation", "table", "figure", "algorithm")
+
+
+def _requested_gate_evidence(evidence_intent: Dict[str, bool]) -> List[str]:
+    """Gate-eligible evidence types (equation/table/figure/algorithm) the question asked for."""
+    return [t for t in _GATE_EVIDENCE_TYPES if evidence_intent.get(t)]
+
+
 def _missing_requested_evidence(
     chunks: List[Dict[str, Any]], evidence_intent: Dict[str, bool]
 ) -> List[str]:
     """
-    Evidence types the question asked for (equation/table/figure/algorithm)
-    that are not present in ANY retrieved chunk, by metadata flag. Used to
-    hard-stop generation before it reaches the LLM — see agent_node().
+    Requested gate-eligible evidence types (equation/table/figure/algorithm)
+    not present in ANY retrieved chunk. See _chunk_has_evidence for detection.
     """
     evidence_counts = _compute_evidence_counts(chunks)
     return [
-        t for t in ("equation", "table", "figure", "algorithm")
-        if evidence_intent.get(t) and evidence_counts[t] == 0
+        t for t in _requested_gate_evidence(evidence_intent)
+        if evidence_counts[t] == 0
     ]
 
 
@@ -469,6 +476,7 @@ class AgentState(TypedDict, total=False):
     retrieval_candidate_count: int
     reranker_candidate_count: int
     evidence_types: List[str]
+    requested_gate_evidence: List[str]
     missing_evidence_types: List[str]
     subqueries_count: int
 
@@ -1056,6 +1064,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             "retrieval_candidate_count": initial_chunk_count,
             "reranker_candidate_count": reranker_candidate_count,
             "evidence_types": [t for t, act in evidence_intent.items() if act],
+            "requested_gate_evidence": _requested_gate_evidence(evidence_intent),
             "missing_evidence_types": _missing_requested_evidence(chunks, evidence_intent),
             "subqueries_count": len(subqueries) if 'subqueries' in locals() and subqueries else 0,
         }
@@ -1145,17 +1154,29 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
 
     # ------------------------------------------------------------------
     # Fix #1 — hard evidence gate (code-level, not a prompt instruction).
-    # If the question required equation/table/figure/algorithm evidence and
-    # retrieval found none of that type anywhere in the retrieved chunks,
-    # never send the question to the LLM as an ordinary technical question:
-    # that is exactly how the model ends up answering from pretrained
-    # knowledge instead of the paper. Refuse explicitly instead.
+    # Original purpose: stop the model answering an equation/table/figure/
+    # algorithm question purely from pretrained knowledge when NONE of the
+    # requested structured evidence was actually retrieved (the Q2 hallucination).
+    #
+    # It must fire only when ALL requested gate-evidence types are absent, not
+    # when merely one of several is. A question like "explain the objective
+    # equation AND how the actor/critic are trained" flags both `equation` and
+    # `algorithm`; if the equation is present but the paper's Algorithm box
+    # didn't survive retrieval, refusing the whole answer throws away a
+    # perfectly groundable equation answer. When at least one requested type is
+    # present we let generation proceed — the grounding prompt already instructs
+    # the model to say a specific missing detail "is not in the retrieved text"
+    # rather than inventing it, and ClaimEvidenceVerifier backs that up.
     # ------------------------------------------------------------------
+    requested_gate = state.get("requested_gate_evidence") or []
     missing_evidence_types = state.get("missing_evidence_types") or []
-    if missing_evidence_types:
+    all_requested_evidence_missing = (
+        bool(requested_gate) and len(missing_evidence_types) == len(requested_gate)
+    )
+    if all_requested_evidence_missing:
         print(
-            f"[EVIDENCE GATE] Refusing to generate: requested evidence type(s) "
-            f"{missing_evidence_types} were not found in any retrieved chunk.",
+            f"[EVIDENCE GATE] Refusing to generate: NONE of the requested evidence "
+            f"type(s) {requested_gate} were found in any retrieved chunk.",
             flush=True,
         )
         log_grounding_exit(
@@ -1163,9 +1184,9 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             file_path="agents/orchestrator.py",
             function_name="agent_node",
             line_number=0,
-            reason="Requested evidence type(s) absent from all retrieved chunks",
-            condition="state.get('missing_evidence_types') is non-empty",
-            evidence={"missing_evidence_types": missing_evidence_types}
+            reason="All requested evidence type(s) absent from all retrieved chunks",
+            condition="every requested gate-evidence type has zero retrieved chunks",
+            evidence={"requested": requested_gate, "missing": missing_evidence_types}
         )
         return {
             "answer": _missing_evidence_response(missing_evidence_types),

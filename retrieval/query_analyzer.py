@@ -413,7 +413,11 @@ def decompose_complex_question(question: str, max_subqueries: int = 4) -> List[s
 # _structural_scores rather than replacing it with a second parser.
 _EVIDENCE_EXTRA_PATTERNS = {
     "table": [r'\btables?\b', r'\bquantitativ\w*\b'],
-    "figure": [r'\bfigures?\b', r'\bdiagrams?\b', r'\barchitectures?\b', r'\billustrat\w*\b', r'\binformation flow\b'],
+    # NOTE: "architecture" is deliberately NOT here — an architecture question is
+    # answered from prose describing the components, not necessarily from a figure.
+    # Mapping architecture -> figure made every architecture query demand figure
+    # evidence, which the hard evidence gate then refused (see orchestrator).
+    "figure": [r'\bfigures?\b', r'\bdiagrams?\b', r'\billustrat\w*\b'],
     "equation": [
         r'\bequations?\b', r'\bobjective function\b', r'\bformulas?\b', r'\bupdate rule\b',
         r'\b\w+-?entropy\b.{0,40}\bobjective\b',  # e.g. "maximum-entropy objective"
