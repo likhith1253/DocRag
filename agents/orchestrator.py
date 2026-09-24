@@ -401,6 +401,7 @@ _REFUSAL_PREFIXES = (
     "Embedding service unavailable.",
     "Vector search failed.",
     "LLM generation timed out.",
+    "LLM generation failed:",
     "I cannot answer this reliably from the retrieved evidence",
 )
 

@@ -1650,7 +1650,11 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         }
         log_stage(request_id, 11, "Raw LLM Output", stage11_data, latency_ms=llm_gen_ms)
 
-        # Post-processing: if LLM returned empty string, return canonical not-found
+        # Post-processing: an empty LLM output is a generation/infrastructure
+        # failure (bad decoding params, a truncated/garbled response, a
+        # backend that returned "" instead of raising) — NOT evidence that the
+        # paper lacks the answer. Conflating the two as CANNOT_FIND_RESPONSE
+        # makes a real bug indistinguishable from a correct refusal.
         if not result or not result.strip():
             log_grounding_exit(
                 request_id=request_id,
@@ -1661,7 +1665,7 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
                 condition="not result or not result.strip()",
                 evidence={"result": result},
             )
-            return CANNOT_FIND_RESPONSE
+            return "LLM generation failed: model returned an empty response."
 
         # ── Phase 3/Fix B: Post-generation claim validation & sanitization ─────
         t_verif_start = time.perf_counter()
@@ -1697,9 +1701,17 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         log_exception(e, "doc_agent.run")
         if isinstance(e, AssertionError):
             raise e
-        err_lower = str(e).lower()
+        err_str = str(e)
+        err_lower = err_str.lower()
         if "timed out" in err_lower or "timeout" in err_lower:
             return "LLM generation timed out."
+        # A real backend/generation failure (CUDA OOM, a raised exception
+        # inside model.generate() — see llm/transformers_backend.py) must
+        # never be reported as CANNOT_FIND_RESPONSE: that message means "the
+        # retrieved documents don't contain this," which is a completely
+        # different, false claim about a request that never got to look.
+        if "llm generation failed" in err_lower:
+            return err_str
         return CANNOT_FIND_RESPONSE
 
     finally:
