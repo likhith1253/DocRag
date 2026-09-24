@@ -202,6 +202,23 @@ class HFTransformersBackend(LLMBackend):
         try:
             with torch.inference_mode():
                 output_ids = self.model.generate(**inputs, **gen_kwargs)
+        except torch.cuda.OutOfMemoryError as oom:
+            # Never let this surface as an empty/ambiguous result — doc_agent.run()
+            # would otherwise treat "generation produced nothing" the same as "the
+            # paper doesn't contain this information", which is exactly backwards:
+            # this is an infrastructure failure, not a grounding failure.
+            try:
+                torch.cuda.empty_cache()
+            except Exception:
+                pass
+            print(f"[LLM GENERATION FATAL] CUDA OOM at input_tokens={input_length}, max_new_tokens={max_new_tokens}: {oom}", flush=True)
+            raise RuntimeError(
+                f"LLM generation failed: CUDA out of memory (prompt={input_length} tokens, "
+                f"max_new_tokens={max_new_tokens})."
+            ) from oom
+        except Exception as gen_err:
+            print(f"[LLM GENERATION FATAL] {type(gen_err).__name__}: {gen_err}", flush=True)
+            raise RuntimeError(f"LLM generation failed: {type(gen_err).__name__}: {gen_err}") from gen_err
         finally:
             stop_heartbeat.set()
             ticker.join(timeout=1.0)
