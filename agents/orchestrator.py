@@ -698,6 +698,33 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                         "repo_id": repo_id,
                     }
                 points_in_coll = v_manager.count()
+                if points_in_coll == 0:
+                    # A READY repo pointing at an empty collection (registry
+                    # says indexed, Qdrant says nothing is there — stale
+                    # registry state, points dropped/reindex interrupted, or
+                    # a collection-name mismatch) must never look like an
+                    # ordinary grounding failure. Silently falling through to
+                    # "zero chunks retrieved" -> CANNOT_FIND_RESPONSE is
+                    # indistinguishable from "the paper genuinely doesn't
+                    # cover this" and hides a real indexing bug behind what
+                    # looks like a normal, honest refusal.
+                    err_msg = (
+                        f"Repository '{repo_id}' collection '{v_coll}' is marked READY but "
+                        f"contains 0 indexed vectors. Reindex this repository."
+                    )
+                    print(f"[RETRIEVAL] EMPTY COLLECTION: {err_msg}", flush=True)
+                    return {
+                        "agent": "doc_agent",
+                        "error": err_msg,
+                        "status": "EMPTY_COLLECTION",
+                        "retrieved_chunks": [],
+                        "answer": f"Error: {err_msg}",
+                        "citations": [],
+                        "claim_verification": {},
+                        "latency_breakdown": latency_breakdown,
+                        "collection": v_coll,
+                        "repo_id": repo_id,
+                    }
             except Exception as e:
                 err_msg = f"Vector storage error for collection '{v_coll}': {e}"
                 return {
