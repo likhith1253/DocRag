@@ -68,9 +68,17 @@ class RepositoryRegistry:
         self.storage_path = storage_path
         self.repositories: Dict[str, Repository] = {}
         self._lock = threading.Lock()
+        self._mtime: Optional[float] = None
         self._load()
 
+    def _disk_mtime(self) -> Optional[float]:
+        try:
+            return os.path.getmtime(self.storage_path)
+        except OSError:
+            return None
+
     def _load(self):
+        self.repositories = {}
         if os.path.exists(self.storage_path):
             try:
                 with open(self.storage_path, "r", encoding="utf-8") as f:
@@ -79,6 +87,27 @@ class RepositoryRegistry:
                         self.repositories[repo_id] = Repository(**repo_data)
             except Exception as e:
                 print(f"Failed to load registry from {self.storage_path}: {e}")
+        self._mtime = self._disk_mtime()
+
+    def _reload_if_stale(self) -> None:
+        """
+        Cross-process staleness guard. get_registry() returns a per-PROCESS
+        singleton (Phase 6: avoids re-reading registry.json on every query),
+        but registry.json can be written by a DIFFERENT process — e.g. the
+        Streamlit UI creating/indexing a repository while a separately
+        started API/uvicorn process is already running. That API process's
+        singleton never sees the new repo, so a query against it fails with
+        "Repository X not found in registry" even though the repo is READY
+        and fully queryable from the process that created it. Checking the
+        file's mtime is a cheap, safe way to detect that and resync.
+        """
+        current = self._disk_mtime()
+        if current is None or current == self._mtime:
+            return
+        with self._lock:
+            current = self._disk_mtime()
+            if current is not None and current != self._mtime:
+                self._load()
 
     def _save(self):
         # NOTE: Caller must hold self._lock
@@ -144,10 +173,7 @@ class RepositoryRegistry:
         self.register(repo)
         return repo
 
-    def get_repository(self, repo_id: str) -> Optional[Repository]:
-        """Retrieves a repository by its ID, collection ID, or vector collection name."""
-        if not repo_id:
-            return None
+    def _find_repository(self, repo_id: str) -> Optional[Repository]:
         if repo_id in self.repositories:
             return self.repositories[repo_id]
         for repo in self.repositories.values():
@@ -159,8 +185,23 @@ class RepositoryRegistry:
                 return self.repositories[stripped]
         return None
 
+    def get_repository(self, repo_id: str) -> Optional[Repository]:
+        """Retrieves a repository by its ID, collection ID, or vector collection name."""
+        if not repo_id:
+            return None
+        found = self._find_repository(repo_id)
+        if found is not None:
+            return found
+        # Not found in this process's in-memory snapshot — before reporting
+        # "doesn't exist", check whether another process wrote a newer
+        # registry.json (see _reload_if_stale) and retry once. Keeps the
+        # common case (repo already known) free of any disk I/O.
+        self._reload_if_stale()
+        return self._find_repository(repo_id)
+
     def list_repositories(self) -> List[Repository]:
         """Lists all non-deleted repositories."""
+        self._reload_if_stale()
         return [
             repo for repo in self.repositories.values()
             if repo.status not in (RepoStatus.DELETED, RepoStatus.DELETING)
