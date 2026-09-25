@@ -44,6 +44,17 @@ class HFTransformersBackend(LLMBackend):
         self.tokenizer = None
         self.model = None
 
+        # Set once a real CUDA OOM occurs. A CUDA OOM can leave the driver
+        # context unusable for the rest of the process — retrying generate()
+        # in-process does NOT help (confirmed live: it produced a second,
+        # unrelated-looking "CUDA driver error: invalid argument" instead of
+        # recovering). Once poisoned, every later query fails this same way
+        # for the process's remaining lifetime; the only fix is restarting
+        # the process to get a fresh CUDA context. Failing fast with a clear
+        # message beats letting every subsequent request rediscover this via
+        # a fresh, differently-worded driver error.
+        self._cuda_context_poisoned = False
+
     def _ensure_loaded(self):
         """Lazy load tokenizer and model on first generation call."""
         if self.model is not None and self.tokenizer is not None:
@@ -108,6 +119,11 @@ class HFTransformersBackend(LLMBackend):
         """
         Generate text response using HuggingFace Transformers model.
         """
+        if self._cuda_context_poisoned:
+            raise RuntimeError(
+                "LLM generation failed: this process's CUDA context was left unusable by "
+                "an earlier out-of-memory error. Restart the API/model server process to recover."
+            )
         self._ensure_loaded()
         from storage.pipeline_logger import log_stage
 
@@ -209,31 +225,21 @@ class HFTransformersBackend(LLMBackend):
                     torch.cuda.empty_cache()
                 except Exception:
                     pass
-            try:
-                with torch.inference_mode():
-                    output_ids = self.model.generate(**inputs, **gen_kwargs)
-            except torch.cuda.OutOfMemoryError:
-                # Graceful degradation: retry once with half the token budget
-                # after clearing the cache, rather than failing a genuinely
-                # answerable question outright just because the *ideal*
-                # answer length didn't fit under current memory pressure.
-                torch.cuda.empty_cache()
-                retry_max_new_tokens = max(64, max_new_tokens // 2)
-                print(
-                    f"[LLM GENERATION] CUDA OOM at max_new_tokens={max_new_tokens} — "
-                    f"retrying once with max_new_tokens={retry_max_new_tokens}.",
-                    flush=True,
-                )
-                retry_kwargs = dict(gen_kwargs)
-                retry_kwargs["max_new_tokens"] = retry_max_new_tokens
-                max_new_tokens = retry_max_new_tokens
-                with torch.inference_mode():
-                    output_ids = self.model.generate(**inputs, **retry_kwargs)
+            with torch.inference_mode():
+                output_ids = self.model.generate(**inputs, **gen_kwargs)
         except torch.cuda.OutOfMemoryError as oom:
             # Never let this surface as an empty/ambiguous result — doc_agent.run()
             # would otherwise treat "generation produced nothing" the same as "the
             # paper doesn't contain this information", which is exactly backwards:
             # this is an infrastructure failure, not a grounding failure.
+            #
+            # A real OOM here can leave the CUDA driver context unusable for
+            # the rest of this process (confirmed live: a same-process retry
+            # after this exact error produced "CUDA driver error: invalid
+            # argument" instead of recovering). Mark it so every subsequent
+            # call fails fast with an actionable message instead of a fresh,
+            # differently-worded driver error each time.
+            self._cuda_context_poisoned = True
             try:
                 torch.cuda.empty_cache()
             except Exception:
@@ -241,9 +247,11 @@ class HFTransformersBackend(LLMBackend):
             print(f"[LLM GENERATION FATAL] CUDA OOM at input_tokens={input_length}, max_new_tokens={max_new_tokens}: {oom}", flush=True)
             raise RuntimeError(
                 f"LLM generation failed: CUDA out of memory (prompt={input_length} tokens, "
-                f"max_new_tokens={max_new_tokens})."
+                f"max_new_tokens={max_new_tokens}). This process's CUDA context may now need a restart."
             ) from oom
         except Exception as gen_err:
+            if "cuda" in str(gen_err).lower():
+                self._cuda_context_poisoned = True
             print(f"[LLM GENERATION FATAL] {type(gen_err).__name__}: {gen_err}", flush=True)
             raise RuntimeError(f"LLM generation failed: {type(gen_err).__name__}: {gen_err}") from gen_err
         finally:
