@@ -1550,8 +1550,19 @@ def answer(
         forensic_tracer.returned_answer = ans
         forensic_tracer.citations = citations
         forensic_tracer.response_json = response_obj
-        if forensic_tracer.stages_status.get("LLM") == "PENDING" and ans:
-            forensic_tracer.record_stage("LLM", "PASS", 0.0, {}, ans, f"Completed ({len(ans)} chars)")
+        if forensic_tracer.stages_status.get("LLM") == "PENDING":
+            # A stage left "PENDING" here means log_stage(10/11, ...) was
+            # never reached — i.e. generation raised before completing (see
+            # llm/transformers_backend.py) — NOT that it produced no answer.
+            # The previous check only tested `bool(ans)`, so a truthy error
+            # string like "LLM generation failed: CUDA driver error:
+            # invalid argument" got recorded as "LLM PASS", which is exactly
+            # backwards: the pipeline must report a fatal generation
+            # exception as FAIL, never PASS.
+            if ans and not _is_refusal_answer(ans):
+                forensic_tracer.record_stage("LLM", "PASS", 0.0, {}, ans, f"Completed ({len(ans)} chars)")
+            else:
+                forensic_tracer.record_stage("LLM", "FAIL", 0.0, {}, ans, "LLM generation did not complete successfully")
         forensic_tracer.write_artifacts()
         forensic_tracer.print_terminal_summary()
     except Exception:

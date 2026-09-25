@@ -34,6 +34,24 @@ class HFTransformersBackend(LLMBackend):
             self.gpu_name = torch.cuda.get_device_name(0)
             self.dtype = torch.float16
             self.dtype_str = "float16"
+
+            # PyTorch's fused "flash attention" SDPA backend requires compute
+            # capability >= 8.0 (Ampere+). V100 is Volta (compute capability
+            # 7.0) and does not support it. transformers' auto-picked
+            # attention path, and/or torch's own SDPA kernel dispatch, can
+            # still attempt it on unsupported hardware for certain
+            # sequence-length/dtype combinations, surfacing as a low-level
+            # "CUDA driver error: invalid argument" instead of a clean
+            # fallback or a clear error. Disabling only the flash SDP kernel
+            # (memory-efficient and math SDP stay enabled — both are valid
+            # and supported on Volta) is a narrow, hardware-targeted fix that
+            # doesn't affect newer GPUs where flash SDP is actually usable.
+            try:
+                major_cc, _ = torch.cuda.get_device_capability(0)
+                if major_cc < 8:
+                    torch.backends.cuda.enable_flash_sdp(False)
+            except Exception:
+                pass
         else:
             self.device = "cpu"
             self.gpu_name = "N/A"
@@ -81,11 +99,18 @@ class HFTransformersBackend(LLMBackend):
 
         print(f"Loading HuggingFace model '{self.model_name}' on {self.device} ({self.dtype_str})...")
         if self.device == "cuda":
+            # Explicit attn_implementation="sdpa": avoids transformers'
+            # ambient auto-detection selecting "flash_attention_2" (a
+            # separate package, unsupported on Volta/V100 regardless of
+            # whether it happens to be pip-installed in this environment).
+            # SDPA is safe on any CUDA architecture, and the flash sub-kernel
+            # within it is already disabled above for compute capability < 8.
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
                 torch_dtype=self.dtype,
                 device_map="auto",
-                trust_remote_code=True
+                trust_remote_code=True,
+                attn_implementation="sdpa",
             )
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
