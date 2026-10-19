@@ -1703,16 +1703,21 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
             raise e
         err_str = str(e)
         err_lower = err_str.lower()
+        try:
+            from storage.pipeline_logger import forensic_tracer
+            forensic_tracer.record_stage("LLM", "FAIL", 0.0, {}, err_str, f"doc_agent exception: {err_str}")
+        except Exception:
+            pass
         if "timed out" in err_lower or "timeout" in err_lower:
             return "LLM generation timed out."
-        # A real backend/generation failure (CUDA OOM, a raised exception
+        # A real backend/generation failure (CUDA driver error, CUDA OOM, a raised exception
         # inside model.generate() — see llm/transformers_backend.py) must
         # never be reported as CANNOT_FIND_RESPONSE: that message means "the
         # retrieved documents don't contain this," which is a completely
         # different, false claim about a request that never got to look.
         if "llm generation failed" in err_lower:
             return err_str
-        return CANNOT_FIND_RESPONSE
+        return f"LLM generation failed: {err_str}"
 
     finally:
         try:

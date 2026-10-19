@@ -35,28 +35,43 @@ class HFTransformersBackend(LLMBackend):
             self.dtype = torch.float16
             self.dtype_str = "float16"
 
-            # PyTorch's fused "flash attention" SDPA backend requires compute
-            # capability >= 8.0 (Ampere+). V100 is Volta (compute capability
-            # 7.0) and does not support it. transformers' auto-picked
-            # attention path, and/or torch's own SDPA kernel dispatch, can
-            # still attempt it on unsupported hardware for certain
-            # sequence-length/dtype combinations, surfacing as a low-level
-            # "CUDA driver error: invalid argument" instead of a clean
-            # fallback or a clear error. Disabling only the flash SDP kernel
-            # (memory-efficient and math SDP stay enabled — both are valid
-            # and supported on Volta) is a narrow, hardware-targeted fix that
-            # doesn't affect newer GPUs where flash SDP is actually usable.
+            # Check compute capability
+            major_cc = 0
             try:
                 major_cc, _ = torch.cuda.get_device_capability(0)
-                if major_cc < 8:
-                    torch.backends.cuda.enable_flash_sdp(False)
             except Exception:
-                pass
+                major_cc = 0
+
+            # V100 is Volta architecture with compute capability 7.0 (major_cc < 8).
+            # On Volta (cc < 8):
+            # 1. FlashAttention (flash_sdp) is unsupported by hardware.
+            # 2. PyTorch memory-efficient SDPA (mem_efficient_sdp / CUTLASS) has
+            #    kernel launch parameter failures ("CUDA driver error: invalid argument")
+            #    under long sequence lengths (e.g. ~7400+ tokens) and FP16 GQA.
+            #    Disabling both flash_sdp and mem_efficient_sdp leaves math_sdp active.
+            # 3. For model loading, attn_implementation must be "eager" on cc < 8
+            #    (using standard cuBLAS GEMM and softmax) instead of "sdpa",
+            #    avoiding all unsupported/failing SDPA kernel dispatches.
+            if major_cc < 8:
+                try:
+                    torch.backends.cuda.enable_flash_sdp(False)
+                    torch.backends.cuda.enable_mem_efficient_sdp(False)
+                    torch.backends.cuda.enable_math_sdp(True)
+                except Exception:
+                    pass
+                self.attn_implementation = "eager"
+            else:
+                self.attn_implementation = "sdpa"
+
+            env_attn = os.environ.get("ATTN_IMPLEMENTATION")
+            if env_attn:
+                self.attn_implementation = env_attn.strip().lower()
         else:
             self.device = "cpu"
             self.gpu_name = "N/A"
             self.dtype = torch.float32
             self.dtype_str = "float32"
+            self.attn_implementation = "eager"
 
         # Lazy loading attributes for singleton model & tokenizer
         self.tokenizer = None
@@ -86,6 +101,7 @@ class HFTransformersBackend(LLMBackend):
         if self.device == "cuda":
             print(f"GPU         : {self.gpu_name}")
             print(f"dtype       : {self.dtype_str}")
+        print(f"Attention   : {self.attn_implementation}")
         print("=" * 40)
 
         # Load Tokenizer & Model exactly ONCE into memory
@@ -97,26 +113,21 @@ class HFTransformersBackend(LLMBackend):
         if self.tokenizer.pad_token_id is None:
             self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
-        print(f"Loading HuggingFace model '{self.model_name}' on {self.device} ({self.dtype_str})...")
+        print(f"Loading HuggingFace model '{self.model_name}' on {self.device} ({self.dtype_str}) with attn_implementation='{self.attn_implementation}'...")
         if self.device == "cuda":
-            # Explicit attn_implementation="sdpa": avoids transformers'
-            # ambient auto-detection selecting "flash_attention_2" (a
-            # separate package, unsupported on Volta/V100 regardless of
-            # whether it happens to be pip-installed in this environment).
-            # SDPA is safe on any CUDA architecture, and the flash sub-kernel
-            # within it is already disabled above for compute capability < 8.
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
                 torch_dtype=self.dtype,
                 device_map="auto",
                 trust_remote_code=True,
-                attn_implementation="sdpa",
+                attn_implementation=self.attn_implementation,
             )
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
                 torch_dtype=self.dtype,
-                trust_remote_code=True
+                trust_remote_code=True,
+                attn_implementation=self.attn_implementation,
             ).to(self.device)
             
         self.model.eval()
@@ -149,7 +160,18 @@ class HFTransformersBackend(LLMBackend):
                 "LLM generation failed: this process's CUDA context was left unusable by "
                 "an earlier out-of-memory error. Restart the API/model server process to recover."
             )
-        self._ensure_loaded()
+        try:
+            self._ensure_loaded()
+        except Exception as load_err:
+            if "cuda" in str(load_err).lower():
+                self._cuda_context_poisoned = True
+            try:
+                from storage.pipeline_logger import forensic_tracer
+                forensic_tracer.record_stage("LLM", "FAIL", 0.0, {}, str(load_err), f"Model loading failed: {load_err}")
+            except Exception:
+                pass
+            raise RuntimeError(f"LLM generation failed during model loading: {load_err}") from load_err
+
         from storage.pipeline_logger import log_stage
 
         t_tok_start = time.perf_counter()
@@ -211,11 +233,13 @@ class HFTransformersBackend(LLMBackend):
             gen_kwargs["do_sample"] = True
             gen_kwargs["temperature"] = temperature
             gen_kwargs["top_p"] = top_p
+            gen_kwargs["top_k"] = top_k_param
         else:
             gen_kwargs["do_sample"] = False
             # Explicitly override model defaults to avoid warnings when greedy decoding
             gen_kwargs["temperature"] = None
             gen_kwargs["top_p"] = None
+            gen_kwargs["top_k"] = None
 
         if repetition_penalty != 1.0:
             gen_kwargs["repetition_penalty"] = repetition_penalty
@@ -270,6 +294,11 @@ class HFTransformersBackend(LLMBackend):
             except Exception:
                 pass
             print(f"[LLM GENERATION FATAL] CUDA OOM at input_tokens={input_length}, max_new_tokens={max_new_tokens}: {oom}", flush=True)
+            try:
+                from storage.pipeline_logger import forensic_tracer
+                forensic_tracer.record_stage("LLM", "FAIL", 0.0, {"input_tokens": input_length}, str(oom), f"CUDA OOM: {oom}")
+            except Exception:
+                pass
             raise RuntimeError(
                 f"LLM generation failed: CUDA out of memory (prompt={input_length} tokens, "
                 f"max_new_tokens={max_new_tokens}). This process's CUDA context may now need a restart."
@@ -278,6 +307,11 @@ class HFTransformersBackend(LLMBackend):
             if "cuda" in str(gen_err).lower():
                 self._cuda_context_poisoned = True
             print(f"[LLM GENERATION FATAL] {type(gen_err).__name__}: {gen_err}", flush=True)
+            try:
+                from storage.pipeline_logger import forensic_tracer
+                forensic_tracer.record_stage("LLM", "FAIL", 0.0, {"input_tokens": input_length}, str(gen_err), f"LLM generation failed: {type(gen_err).__name__}: {gen_err}")
+            except Exception:
+                pass
             raise RuntimeError(f"LLM generation failed: {type(gen_err).__name__}: {gen_err}") from gen_err
         finally:
             stop_heartbeat.set()
