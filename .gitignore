@@ -10,9 +10,14 @@ eval_output.txt
 knowledge_graph.json
 metadata_store.json
 embedding_cache.db
+semantic_cache.db
 metadata_storage/
 snapshot_storage/
 papers/
 test_qdrant_storage/
 !.debug/
 !.debug/current_query/*
+scratch/
+benchmark_results/
+test_rules.py
+scratch_check_q5_evidence.py
