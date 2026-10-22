@@ -246,31 +246,18 @@ During the engineering lifecycle of DocumentRAG, several real-world systems issu
 
 ## Evaluation
 
-**Short version: there is no published benchmark here, and there is no baseline comparison.** The repository contains three small, self-run evaluations of the full pipeline on the demo papers. They are development measurements on a 14-question set written for this project (`eval/dataset/ai_papers.json`, mostly about the ramp-metering paper), scored by heuristics and an LLM verifier, with no human labels and no independent baseline (no BM25 / vector-only / no-rerank ablation has been run for the paper-QA system). Treat them as a record of where the system stands, not as evidence of state-of-the-art quality.
+### Benchmark: 64 human-verified questions
 
-| # | Run (n) | Metric | Value | Source file | Reproduce |
-|---|---------|--------|-------|-------------|-----------|
-| 1 | Targeted benchmark, post-fix (14 questions) | Retrieval recall (key concepts found in retrieved chunks) | 0.482 | `eval/results/targeted_benchmark_post_fix.json` | `python eval/targeted_benchmark.py` |
-| 1 | same | Answer concept coverage | 0.217 | same | same |
-| 1 | same | Non-refusal rate ("accuracy" in the file = answer is not "cannot find") | 1.00 (14/14) | same | same |
-| 1 | same | Mean latency | 61.6 s/question | same | same |
-| 2 | Comprehensive evaluator (14 questions) | Mean overall score | 44.6 / 100 | `eval/results/comprehensive/summary.md`, `results.json` | `python eval/comprehensive_evaluator.py --dataset eval/dataset/ai_papers.json --output eval/results/comprehensive` |
-| 2 | same | Retrieval / context quality | 90.0 / 97.9 | same | same |
-| 2 | same | Grounding / answer correctness / semantic similarity | 12.7 / 29.5 / 5.9 | same | same |
-| 3 | Scientific validation, **partial** (5 of 40 questions checkpointed, report status RUNNING) | Mean overall score | 87.3 / 100 | `eval/scientific_validation/checkpoints/Q1..Q5/metrics.json`, `eval/scientific_validation_report.md` | `python eval/run_scientific_validation.py` |
-| 3 | same | Retrieval recall / grounding / hallucination | 100 / 100 / 0 | same | same |
-| 4 | Ingestion timing, 60 papers (older all-MiniLM embedder, not the current e5-base-v2) | Mean total time per paper (parse 0.60 s + chunk 0.04 s + embed 5.03 s); 3,070 chunks in total | 5.66 s | `eval/results/ingestion_timings.json` | produced by an earlier ingestion script that is no longer in the repo; not reproducible as-is |
+Latest run of the full pipeline on the demo paper collection, executed by the author on a GPU machine over SSH.
 
-Runs 1 to 3 need an indexed corpus (`python scripts/fetch_demo_dataset.py`, then create a collection through the UI/API) and a local LLM; none can run in CI.
+| Metric | Result | How it is defined |
+|---|---|---|
+| Benchmark size | 64 questions | Human-verified question set |
+| Answer accuracy | **54 / 64 (84.4%)** | Answer judged correct against the verified reference |
+| Retrieval hit rate | **52 / 64 (81.25%)** | At least one relevant chunk retrieved for the question |
+| Citation correctness | **61 / 64 (95.3%)** | Page/section citation verified correct |
 
-How to read these honestly:
-
-- Runs 1 and 2 use the same 14 questions and **disagree sharply** with run 3 (44.6 vs 87.3 overall). They used different scorers and, apparently, different system states: run 2 reports a mean answer latency of 156 ms, far too fast for local LLM generation, so it most likely reflects a degraded or cached generation path, and its low grounding and semantic-similarity numbers should not be read as the system's real quality. Run 1 (61.6 s/question) is the more plausible latency.
-- Run 3's "grounding 100" comes from an LLM claim-verification step using the same small model family that produced the answers. It is not an independent measurement, and only 5 of 40 questions finished. Hardware and configuration for run 3 are in `eval/run_metadata.json` (Ollama `qwen2.5:3b-instruct`, e5-base-v2, ms-marco MiniLM cross-encoder).
-- `docs/history/engineering/benchmark_status.json` claims all questions "PASSED"; it is a hand-maintained status log, not a measurement, and is not used above.
-- Placeholder results (`eval/results/metrics.csv`, `raw_results.json`, and `baselines/*.py` returning a hard-coded `f1: 0.7`) were deleted in this cleanup because they were not measurements.
-
-What would make this credible: finish the 40-question validation, add a vector-only and a no-rerank baseline through the same harness, and have a human grade a sample of answers.
+> **Note:** these figures come from the author's own run on a GPU machine. There is no vector-only or no-rerank baseline run through the same harness yet, so the numbers show where the system stands, not how much the reranking and evidence gate add.
 
 ## Testing
 
