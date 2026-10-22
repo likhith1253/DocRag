@@ -248,7 +248,7 @@ During the engineering lifecycle of DocumentRAG, several real-world systems issu
 
 ### Benchmark: 64 human-verified questions
 
-Latest run of the full pipeline on the demo paper collection, executed by the author on a GPU machine over SSH.
+Latest run of the full pipeline on the demo paper collection, executed on a GPU machine over SSH.
 
 | Metric | Result | How it is defined |
 |---|---|---|
@@ -257,7 +257,7 @@ Latest run of the full pipeline on the demo paper collection, executed by the au
 | Retrieval hit rate | **52 / 64 (81.25%)** | At least one relevant chunk retrieved for the question |
 | Citation correctness | **61 / 64 (95.3%)** | Page/section citation verified correct |
 
-> **Note:** these figures come from the author's own run on a GPU machine. There is no vector-only or no-rerank baseline run through the same harness yet, so the numbers show where the system stands, not how much the reranking and evidence gate add.
+> **Next:** run a vector-only and a no-rerank baseline through the same harness to measure how much the reranking and evidence gate add.
 
 ## Testing
 
