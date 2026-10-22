@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.insert(0, "d:/Document_RAG")
 
-from agents.router import route, AGENT_CODE, AGENT_DATA, AGENT_REASONING
+from experiments.codegraphrag.agents.router import route, AGENT_CODE, AGENT_DATA, AGENT_REASONING
 
 # 10 hand-written test queries with expected agent categories
 TEST_QUERIES = [
@@ -48,17 +48,17 @@ def run_routing_test():
 def run_e2e_test():
     """Run 3 queries end-to-end: router → agent → real LLM answer"""
     from storage.vector_store import VectorStoreManager
-    from ingestion.loader import load_repository
-    from ingestion.language_detect import detect_language
-    from ingestion.chunker import chunk_file
-    from storage.knowledge_graph import KnowledgeGraphManager
-    from retrieval.graph_search import expand_by_graph
-    from retrieval.metadata_filter import filter_chunks
+    from experiments.codegraphrag.ingestion.loader import load_repository
+    from experiments.codegraphrag.ingestion.language_detect import detect_language
+    from experiments.codegraphrag.ingestion.chunker import chunk_file
+    from experiments.codegraphrag.storage.knowledge_graph import KnowledgeGraphManager
+    from experiments.codegraphrag.retrieval.graph_search import expand_by_graph
+    from experiments.codegraphrag.retrieval.metadata_filter import filter_chunks
     from retrieval.mmr_rerank import mmr_rerank
     from retrieval.cross_encoder_rerank import rerank_cross_encoder
-    import agents.code_agent as code_agent
-    import agents.data_agent as data_agent
-    import agents.reasoning_agent as reasoning_agent
+    import experiments.codegraphrag.agents.code_agent as code_agent
+    import experiments.codegraphrag.agents.data_agent as data_agent
+    import experiments.codegraphrag.agents.reasoning_agent as reasoning_agent
     
     agent_map = {
         AGENT_CODE: code_agent,

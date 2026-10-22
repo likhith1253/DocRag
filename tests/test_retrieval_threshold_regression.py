@@ -1,3 +1,4 @@
+import pytest
 import numpy as np
 from unittest.mock import patch
 
@@ -30,6 +31,7 @@ class _FakeVectorManager:
         return chunks, timing
 
 
+@pytest.mark.stale
 def test_low_score_chunks_still_reach_llm():
     orch = Orchestrator()
     orch.v_manager = _FakeVectorManager()

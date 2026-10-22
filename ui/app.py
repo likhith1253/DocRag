@@ -16,7 +16,7 @@ UI design principles:
 """
 
 import streamlit as st
-import requests
+import requests as _requests
 import time
 import os
 
@@ -45,6 +45,18 @@ def _get_api_url():
     return "http://localhost:9001"
 
 API_URL = _get_api_url()
+
+
+def _make_session():
+    """HTTP session that forwards DOCRAG_API_KEY (if set) as X-API-Key."""
+    sess = _requests.Session()
+    key = os.environ.get("DOCRAG_API_KEY", "").strip()
+    if key:
+        sess.headers["X-API-Key"] = key
+    return sess
+
+
+requests = _make_session()
 
 # ---------------------------------------------------------------------------
 # Minimal CSS fixes — spacing, overflow, stable layout

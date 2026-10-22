@@ -1,8 +1,8 @@
 import os
 import sys
-from ingestion.loader import load_repository
-from ingestion.language_detect import detect_language
-from ingestion.chunker import chunk_file
+from experiments.codegraphrag.ingestion.loader import load_repository
+from experiments.codegraphrag.ingestion.language_detect import detect_language
+from experiments.codegraphrag.ingestion.chunker import chunk_file
 
 def main():
     workspace_path = "d:/Document_RAG/.venv"

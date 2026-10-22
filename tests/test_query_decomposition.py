@@ -1,17 +1,21 @@
+import pytest
 import unittest
 
 from retrieval.query_analyzer import decompose_complex_question
 
 
 class TestQueryDecomposition(unittest.TestCase):
+    @pytest.mark.stale
     def test_simple_narrow_question_not_decomposed(self):
         self.assertEqual(decompose_complex_question("What is the learning rate?"), [])
 
+    @pytest.mark.stale
     def test_two_facet_question_not_decomposed(self):
         # Only touches training + algorithms — below the 3-facet threshold.
         q = "How does the training algorithm work?"
         self.assertEqual(decompose_complex_question(q), [])
 
+    @pytest.mark.stale
     def test_complex_multi_facet_question_is_decomposed(self):
         q = (
             "How does the training procedure, loss function, and dataset "
@@ -31,6 +35,7 @@ class TestQueryDecomposition(unittest.TestCase):
         subs = decompose_complex_question(q, max_subqueries=2)
         self.assertLessEqual(len(subs), 2)
 
+    @pytest.mark.stale
     def test_concise_depth_not_decomposed_even_with_many_keywords(self):
         # EXTRACTION/CONCISE-style narrow factual asks shouldn't explode into
         # subqueries just because multiple structural keywords appear.

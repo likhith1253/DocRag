@@ -19,6 +19,7 @@ was asked to protect going into HPC/V100 validation:
   I. GPU/CPU fallback          (centralized device fallback, no GPU required)
 """
 
+import pytest
 import os
 import sys
 import unittest
@@ -78,6 +79,7 @@ class TestIndexingIntegrityRegression(unittest.TestCase):
     def tearDown(self):
         self.vm.drop_collection()
 
+    @pytest.mark.models
     def test_repeated_identical_chunks_do_not_duplicate(self):
         chunk = _make_chunk("Deep Q-Networks use experience replay.", "DQN.pdf", self.collection)
         self.vm.add_chunks([chunk])
@@ -85,6 +87,7 @@ class TestIndexingIntegrityRegression(unittest.TestCase):
         self.vm.add_chunks([chunk])
         self.assertEqual(self.vm.count(), 1, "Re-adding an identical chunk must upsert, not duplicate")
 
+    @pytest.mark.models
     def test_chunk_count_matches_uploaded_count(self):
         chunks = [
             _make_chunk(f"Unique sentence number {i} about reinforcement learning.", "Paper.pdf", self.collection, page=i)
@@ -93,6 +96,7 @@ class TestIndexingIntegrityRegression(unittest.TestCase):
         self.vm.add_chunks(chunks)
         self.assertEqual(self.vm.count(), 5)
 
+    @pytest.mark.models
     def test_deterministic_ids_are_stable(self):
         import uuid
         chash = "stable-hash-123"
@@ -100,6 +104,7 @@ class TestIndexingIntegrityRegression(unittest.TestCase):
         id2 = str(uuid.uuid5(uuid.NAMESPACE_DNS, chash))
         self.assertEqual(id1, id2)
 
+    @pytest.mark.models
     def test_reconciliation_catches_missing_points(self):
         chunks = [_make_chunk(f"Sentence {i}", "Paper.pdf", self.collection, page=i) for i in range(3)]
         self.vm.add_chunks(chunks)
@@ -108,6 +113,7 @@ class TestIndexingIntegrityRegression(unittest.TestCase):
         self.assertEqual(found, 3)
         self.assertEqual(missing, ["never-indexed-hash"])
 
+    @pytest.mark.models
     def test_failed_ingestion_does_not_report_ready(self):
         registry = get_registry()
         repo_id = f"test_p7_failed_{self._testMethodName}"
@@ -128,6 +134,7 @@ class TestIndexingIntegrityRegression(unittest.TestCase):
 # B. Repository isolation
 # ---------------------------------------------------------------------------
 class TestRepositoryIsolationRegression(unittest.TestCase):
+    @pytest.mark.models
     def test_collection_mismatch_is_rejected(self):
         registry = get_registry()
         repo_id = "test_p7_mismatch_repo"
@@ -145,11 +152,13 @@ class TestRepositoryIsolationRegression(unittest.TestCase):
             vm.drop_collection()
             registry.delete_repository(repo_id)
 
+    @pytest.mark.models
     def test_invalid_repository_id_fails_cleanly(self):
         vm = VectorStoreManager(collection_name="collection_does_not_matter")
         with self.assertRaises(ValueError):
             vm.search("some query", top_k=3, repository_id="repo-that-does-not-exist-anywhere")
 
+    @pytest.mark.models
     def test_missing_collection_raises_controlled_error(self):
         vm = VectorStoreManager()
         vm.collection_name = "test_p7_never_created_collection"
@@ -157,6 +166,7 @@ class TestRepositoryIsolationRegression(unittest.TestCase):
             vm.search("query text", top_k=3)
         self.assertIn("Vector search failed", str(ctx.exception))
 
+    @pytest.mark.models
     def test_delete_repository_does_not_affect_other_repository(self):
         registry = get_registry()
         a_id, b_id = "test_p7_del_a", "test_p7_del_b"
@@ -206,6 +216,7 @@ class TestPaperIsolationRegression(unittest.TestCase):
         self.vm.drop_collection()
         invalidate_paper_cache(self.collection)
 
+    @pytest.mark.models
     def test_explicit_paper_name_matches_only_that_paper(self):
         titles = get_collection_papers(self.vm)
         matches = match_papers_in_query("What does the DQN paper say about experience replay?", titles)
@@ -213,12 +224,14 @@ class TestPaperIsolationRegression(unittest.TestCase):
         self.assertIn("DQN", matched_titles)
         self.assertNotIn("A3C", matched_titles)
 
+    @pytest.mark.models
     def test_unrelated_paper_not_injected_for_narrow_query(self):
         titles = get_collection_papers(self.vm)
         matches = match_papers_in_query("Summarize the DQN preprocessing pipeline.", titles)
         matched_titles = [t for t, _ in matches]
         self.assertNotIn("A3C", matched_titles)
 
+    @pytest.mark.models
     def test_paper_cache_is_scoped_per_collection(self):
         other_collection = f"{self.collection}_other"
         get_collection_metadata(self.vm)
@@ -318,6 +331,7 @@ class TestCacheIsolationRegression(unittest.TestCase):
 # G. Lifecycle
 # ---------------------------------------------------------------------------
 class TestLifecycleRegression(unittest.TestCase):
+    @pytest.mark.models
     def test_created_indexing_ready_transition(self):
         registry = get_registry()
         repo_id = "test_p7_lifecycle_ready"
@@ -336,6 +350,7 @@ class TestLifecycleRegression(unittest.TestCase):
         self.assertEqual(registry.get_repository(repo_id).status, RepoStatus.READY)
         registry.delete_repository(repo_id)
 
+    @pytest.mark.models
     def test_ready_updating_ready_transition(self):
         registry = get_registry()
         repo_id = "test_p7_lifecycle_update"
@@ -353,6 +368,7 @@ class TestLifecycleRegression(unittest.TestCase):
         self.assertEqual(registry.get_repository(repo_id).status, RepoStatus.READY)
         registry.delete_repository(repo_id)
 
+    @pytest.mark.models
     def test_delete_transitions_through_deleting_to_gone(self):
         registry = get_registry()
         repo_id = "test_p7_lifecycle_delete"
@@ -405,6 +421,7 @@ class TestFailureHandlingRegression(unittest.TestCase):
         self.assertNotIn("Traceback", ans)
         self.assertNotIn("File \"", ans)
 
+    @pytest.mark.models
     def test_embedding_failure_yields_canonical_error(self):
         vm = VectorStoreManager()
         vm.collection_name = "test_p7_embed_fail"

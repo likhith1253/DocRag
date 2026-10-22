@@ -6,6 +6,7 @@ logs/
 *.log
 *.txt
 !mistakes.txt
+!requirements*.txt
 eval_output.txt
 knowledge_graph.json
 metadata_store.json
@@ -15,9 +16,26 @@ metadata_storage/
 snapshot_storage/
 papers/
 test_qdrant_storage/
-!.debug/
-!.debug/current_query/*
+.debug/
 scratch/
 benchmark_results/
 test_rules.py
 scratch_check_q5_evidence.py
+
+# Third-party papers are fetched, not committed (scripts/fetch_demo_dataset.py)
+demo_dataset/**/*.pdf
+!demo_dataset/Artificial_Intelligence/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf
+!demo_dataset/Artificial_Intelligence/Overview_of_FPGA_deep_learning_acceleration_based_.pdf
+!demo_dataset/Machine_Learning/A_Comparative_Analysis_of_Bias_Amplification_in_Gr.pdf
+
+# Runtime state
+registry.json
+.env
+.venv/
+.pytest_cache/
+.ruff_cache/
+repositories/
+uploads/
+kg_storage/
+semantic_cache.db
+test_semantic_cache.db

@@ -1,7 +1,9 @@
+import pytest
 import unittest
 from retrieval.cross_encoder_rerank import rerank_cross_encoder
 
 class TestCrossEncoderRerank(unittest.TestCase):
+    @pytest.mark.models
     def test_rerank_cross_encoder(self):
         chunks = [
             {"content": "A cat sits on the mat."},

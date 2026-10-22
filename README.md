@@ -2,6 +2,8 @@
 
 DocumentRAG is a specialized research-paper question-answering system using Retrieval-Augmented Generation (RAG). It is designed to index academic PDFs, preserve critical structural evidence (equations, tables, and algorithms), isolate document collections, and produce grounded answers with traceable section- and page-level citations.
 
+> **Scope.** This repository is one system: a citation-grounded question-answering pipeline for research-paper PDFs (FastAPI + Streamlit + embedded Qdrant). An earlier code-repository variant of the idea ("CodeGraphRAG": AST chunking, knowledge graph, code/data/reasoning agents) lives on in [`experiments/codegraphrag/`](experiments/codegraphrag/README.md) and is **not** part of the paper-QA pipeline. Nothing in `experiments/` is imported by `api/`, `agents/`, `retrieval/`, `storage/` or `ingestion/`.
+
 ---
 
 ## Problem & Motivation
@@ -45,18 +47,18 @@ flowchart TD
 ### Pipeline Overview
 
 1. **Document Ingestion (`ingestion/`):**
-   - [`pdf_parser.py`](file:///d:/DocRag/ingestion/pdf_parser.py) extracts text blocks, section headings, and font hierarchies using PyMuPDF (with fallback to pdfminer.six).
-   - [`doc_chunker.py`](file:///d:/DocRag/ingestion/doc_chunker.py) performs section-bounded chunking with configurable overlap. It tags chunks with structural metadata (`contains_equation`, `contains_table`, `contains_figure`, `contains_algorithm`) and generates deterministic point hashes to prevent duplication collisions.
+   - [`pdf_parser.py`](ingestion/pdf_parser.py) extracts text blocks, section headings, and font hierarchies using PyMuPDF (with fallback to pdfminer.six).
+   - [`doc_chunker.py`](ingestion/doc_chunker.py) performs section-bounded chunking with configurable overlap. It tags chunks with structural metadata (`contains_equation`, `contains_table`, `contains_figure`, `contains_algorithm`) and generates deterministic point hashes to prevent duplication collisions.
 2. **Collection Isolation (`storage/registry.py` & `storage/vector_store.py`):**
    - Each workspace or repository is mapped to a dedicated Qdrant collection, preventing inter-collection leakage.
    - Embeddings are generated using `intfloat/e5-base-v2`.
 3. **Retrieval & Reranking (`retrieval/`):**
-   - [`paper_matcher.py`](file:///d:/DocRag/retrieval/paper_matcher.py) dynamically inspects query tokens against indexed paper metadata to detect explicit paper references (using acronym and token matching).
+   - [`paper_matcher.py`](retrieval/paper_matcher.py) dynamically inspects query tokens against indexed paper metadata to detect explicit paper references (using acronym and token matching).
    - Multi-paper questions run isolated retrieval passes per identified paper before merging to prevent dominant papers from crowding out secondary papers.
    - Maximal Marginal Relevance (`mmr_rerank.py`) balances relevance with chunk diversity.
-   - [`cross_encoder_rerank.py`](file:///d:/DocRag/retrieval/cross_encoder_rerank.py) applies `cross-encoder/ms-marco-MiniLM-L-6-v2`. If requested evidence (such as an equation) was cut by score truncation, an evidence swap replaces the lowest-scoring generic chunk to preserve required technical context.
+   - [`cross_encoder_rerank.py`](retrieval/cross_encoder_rerank.py) applies `cross-encoder/ms-marco-MiniLM-L-6-v2`. If requested evidence (such as an equation) was cut by score truncation, an evidence swap replaces the lowest-scoring generic chunk to preserve required technical context.
 4. **Agent Synthesis & Grounding (`agents/`):**
-   - [`doc_agent.py`](file:///d:/DocRag/agents/doc_agent.py) compiles retrieved excerpts into structured context blocks tagged with evidence types, paper titles, sections, and pages.
+   - [`doc_agent.py`](agents/doc_agent.py) compiles retrieved excerpts into structured context blocks tagged with evidence types, paper titles, sections, and pages.
    - The generation prompt enforces strict grounding: if information is missing from the retrieved context, the agent must return the canonical refusal message rather than guessing.
    - Inline citations are built from chunk metadata linking each statement back to the source paper, section, and page number.
 
@@ -79,53 +81,24 @@ flowchart TD
 
 ```
 DocRag/
-├── agents/                     # Pipeline orchestration and synthesis
-│   ├── doc_agent.py            # Grounded QA synthesis and citation construction
-│   └── orchestrator.py         # Multi-stage retrieval and routing pipeline
-├── api/                        # REST API layer
-│   ├── main.py                 # FastAPI application and query endpoints
-│   ├── repository.py           # Repository/collection registration and management
-│   └── dependencies.py         # Shared API dependencies
-├── config.yaml                 # Central system configuration
-├── docs/                       # Architectural documentation and audits
-│   ├── DEPLOYMENT_ARCHITECTURE.md
-│   ├── HPC_DEPLOYMENT_AUDIT.md
-│   ├── KNOWN_LIMITATIONS.md
-│   ├── MULTI_REPOSITORY_ARCHITECTURE.md
-│   ├── ROOT_CAUSE_ANALYSIS.md
-│   └── archive/                # Historical engineering logs and phase reports
-├── ingestion/                  # Document parsing and chunking
-│   ├── doc_chunker.py          # Layout-aware chunking and evidence tagging
-│   ├── pdf_parser.py           # PDF text and section extraction (PyMuPDF)
-│   └── worker.py               # Background indexing worker with reconciliation
-├── llm/                        # Pluggable inference backends
-│   ├── backend.py              # Abstract LLM backend interface
-│   ├── backend_factory.py      # Backend resolution (Transformers / Ollama)
-│   ├── transformers_backend.py # Hugging Face Transformers local inference
-│   └── ollama_backend.py       # Optional Ollama HTTP client backend
-├── requirements.txt            # Python dependencies
-├── retrieval/                  # Search, routing, and reranking
-│   ├── cross_encoder_rerank.py # CrossEncoder reranker with score caching
-│   ├── mmr_rerank.py           # Maximal Marginal Relevance diversity selection
-│   ├── paper_matcher.py        # Query paper identification and scope detection
-│   └── query_analyzer.py       # Evidence-intent and structural facet detector
-├── scripts/                    # Ingestion, validation, and benchmark runners
-│   ├── build_demo_dataset.py
-│   ├── run_production_benchmark.py
-│   └── submit_hpc_job.sh       # Slurm submission script for HPC execution
-├── storage/                    # Persistence, caching, and registries
-│   ├── cache.py                # Semantic and answer cache
-│   ├── pipeline_logger.py      # Execution tracing and timing logger
-│   ├── registry.py             # Repository collection registry
-│   └── vector_store.py         # Qdrant client manager and chunk upsert
-├── tests/                      # Regression and unit tests
-│   ├── test_doc_agent_contract.py
-│   ├── test_doc_chunker.py
-│   ├── test_indexing_integrity.py
-│   ├── test_paper_matcher.py
-│   └── test_phase7_regression.py
-└── ui/
-    └── app.py                  # Streamlit web application
+|-- agents/            # doc_agent.py (grounded synthesis + citations), orchestrator.py (LangGraph pipeline)
+|-- api/               # FastAPI app: main.py (/query, /health), repository.py (collections), security.py (auth, path allow-list)
+|-- ingestion/         # pdf_parser.py, doc_chunker.py, worker.py (background indexing), diff_engine.py
+|-- llm/               # Transformers / Ollama backends behind one interface
+|-- retrieval/         # paper_matcher, mmr_rerank, cross_encoder_rerank, query_analyzer, repository_router
+|-- storage/           # Qdrant manager, registry, caches, progress, snapshots
+|-- ui/app.py          # Streamlit front-end
+|-- eval/              # evaluation harnesses + datasets + real result artefacts (see "Evaluation")
+|   `-- legacy/        # one-off audit/diagnostic scripts from past investigations
+|-- experiments/
+|   `-- codegraphrag/  # archived code-repo RAG experiments (own agents, KG, benchmark, tests, results)
+|-- scripts/           # demo-dataset fetch/build, HPC (Slurm) launchers, benchmark runners
+|-- tests/             # fast, model-free regression tests (+ model/GPU tests behind markers)
+|-- demo_dataset/      # MANIFEST.json (+ 3 non-arXiv PDFs); the other papers are fetched on demand
+|-- docs/              # architecture notes; docs/history/ = old engineering logs (kept for provenance, not maintained)
+|-- config.yaml        # pipeline configuration
+|-- pyproject.toml     # ruff + pytest configuration
+`-- requirements*.txt, constraints.txt, .env.example, LICENSE
 ```
 
 ---
@@ -149,12 +122,17 @@ source .venv/bin/activate
 
 # Upgrade packaging tools and install requirements
 pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
+pip install -r requirements.txt            # add -c constraints.txt to use the versions the tests last ran against
+
+# Optional: fetch the third-party demo PDFs (arXiv; ~90 MB, not stored in git)
+python scripts/fetch_demo_dataset.py
 ```
+
+Copy `.env.example` to `.env` (or export the variables) if you want to change any defaults.
 
 ### 2. Configuration
 
-System parameters are defined in [`config.yaml`](file:///d:/DocRag/config.yaml). The default configuration is configured for local Hugging Face Transformers inference:
+System parameters are defined in [`config.yaml`](config.yaml). The default configuration is configured for local Hugging Face Transformers inference:
 
 ```yaml
 llm_backend: transformers
@@ -183,8 +161,10 @@ Key environment variables:
 Start the backend API server:
 
 ```bash
-uvicorn api.main:app --host 0.0.0.0 --port 9001
+uvicorn api.main:app --host 127.0.0.1 --port 9001
 ```
+
+By default the API only answers clients on the loopback interface. To expose it beyond localhost set `DOCRAG_API_KEY` (clients then send `X-API-Key`) and read [Security](#security).
 
 In a separate terminal, launch the Streamlit interface:
 
@@ -203,6 +183,7 @@ For cluster environments with NVIDIA GPUs (e.g., Tesla V100):
    cd /path/to/DocRag
    source .venv/bin/activate
    export PYTHONPATH=$(pwd)
+   export DOCRAG_API_KEY=...   # required for non-loopback clients
    python -m uvicorn api.main:app --host 0.0.0.0 --port 9001
    ```
 
@@ -218,7 +199,7 @@ For cluster environments with NVIDIA GPUs (e.g., Tesla V100):
    Open `http://localhost:8501` locally.
 
 4. **Slurm Batch Script:**
-   Review [`scripts/submit_hpc_job.sh`](file:///d:/DocRag/scripts/submit_hpc_job.sh) for Slurm allocation details:
+   Review [`scripts/submit_hpc_job.sh`](scripts/submit_hpc_job.sh) for Slurm allocation details:
    ```bash
    sbatch scripts/submit_hpc_job.sh
    ```
@@ -247,13 +228,13 @@ During the engineering lifecycle of DocumentRAG, several real-world systems issu
 
 1. **Qdrant Chunk Point ID Collisions:**
    - *Problem:* Chunks with identical text content (e.g., repeating chart labels, headers, or copyright footers) across a paper generated matching hash IDs, causing newer chunks to silently overwrite earlier points in Qdrant.
-   - *Fix:* Folded an occurrence counter into the hash for duplicate chunk contents and introduced reconciliation verification in [`ingestion/worker.py`](file:///d:/DocRag/ingestion/worker.py) to guarantee uploaded counts match verified storage points.
+   - *Fix:* Folded an occurrence counter into the hash for duplicate chunk contents and introduced reconciliation verification in [`ingestion/worker.py`](ingestion/worker.py) to guarantee uploaded counts match verified storage points.
 2. **Multi-Paper Context Contamination:**
    - *Problem:* Broad semantic search often retrieved passages from unrelated papers in the collection that shared common phrasing (such as "deep reinforcement learning").
-   - *Fix:* Built [`retrieval/paper_matcher.py`](file:///d:/DocRag/retrieval/paper_matcher.py) to extract explicit paper references from queries using token and acronym scoring, allowing the pipeline to isolate retrieval to the requested document.
+   - *Fix:* Built [`retrieval/paper_matcher.py`](retrieval/paper_matcher.py) to extract explicit paper references from queries using token and acronym scoring, allowing the pipeline to isolate retrieval to the requested document.
 3. **Evidence Starvation During Reranking:**
    - *Problem:* Relevant equations and table rows scored lower on lexical similarity than descriptive narrative paragraphs, getting truncated before reaching the LLM context.
-   - *Fix:* Added structural chunk detection (`contains_equation`, `contains_table`) and an evidence coverage check in [`agents/orchestrator.py`](file:///d:/DocRag/agents/orchestrator.py) that preserves requested technical chunks in the final context.
+   - *Fix:* Added structural chunk detection (`contains_equation`, `contains_table`) and an evidence coverage check in [`agents/orchestrator.py`](agents/orchestrator.py) that preserves requested technical chunks in the final context.
 4. **PyTorch SDPA & CUDA Memory on Volta (V100):**
    - *Problem:* Long-context prompts (~7,000+ tokens) on Volta architecture GPUs produced low-level kernel driver errors under PyTorch memory-efficient SDPA, while dynamic allocations caused memory fragmentation over continuous runs.
    - *Fix:* Enforced `expandable_segments:True` in `PYTORCH_CUDA_ALLOC_CONF` and routed attention to `eager` on hardware with Compute Capability < 8.0, combined with explicit GPU cache clearing prior to generation.
@@ -263,23 +244,52 @@ During the engineering lifecycle of DocumentRAG, several real-world systems issu
 
 ---
 
-## Evaluation & Testing
+## Evaluation
 
-The repository includes unit and regression suites validating ingestion integrity, paper isolation, and retrieval:
+### Benchmark: 64 human-verified questions
 
-- **Targeted Test Execution:**
-  ```bash
-  pytest tests/test_doc_agent_contract.py -v
-  pytest tests/test_doc_chunker.py -v
-  pytest tests/test_indexing_integrity.py -v
-  pytest tests/test_paper_matcher.py -v
-  pytest tests/test_phase7_regression.py -v
-  ```
-- **Validation Capabilities:**
-  - Verify deterministic and unique chunk hashing.
-  - Verify prompt contracts and error handling propagation.
-  - Verify paper isolation filters against collection cross-talk.
-  - Confirm CPU/GPU fallback paths.
+Latest run of the full pipeline on the demo paper collection, executed on a GPU machine over SSH.
+
+| Metric | Result | How it is defined |
+|---|---|---|
+| Benchmark size | 64 questions | Human-verified question set |
+| Answer accuracy | **54 / 64 (84.4%)** | Answer judged correct against the verified reference |
+| Retrieval hit rate | **52 / 64 (81.25%)** | At least one relevant chunk retrieved for the question |
+| Citation correctness | **61 / 64 (95.3%)** | Page/section citation verified correct |
+
+> **Next:** run a vector-only and a no-rerank baseline through the same harness to measure how much the reranking and evidence gate add.
+
+## Testing
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest                      # fast suite: no GPU, no model downloads (about 30 s)
+ruff check .                          # correctness lint (see pyproject.toml)
+```
+
+`pyproject.toml` deselects tests carrying these markers by default:
+
+| Marker | Meaning | Run with |
+|--------|---------|----------|
+| `models` | needs `intfloat/e5-base-v2` / the cross-encoder (downloaded from Hugging Face) | `pytest -m models` |
+| `gpu` | needs CUDA | `pytest -m gpu` |
+| `slow`, `integration` | long-running or needs an indexed corpus / running service | `pytest -m "slow or integration"` |
+| `stale` | pre-existing failures whose expectations drifted from current behaviour; need triage | `pytest -m stale` |
+
+Last results (Windows 11, Python 3.12, CPU torch, empty Hugging Face cache): default suite 215 passed, 1 skipped, 70 deselected. With the two small models cached, the `models` tests pass (45 passed; the two `gpu`-marked tests fail on CPU as expected). The default run also includes the archived experiments' unit tests (`experiments/codegraphrag/tests`) except those marked `stale`/`integration`. The `stale` tests (23, listed by `pytest -m stale --co -q`) fail today and are not claimed to pass. CI (`.github/workflows/ci.yml`) runs ruff and the default suite only.
+
+---
+
+## Security
+
+The API is meant for single-user or trusted-network use. Hardening applied (code in `api/security.py`, regression tests in `tests/test_api_security.py`):
+
+- **Authentication.** Every endpoint except `GET /health` requires `X-API-Key: $DOCRAG_API_KEY`. If no key is configured, only loopback clients are served, so an accidental `--host 0.0.0.0` does not expose the API. Behind a reverse proxy on the same host all requests look like loopback, so set a key there.
+- **Filesystem confinement.** `source_path` (collection create/update/reindex) is resolved and must lie inside `DOCRAG_DATA_ROOTS` (default `./demo_dataset`, `./papers`, `./uploads`); `..` and symlink escapes are rejected. Zip archives are extracted with zip-slip and size checks.
+- **CORS** is limited to `DOCRAG_CORS_ORIGINS` (default: the local Streamlit UI) and sends no credentials.
+- **No error leakage.** 500 responses carry a request id, not exception text. `/health` details (model, device, collections) are shown only to authorized callers.
+- `debug_mode` in `config.yaml` now defaults to `false` (it writes retrieved text and prompts under `logs/`).
+- Not covered: rate limiting, TLS (terminate in a proxy), per-user authorization (one shared key). The API has no upload endpoint; PDFs are indexed from allow-listed server directories.
 
 ---
 
@@ -293,4 +303,4 @@ The repository includes unit and regression suites validating ingestion integrit
 
 ## License
 
-A formal open-source license has not yet been specified for this repository. All rights are reserved by the author until a formal license is added.
+MIT, see [LICENSE](LICENSE). The demo PDFs are third-party papers (see `demo_dataset/MANIFEST.json`) and remain under their authors' licenses; the arXiv ones are downloaded on demand rather than redistributed.

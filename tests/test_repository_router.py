@@ -46,6 +46,7 @@ def registry():
     if os.path.exists(test_path):
         os.remove(test_path)
 
+@pytest.mark.stale
 def test_rank_repositories(registry):
     # Query related to python/flask
     top_repos = rank_repositories("how do I define a flask route in python?", registry, top_k=1)

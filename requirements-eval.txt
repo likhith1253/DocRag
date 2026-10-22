@@ -1,0 +1,9 @@
+# Extra dependencies for the evaluation scripts in eval/ and scripts/.
+-r requirements.txt
+pandas>=2.0,<4
+scipy>=1.12,<2
+matplotlib>=3.8,<4
+seaborn>=0.13,<1
+nltk>=3.8,<4
+rouge-score>=0.1.2
+bert-score>=0.3.13

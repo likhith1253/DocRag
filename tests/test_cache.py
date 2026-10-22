@@ -13,6 +13,7 @@ def cache():
     if os.path.exists(db_path):
         os.remove(db_path)
 
+@pytest.mark.models
 def test_semantic_cache(cache):
     # Set cached answer
     cache.set_cached_answer("How to fetch user?", "repo-a", "Use get_user()", ["main.py"])
@@ -36,6 +37,7 @@ def test_semantic_cache(cache):
     res4 = cache.get_cached_answer("How to configure database?", "repo-a")
     assert res4 is None
 
+@pytest.mark.models
 def test_cache_clear(cache):
     # Set cached answer
     cache.set_cached_answer("How to fetch user?", "repo-a", "Use get_user()", ["main.py"])
