@@ -15,10 +15,10 @@ _PROJECT_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(os.path.abspath(
 sys.path.insert(0, _PROJECT_ROOT)
 
 from storage.vector_store import VectorStoreManager
-from storage.knowledge_graph import KnowledgeGraphManager
+from experiments.codegraphrag.storage.knowledge_graph import KnowledgeGraphManager
 from storage.registry import RepositoryRegistry, Repository
 from agents.orchestrator import Orchestrator
-from agents.query_planner import plan_structural_query
+from experiments.codegraphrag.agents.query_planner import plan_structural_query
 
 # Add benchmark to path for evidence collector
 sys.path.insert(0, os.path.join(_PROJECT_ROOT, "benchmark"))

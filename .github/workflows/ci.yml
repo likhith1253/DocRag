@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "overhaul/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Fast suite only: no model downloads, no GPU.
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Install dependencies (CPU torch)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          # streamlit is only needed by ui/app.py, which the fast suite does not import
+          grep -v -i '^streamlit' requirements.txt > /tmp/requirements-ci.txt
+          pip install -r /tmp/requirements-ci.txt pytest pytest-timeout httpx ruff
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Fast tests
+        # pyproject.toml deselects tests marked models/gpu/slow/integration/stale
+        run: python -m pytest -q

@@ -1,3 +1,4 @@
+import pytest
 import os
 import unittest
 import shutil
@@ -64,6 +65,7 @@ class TestIndexingIntegrity(unittest.TestCase):
         except Exception:
             pass
 
+    @pytest.mark.models
     def test_deterministic_point_ids_across_runs(self):
         """Same chunk hash indexed twice (two separate add_chunks calls,
         simulating two indexing runs) must resolve to the same point ID."""
@@ -80,6 +82,7 @@ class TestIndexingIntegrity(unittest.TestCase):
             "Re-indexing the same chunk must not create a duplicate point (idempotency).",
         )
 
+    @pytest.mark.models
     def test_idempotent_indexing_same_document_twice(self):
         """Indexing the same set of chunks for a document twice must not
         double the point count."""
@@ -96,6 +99,7 @@ class TestIndexingIntegrity(unittest.TestCase):
             "Second indexing pass of identical chunks must not create 10 points.",
         )
 
+    @pytest.mark.models
     def test_different_chunks_do_not_collide(self):
         chunks = [
             _make_chunk("First unique sentence.", "paper.pdf", "colA"),
@@ -105,6 +109,7 @@ class TestIndexingIntegrity(unittest.TestCase):
         self.manager.add_chunks(chunks)
         self.assertEqual(self.manager.count(), 3)
 
+    @pytest.mark.models
     def test_verify_points_exist_detects_missing_points(self):
         chunks = [_make_chunk(f"Chunk {i}", "paper.pdf", "colA", page=i) for i in range(3)]
         self.manager.add_chunks(chunks[:2])  # only index 2 of the 3
@@ -115,6 +120,7 @@ class TestIndexingIntegrity(unittest.TestCase):
         self.assertEqual(found_count, 2)
         self.assertEqual(missing, [chunks[2]["metadata"]["hash"]])
 
+    @pytest.mark.models
     def test_verify_points_exist_all_present(self):
         chunks = [_make_chunk(f"Present chunk {i}", "paper.pdf", "colA", page=i) for i in range(4)]
         self.manager.add_chunks(chunks)
@@ -124,6 +130,7 @@ class TestIndexingIntegrity(unittest.TestCase):
         self.assertEqual(found_count, 4)
         self.assertEqual(missing, [])
 
+    @pytest.mark.models
     def test_metadata_round_trips_through_qdrant(self):
         chunk = _make_chunk("Metadata integrity check.", "sub/paper.pdf", "colA", section="Method", page=7)
         self.manager.add_chunks([chunk])
@@ -137,6 +144,7 @@ class TestIndexingIntegrity(unittest.TestCase):
         self.assertIn("document_id", meta)
         self.assertIn("hash", meta)
 
+    @pytest.mark.models
     def test_collection_usable_after_drop_and_recreate(self):
         """
         Regression test: deleting a collection (e.g. via DELETE /repository/{id})

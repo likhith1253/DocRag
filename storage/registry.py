@@ -4,7 +4,12 @@ import threading
 from enum import Enum
 from typing import Optional, Dict, List, Any
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
+
+def _utcnow() -> datetime:
+    """Naive UTC timestamp (same value the old datetime.utcnow() produced)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
 
 class RepoStatus(str, Enum):
     CREATED = "CREATED"
@@ -58,14 +63,14 @@ class Repository(BaseModel):
         if self.chunk_count == 0 and self.tier2_total_chunks > 0:
             self.chunk_count = self.tier2_total_chunks
         if not self.created_at:
-            self.created_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+            self.created_at = _utcnow()
 
 class RepositoryRegistry:
     """
     Central authority for multi-tenant repository management.
     """
-    def __init__(self, storage_path: str = "./registry.json"):
-        self.storage_path = storage_path
+    def __init__(self, storage_path: Optional[str] = None):
+        self.storage_path = storage_path or os.environ.get("DOCRAG_REGISTRY_PATH", "./registry.json")
         self.repositories: Dict[str, Repository] = {}
         self._lock = threading.Lock()
         self._mtime: Optional[float] = None
@@ -153,7 +158,7 @@ class RepositoryRegistry:
         import uuid
         rid = repo_id or str(uuid.uuid4())
         coll_name = f"collection_{rid}"
-        now = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+        now = _utcnow()
 
         repo = Repository(
             repo_id=rid,
@@ -225,7 +230,7 @@ class RepositoryRegistry:
                         repo.last_error = f"Vector count verification failed: {e}"
 
                 repo.status = status
-                repo.updated_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+                repo.updated_at = _utcnow()
                 self._save()
             else:
                 raise ValueError(f"Repository {repo_id} not found in registry.")
@@ -264,7 +269,7 @@ class RepositoryRegistry:
             if chunk_count is not None:
                 repo.chunk_count = chunk_count
                 repo.tier2_total_chunks = chunk_count
-            repo.updated_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+            repo.updated_at = _utcnow()
             self._save()
 
         try:
@@ -279,7 +284,7 @@ class RepositoryRegistry:
         with self._lock:
             if repo_id in self.repositories:
                 self.repositories[repo_id].status = RepoStatus.DELETED
-                self.repositories[repo_id].updated_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+                self.repositories[repo_id].updated_at = _utcnow()
                 self._save()
             else:
                 raise ValueError(f"Repository {repo_id} not found in registry.")
@@ -354,7 +359,7 @@ class RepositoryRegistry:
                 self.repositories.pop(repo_id, None)
             else:
                 repo.status = RepoStatus.DELETED
-                repo.updated_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+                repo.updated_at = _utcnow()
             self._save()
 
         try:
@@ -450,7 +455,7 @@ _registry_singleton: Optional["RepositoryRegistry"] = None
 _registry_singleton_path: Optional[str] = None
 
 
-def get_registry(storage_path: str = "./registry.json") -> "RepositoryRegistry":
+def get_registry(storage_path: Optional[str] = None) -> "RepositoryRegistry":
     """
     Return the process-level RepositoryRegistry singleton.
     Loads registry.json exactly once per process (or when storage_path changes).

@@ -1,11 +1,12 @@
+import pytest
 import os
 import unittest
 import shutil
 import tempfile
 from pathlib import Path
-from ingestion.loader import load_repository
-from ingestion.language_detect import detect_language
-from ingestion.chunker import chunk_file
+from experiments.codegraphrag.ingestion.loader import load_repository
+from experiments.codegraphrag.ingestion.language_detect import detect_language
+from experiments.codegraphrag.ingestion.chunker import chunk_file
 from storage.vector_store import VectorStoreManager
 
 class TestVectorStore(unittest.TestCase):
@@ -39,6 +40,7 @@ class TestVectorStore(unittest.TestCase):
             except Exception:
                 pass
 
+    @pytest.mark.models
     def test_add_and_search(self):
         # Read files from workspace_path
         workspace_path = str(Path(__file__).resolve().parents[1])
@@ -78,6 +80,7 @@ class TestVectorStore(unittest.TestCase):
         self.assertIn("metadata", result_chunks[0])
         self.assertIn("score", result_chunks[0])
 
+    @pytest.mark.models
     def test_qdrant_path_resolves_against_repo_root(self):
         repo_root = Path(__file__).resolve().parents[1]
         original_cwd = os.getcwd()
@@ -96,6 +99,7 @@ class TestVectorStore(unittest.TestCase):
             shutil.rmtree(temp_dir, ignore_errors=True)
 
     @unittest.mock.patch("storage.vector_store.SentenceTransformer")
+    @pytest.mark.gpu
     def test_embedding_device_configuration(self, mock_st):
         from storage.vector_store import _get_encoder, _get_embedding_device
 

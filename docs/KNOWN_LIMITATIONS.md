@@ -13,3 +13,12 @@ The current vector storage backend utilizes Qdrant running in local file-mode (`
 
 ### 4. Mid-Batch Resume Indexing
 While the ingestion pipeline implements a snapshotting mechanism to support incremental indexing across subsequent runs, resuming an ingestion job that is forcefully interrupted mid-batch was not tested under documented assumptions before the release candidate freeze.
+
+### 5. Evaluation is thin
+There is no baseline comparison for the paper-QA pipeline and the self-run evaluations disagree with each other (see the Evaluation section of the root README). A human-graded sample and a vector-only / no-rerank ablation are the obvious next steps.
+
+### 6. Stale tests
+Tests marked `stale` (see `pyproject.toml`) fail against the current code; their expectations drifted (prompt-length limits, query-decomposition thresholds, multi-repository isolation retrieval counts, old orchestrator mocks) and need triage rather than silent deletion.
+
+### 7. Single shared API key
+Authentication is one shared `DOCRAG_API_KEY`; there are no per-user accounts, per-collection ACLs or rate limits.

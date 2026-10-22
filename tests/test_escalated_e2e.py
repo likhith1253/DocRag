@@ -1,17 +1,17 @@
 import sys
 sys.path.insert(0, "d:/Document_RAG")
 
-from agents.router import route
+from experiments.codegraphrag.agents.router import route
 from storage.vector_store import VectorStoreManager
-from ingestion.loader import load_repository
-from ingestion.language_detect import detect_language
-from ingestion.chunker import chunk_file
-from storage.knowledge_graph import KnowledgeGraphManager
-from retrieval.graph_search import expand_by_graph
-from retrieval.metadata_filter import filter_chunks
+from experiments.codegraphrag.ingestion.loader import load_repository
+from experiments.codegraphrag.ingestion.language_detect import detect_language
+from experiments.codegraphrag.ingestion.chunker import chunk_file
+from experiments.codegraphrag.storage.knowledge_graph import KnowledgeGraphManager
+from experiments.codegraphrag.retrieval.graph_search import expand_by_graph
+from experiments.codegraphrag.retrieval.metadata_filter import filter_chunks
 from retrieval.mmr_rerank import mmr_rerank
 from retrieval.cross_encoder_rerank import rerank_cross_encoder
-import agents.reasoning_agent as reasoning_agent
+import experiments.codegraphrag.agents.reasoning_agent as reasoning_agent
 
 def main():
     workspace_path = "d:/Document_RAG"

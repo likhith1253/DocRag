@@ -4,9 +4,13 @@ Production research paper question-answering API.
 Preserves collection/registry infrastructure for collection isolation.
 
 Endpoints:
-  GET  /health               — liveness check
+  GET  /health               — liveness check (details only for authorized callers)
   POST /query                — answer a question from an indexed collection
   GET  /indexing/status/{id} — progress polling
+  POST /cache/clear          — clear caches
+
+Every endpoint except /health requires authentication; see api/security.py
+(DOCRAG_API_KEY / loopback-only).
 
   (Collection CRUD is in api/repository.py, mounted at /repository/)
 """
@@ -24,15 +28,18 @@ import os
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 import json
+import logging
 import threading
 import time
+from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Depends
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Depends, Header, Request
+from pydantic import BaseModel, Field
 
 from storage.registry import RepositoryRegistry
 from api.repository import router as repository_router
 from api.dependencies import get_registry
+from api.security import require_api_key, is_authorized
 
 import agents.orchestrator as orchestrator
 
@@ -77,14 +84,27 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+logger = logging.getLogger(__name__)
+
+
+def _cors_origins():
+    raw = os.environ.get(
+        "DOCRAG_CORS_ORIGINS", "http://localhost:8501,http://127.0.0.1:8501"
+    )
+    return [o.strip() for o in raw.split(",") if o.strip() and o.strip() != "*"]
+
+
+# Authentication uses the X-API-Key header, not cookies, so credentials are
+# never allowed cross-origin and no wildcard origin is accepted.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_origins(),
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
 
+# The router itself carries the require_api_key dependency.
 app.include_router(repository_router, prefix="/repository")
 app.include_router(repository_router, prefix="/repositories")
 
@@ -185,11 +205,11 @@ def _system_diagnostics_payload():
 # ---------------------------------------------------------------------------
 
 class QueryPayload(BaseModel):
-    question: str
-    collection_id: str = None   # alias for repo_id — both accepted
-    repo_id: str = None         # legacy name kept for compatibility
-    filters: dict = None
-    request_id: str = None
+    question: str = Field(max_length=4000)
+    collection_id: Optional[str] = Field(default=None, max_length=200)  # alias for repo_id
+    repo_id: Optional[str] = Field(default=None, max_length=200)        # legacy name
+    filters: Optional[dict] = None
+    request_id: Optional[str] = Field(default=None, max_length=100, pattern=r"^[A-Za-z0-9_.:-]+$")
 
 
 # ---------------------------------------------------------------------------
@@ -197,20 +217,21 @@ class QueryPayload(BaseModel):
 # ---------------------------------------------------------------------------
 
 @app.get("/health")
-def health():
-    return {
-        "status": "ok",
-        "system": "DocumentRAG",
-        "backend": _backend_health_payload(),
-        "diagnostics": _system_diagnostics_payload(),
-    }
+def health(request: Request, x_api_key: Optional[str] = Header(default=None)):
+    """Public liveness probe. Backend/diagnostic details are only returned to
+    authorized callers (they expose model names, devices and collection stats)."""
+    payload = {"status": "ok", "system": "DocumentRAG"}
+    if is_authorized(request, x_api_key):
+        payload["backend"] = _backend_health_payload()
+        payload["diagnostics"] = _system_diagnostics_payload()
+    return payload
 
 
 # ---------------------------------------------------------------------------
 # Query
 # ---------------------------------------------------------------------------
 
-@app.post("/query")
+@app.post("/query", dependencies=[Depends(require_api_key)])
 def query(payload: QueryPayload):
     req_start = time.perf_counter()
     from storage.pipeline_logger import generate_request_id
@@ -282,14 +303,17 @@ def query(payload: QueryPayload):
     except Exception as e:
         from storage.pipeline_logger import log_exception
         log_exception(e, "api/main.py::query")
-        raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
+        logger.exception("Query failed (request_id=%s)", req_id)
+        raise HTTPException(
+            status_code=500, detail=f"Query failed. Request ID: {req_id}"
+        )
 
 
 # ---------------------------------------------------------------------------
 # Cache Clearing
 # ---------------------------------------------------------------------------
 
-@app.post("/cache/clear")
+@app.post("/cache/clear", dependencies=[Depends(require_api_key)])
 def clear_all_caches():
     try:
         from storage.cache import SemanticCache
@@ -321,19 +345,21 @@ def clear_all_caches():
 # Indexing progress
 # ---------------------------------------------------------------------------
 
-@app.get("/indexing/status/{repo_id}")
+@app.get("/indexing/status/{repo_id}", dependencies=[Depends(require_api_key)])
 def get_indexing_status(
     repo_id: str, registry: RepositoryRegistry = Depends(get_registry)
 ):
     from storage.progress import ProgressRegistry
 
+    # Reject unknown ids up-front so arbitrary ids cannot allocate trackers.
+    repo = registry.get_repository(repo_id)
+    if not repo:
+        raise HTTPException(status_code=404, detail="Collection not found")
+
     ProgressRegistry.check_heartbeats(registry)
 
     tracker = ProgressRegistry.get_tracker(repo_id)
     if tracker.stage == "queued":
-        repo = registry.get_repository(repo_id)
-        if not repo:
-            raise HTTPException(status_code=404, detail="Collection not found")
         if repo.status == "READY":
             tracker.update(status="READY", stage="completed", percentage=100.0)
         elif repo.status == "FAILED":

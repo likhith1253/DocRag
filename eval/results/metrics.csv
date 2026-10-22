@@ -1,9 +1,0 @@
-Metric,Value
-Accuracy,1.0
-Precision,1.0
-Recall,1.0
-F1,1.0
-Recall@5,0.95
-MRR,0.85
-Latency,3.0
-Memory,248

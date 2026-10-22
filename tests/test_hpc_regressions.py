@@ -1,3 +1,4 @@
+import pytest
 import os
 import sys
 import unittest
@@ -45,6 +46,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 1: A3C Q-learning max target vs Sarsa target distinction
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_01_a3c_qlearning_vs_sarsa_target_distinction(self):
         """A3C technical evidence keeps Q-learning max target distinct from Sarsa target."""
         raw_output = (
@@ -68,6 +70,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 2: DQN preprocessing frame count cannot be turned into 84 frames
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_02_dqn_preprocessing_frame_count_not_84(self):
         """DQN preprocessing answer cannot turn 84x84 into '84 frames'."""
         hallucinated_answer = (
@@ -82,6 +85,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 3: DQN preprocessing methodology chunk survives into final context
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_03_dqn_preprocessing_chunk_survives_to_final_context(self):
         """DQN preprocessing methodology chunk survives through FINAL prompt context."""
         query = "How are game screens preprocessed in Playing Atari with Deep Reinforcement Learning?"
@@ -113,6 +117,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 4: SAC Supporting Evidence cannot attribute equations to unrelated page
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_04_sac_supporting_evidence_no_fake_equation_attribution(self):
         """SAC Supporting Evidence cannot attribute generated equations to an unrelated page/figure."""
         # Simulated retrieved chunks for SAC: Page 7 is ablation study, Page 3 has objective
@@ -170,6 +175,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 5: World Models keeps 867 CarRacing and 1088 VizDoom parameter counts tied to correct source chunks
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_05_world_models_parameter_counts_attribution(self):
         """World Models keeps 867 CarRacing and 1088 VizDoom parameter counts tied to their correct source chunks."""
         raw_output = (
@@ -184,6 +190,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 6: Figure-only textual evidence produces an explicit visual-unavailable caveat
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_06_figure_only_textual_evidence_caveat(self):
         """Figure-only textual evidence produces an explicit visual-unavailable caveat."""
         raw_output = (
@@ -196,6 +203,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 7: Multi-paper answer cannot assign A3C's softmax-policy/value architecture to DQN
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_07_multi_paper_no_dqn_softmax_linear_policy(self):
         """Multi-paper answer cannot assign A3C's softmax-policy/value architecture to DQN."""
         raw_output = (
@@ -210,6 +218,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 8: A3C correctly states asynchronous actors replace reliance on experience replay
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_08_a3c_experience_replay_replacement(self):
         """A3C correctly states that asynchronous actors replace reliance on experience replay when that evidence is retrieved."""
         raw_output = (
@@ -223,6 +232,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 9: DQN evaluation preserves seven games vs state-of-the-art on six
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_09_dqn_evaluation_seven_games_sota_six(self):
         """DQN evaluation preserves seven games vs state-of-the-art on six."""
         raw_output = (
@@ -236,6 +246,7 @@ class TestHPCRegressions(unittest.TestCase):
     # -----------------------------------------------------------------------
     # Test 10: Every generated high-risk numeric/equation claim must have matching retrieved source chunk
     # -----------------------------------------------------------------------
+    @pytest.mark.models
     def test_10_high_risk_claims_grounded_to_source_chunks(self):
         """Every generated high-risk numeric/equation claim must have a matching retrieved source chunk."""
         retrieved_chunks = [

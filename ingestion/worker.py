@@ -131,6 +131,25 @@ def log_indexing_stage(
         f.write(f"{datetime.now(timezone.utc).isoformat()} | {msg}\n")
 
 
+_MAX_ZIP_MEMBERS = 5000
+_MAX_ZIP_UNCOMPRESSED_BYTES = 2 * 1024 ** 3  # 2 GiB
+
+
+def _safe_extractall(zf: "zipfile.ZipFile", dest: str) -> None:
+    """Extract a zip refusing path traversal (zip-slip) and oversized archives."""
+    dest_root = os.path.realpath(dest)
+    infos = zf.infolist()
+    if len(infos) > _MAX_ZIP_MEMBERS:
+        raise ValueError("Archive has too many members.")
+    if sum(i.file_size for i in infos) > _MAX_ZIP_UNCOMPRESSED_BYTES:
+        raise ValueError("Archive is too large when uncompressed.")
+    for info in infos:
+        target = os.path.realpath(os.path.join(dest_root, info.filename))
+        if target != dest_root and not target.startswith(dest_root + os.sep):
+            raise ValueError(f"Unsafe path in archive: {info.filename!r}")
+    zf.extractall(dest_root)
+
+
 def _is_pdf_file(file_path: str) -> bool:
     """Return True if the file path has a PDF extension."""
     _, ext = os.path.splitext(file_path.lower())
@@ -365,7 +384,7 @@ def background_ingest_repository(
             def _extract():
                 os.makedirs(extract_dir, exist_ok=True)
                 with zipfile.ZipFile(source_path, "r") as zf:
-                    zf.extractall(extract_dir)
+                    _safe_extractall(zf, extract_dir)
                 return extract_dir
 
             target_path = measure("Repository extraction", _extract)
