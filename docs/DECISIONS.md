@@ -9,3 +9,9 @@
 - **Evaluation harness:** Keep only the paper-QA HTTP harness and its helper temporarily. It will be replaced/extended once the system core and research protocol are ready.
 - **GPU:** Do not use remote compute absent a need and explicit authorization. No V100 testing is possible from this workspace; report it as NOT VERIFIED.
 - **Bibliography and data:** Add no paper references or public benchmark claims until existence, provenance, and license are verified from authoritative sources.
+
+- **Claim checker scope:** Replace paper-specific semantic rewrites with a generic high-risk number/equation scan. It does not establish semantic entailment or verify every claim; expose it as a risk scan and do not describe a clean scan as a proven claim-verification result.
+- **Generation cache:** Use content-addressed per-call cache files keyed by model identifier, full prompt, decoding configuration (including seed), and answer depth. Generation errors propagate as generation errors; cache reads/writes are visible failures. `DOCRAG_FORCE_GENERATION=1` is the explicit bypass.
+- **Prompt budget:** Reserve configured generation tokens from `prompt_token_budget` and enforce the remaining approximate token budget as a conservative context character cap. This is an approximation, not tokenizer-exact enforcement.
+- **Remote compute and APIs:** No authorization request is needed for current CPU code work; no remote login, paid API, or GPU service has been used. Avoid those unless later evidence shows CPU work cannot meet the planned study.
+- **Local registry:** Preserve the local `registry.json` because it contains pre-existing repository metadata; untrack it so neither user metadata nor test-generated records enter Git.

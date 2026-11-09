@@ -15,3 +15,11 @@ Cleanup was performed on `research-overhaul` before research design or new bench
 | Runtime ignore rules | databases, registries, Qdrant/graph/metadata/snapshot/log/debug/scratch/result folders, unverified source PDFs | Added ignore rules so machine-local state is not committed. | Checked tracked runtime paths and status after cleanup. |
 | Registry tests | `tests/test_registry.py` | Updated stale expectations to respect the existing nonempty-vector READY safeguard; added an empty-collection failure test. | `python -m pytest -q tests/test_registry.py`: 4 passed. |
 
+
+
+## Phase 2 test triage
+
+- Removed `tests/test_hpc_regressions.py`: these regression assertions encoded paper-specific automatic corrections (including fabricated claim rewriting) that were removed from the general prompt/verifier. They could not test a defensible generic invariant.
+- Replaced paper names in structural-intent, list-prompt, evidence retrieval, citation, and contract fixtures with synthetic study/method names. These remain behavior tests independent of benchmark-paper identities. Updated stale verifier tests to assert only generic number-risk logging and no automatic semantic rewrite.
+
+- **Cleanup correction:** `registry.json` was still tracked despite its ignore rule. Removed it from the Git index while preserving the local registry file. Synthetic integration-test registrations were present in the local copy and will remain ignored.
