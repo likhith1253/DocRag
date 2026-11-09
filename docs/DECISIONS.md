@@ -19,3 +19,6 @@
 - **CPU dependency lock:** Pin Torch to the official PyTorch CPU index and export the runtime requirements from `uv.lock`; avoid CUDA wheel downloads on laptop installs.
 - **Fast test scope:** Tests that initialize real embedding/vector-store models or invoke generation are marked `slow`. Broad test collection currently stalls before output despite targeted fast tests passing, so the fast suite is not yet declared green.
 - **Evaluation command:** Removed the premature `make reproduce` target because no canonical reproduction harness exists yet; it will return only when it runs real saved experiments.
+
+- **Primary study scope:** Limit the primary claim to QASPER evidence retrieval and generic structural selection. The repository lacks audited equation/figure annotations and reliable human answer grades; end-to-end generation/claim-verification claims would not be defensible.
+- **Test freeze:** Freeze official QASPER test data by upstream revision plus local SHA-256 and byte size before inspecting any examples or computing results. Only validation may guide implementation choices.

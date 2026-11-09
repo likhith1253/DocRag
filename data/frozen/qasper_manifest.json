@@ -1,0 +1,22 @@
+{
+  "dataset": "allenai/qasper",
+  "revision": "4d9336e735cf4e9e99e8a4d738847703a43512fa",
+  "license": "CC BY 4.0 per pinned dataset card",
+  "files": {
+    "train": {
+      "path": "data/downloads/qasper/train.parquet",
+      "sha256": "dca3142414789caaeaf60a90a1de3fa9a1a079c50bfcd0e053b55c1f385180ef",
+      "bytes": 14374549
+    },
+    "validation": {
+      "path": "data/downloads/qasper/validation.parquet",
+      "sha256": "111ec99b1ae1db8457dcef018302b30f6fb797cd10b1dcff26a0fa5d4b6e51e6",
+      "bytes": 4749126
+    },
+    "test": {
+      "path": "data/downloads/qasper/test.parquet",
+      "sha256": "071f79659d4c60b50dadbcdc9a2db0e1ab29a73c2ac779e94b1aa1991187b07b",
+      "bytes": 7074872
+    }
+  }
+}

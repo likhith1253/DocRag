@@ -21,10 +21,10 @@
 - [ ] Stabilize full fast-suite collection; current broad pytest invocation stalls before reporting tests. Targeted deterministic slice passes (55 tests); heavyweight storage/model cases are being marked slow.
 
 ## Phase 3 — evaluation and research design
-- [ ] Select and justify one evaluation harness; explain why legacy evaluations differed.
-- [ ] Specify the research question and falsification criteria before test exposure.
-- [ ] Verify benchmark provenance and licensing; create source-backed in-domain annotations and freeze test hash before tuning.
-- [ ] Implement content-addressed generation/judge cache and resumable backend interface.
+- [ ] Select one retrieval-only evaluation harness and explain why legacy evaluations differed.
+- [x] Specify research question, hypotheses, outcomes, controls, and falsification criteria before test exposure.
+- [x] Verify QASPER provenance/license and freeze official splits by revision and SHA-256 before tuning.
+- [ ] Primary experiment excludes generation/judging; the application generation cache exists, but a separate judge cache is out of scope unless the scope expands.
 - [ ] Implement retrieval baselines and ablations under identical conditions; run CPU retrieval metrics.
 - [ ] Run feasible generation only on the frozen set or a predeclared subset; preserve raw outputs with run metadata.
 
