@@ -10,39 +10,20 @@ Key properties:
   - Metadata schema replaces code-specific fields with document fields
 """
 
-import os
 import re
-import yaml
 import hashlib
 from datetime import datetime, timezone
 from typing import List, Dict, Any
-
-CONFIG_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml"
-)
-
 
 # ---------------------------------------------------------------------------
 # Config loading
 # ---------------------------------------------------------------------------
 
 def _load_chunking_config() -> tuple:
-    """
-    Load chunking configuration from config.yaml.
-    Returns (max_chunk_tokens, overlap_tokens).
-    """
-    max_chunk_tokens = 512
-    overlap_tokens = 64
-    if os.path.exists(CONFIG_PATH):
-        try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                config = yaml.safe_load(f)
-            chunking = config.get("chunking", {})
-            max_chunk_tokens = chunking.get("max_chunk_tokens", 512)
-            overlap_tokens = chunking.get("overlap_tokens", 64)
-        except Exception:
-            pass
-    return max_chunk_tokens, overlap_tokens
+    """Return chunk token limits from the shared typed settings object."""
+    from settings import get_settings
+    config = get_settings().chunking
+    return config.max_chunk_tokens, config.overlap_tokens
 
 
 def _count_tokens(text: str) -> int:

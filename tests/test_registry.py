@@ -16,6 +16,7 @@ def registry():
 
 def test_register_and_get(registry, monkeypatch):
     from storage.vector_store import VectorStoreManager
+    monkeypatch.setattr(VectorStoreManager, "__init__", lambda self, *args, **kwargs: None)
     monkeypatch.setattr(VectorStoreManager, "count", lambda self: 1)
     repo = Repository(
         repo_id="repo1",
@@ -38,6 +39,7 @@ def test_register_and_get(registry, monkeypatch):
 
 def test_update_status(registry, monkeypatch):
     from storage.vector_store import VectorStoreManager
+    monkeypatch.setattr(VectorStoreManager, "__init__", lambda self, *args, **kwargs: None)
     monkeypatch.setattr(VectorStoreManager, "count", lambda self: 1)
     repo = Repository(
         repo_id="repo2",
@@ -59,6 +61,7 @@ def test_update_status(registry, monkeypatch):
 
 def test_ready_requires_nonempty_collection(registry, monkeypatch):
     from storage.vector_store import VectorStoreManager
+    monkeypatch.setattr(VectorStoreManager, "__init__", lambda self, *args, **kwargs: None)
     monkeypatch.setattr(VectorStoreManager, "count", lambda self: 0)
     repo = Repository(
         repo_id="empty_repo",
@@ -74,7 +77,10 @@ def test_ready_requires_nonempty_collection(registry, monkeypatch):
     assert fetched.status == RepoStatus.FAILED
     assert fetched.last_error == "Zero vectors indexed in collection."
 
-def test_delete_and_list(registry):
+def test_delete_and_list(registry, monkeypatch):
+    from storage.vector_store import VectorStoreManager
+    monkeypatch.setattr(VectorStoreManager, "__init__", lambda self, *args, **kwargs: None)
+    monkeypatch.setattr(VectorStoreManager, "count", lambda self: 1)
     repo3 = Repository(
         repo_id="repo3",
         name="test_repo3",

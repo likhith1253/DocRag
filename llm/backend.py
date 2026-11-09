@@ -1,29 +1,26 @@
 import os
-import yaml
 import hashlib
 import json
 import time
 from pathlib import Path
 
-CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+from settings import get_settings, resolve_project_path
 
 _config = None
-LLM_METRICS_PATH = Path(__file__).parent.parent / "logs" / "llm_call_metrics.jsonl"
+LLM_METRICS_PATH = resolve_project_path(get_settings().log_dir) / "llm_call_metrics.jsonl"
 
 
 def _load_config():
     global _config
     if _config is None:
-        if not CONFIG_PATH.exists():
-            raise FileNotFoundError(f"Configuration file not found at: {CONFIG_PATH}")
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            _config = yaml.safe_load(f)
+        from settings import get_config_dict
+        _config = get_config_dict()
     return _config
 
 
 def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: str = "default", answer_depth: str = None) -> str:
     """
-    Generate response for a given prompt and model_key mapping to config.yaml.
+    Generate response for a given prompt and model_key using the configured model key.
     
     Args:
         prompt: The prompt text to send to the LLM.
@@ -36,81 +33,66 @@ def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: s
         The generated text response.
     """
     config = _load_config()
-    model = config.get(model_key, model_key)
-    
-    # Simple disk-backed prompt cache to avoid repeated heavy LLM calls
-    cache_dir = Path(__file__).parent.parent / "logs"
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    cache_path = cache_dir / "llm_prompt_cache.json"
+    backend_name = str(config.get("llm_backend", "transformers")).lower()
+    if backend_name == "ollama":
+        model = config.get("ollama_model", get_settings().ollama_model)
+    else:
+        model = config.get(model_key, config.get("hf_model", model_key))
 
-    gen_cfg = config.get("generation", {})
-
-    # Include generation config in cache key so model upgrades or param changes
-    # automatically invalidate old cached responses (BUG-3 fix).
-    num_predict = gen_cfg.get("num_predict", 512) if gen_cfg else 512
-    temperature = gen_cfg.get("temperature", 0.7) if gen_cfg else 0.7
-    cache_seed = f"{prompt}::{model}::np={num_predict}::temp={temperature}"
-    key = hashlib.sha256(cache_seed.encode("utf-8")).hexdigest()
-    cache = {}
-    try:
-        if cache_path.exists():
-            with open(cache_path, "r", encoding="utf-8") as f:
-                cache = json.load(f)
-    except Exception:
-        cache = {}
-
-    # Disable prompt caching by default unless explicitly enabled via ENABLE_PROMPT_CACHE=1
-    enable_cache_env = os.environ.get("ENABLE_PROMPT_CACHE", "").lower() in ("true", "1", "yes")
-    disable_cache_env = os.environ.get("DISABLE_PROMPT_CACHE", "").lower() in ("true", "1", "yes")
-    cache_enabled = enable_cache_env and not disable_cache_env
+    gen_cfg = config.get("generation", {}) or {}
+    from llm.cache import cache_key, read_cached, write_cached
+    decoding = dict(gen_cfg)
+    decoding["backend"] = config.get("llm_backend", "transformers")
+    decoding["answer_depth"] = answer_depth
+    key = cache_key(str(model), prompt, decoding)
+    force_generation = os.environ.get("DOCRAG_FORCE_GENERATION", "").lower() in ("1", "true", "yes")
 
     start_total = time.perf_counter()
-    cache_hit = (key in cache) and cache_enabled
+    cached_result = None if force_generation else read_cached(key)
+    cache_hit = cached_result is not None
     if cache_hit:
-        result = cache[key]
+        result = cached_result
         backend_ms = 0.0
-        print(f"      ├─ [LLM Cache Hit] Returning prompt response from prompt cache", flush=True)
+        print("      ?? [LLM Cache Hit] Returning content-addressed cached output", flush=True)
         try:
             from storage.pipeline_logger import log_stage
-            log_stage(request_id, 10, "LLM Prompt Cache Hit", {"raw_output": result, "cache_hit": True}, latency_ms=0.0)
-        except Exception:
-            pass
+            log_stage(request_id, 10, "LLM Content Cache Hit", {"raw_output": result, "cache_hit": True}, latency_ms=0.0)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Could not record cache-hit trace: %s", exc)
     else:
         from llm.backend_factory import get_backend
+        import inspect
         backend = get_backend()
         start_backend = time.perf_counter()
         print(f"CALLING {backend.__class__.__name__}.generate()", flush=True)
-        try:
-            result = backend.generate(prompt, model, request_id=request_id, answer_depth=answer_depth)
-        except TypeError:
-            result = backend.generate(prompt, model)
+        parameters = inspect.signature(backend.generate).parameters
+        kwargs = {}
+        if "request_id" in parameters:
+            kwargs["request_id"] = request_id
+        if "answer_depth" in parameters:
+            kwargs["answer_depth"] = answer_depth
+        result = backend.generate(prompt, model, **kwargs)
         backend_ms = (time.perf_counter() - start_backend) * 1000
+        if not isinstance(result, str):
+            raise TypeError(f"LLM backend returned {type(result).__name__}; expected str")
+        write_cached(key, result)
 
         try:
             from llm.transformers_backend import HFTransformersBackend
             is_hf = isinstance(backend, HFTransformersBackend)
-        except Exception:
+        except ImportError:
             is_hf = False
-
         if not is_hf:
             try:
                 from storage.pipeline_logger import log_stage
                 log_stage(request_id, 10, f"{backend.__class__.__name__}.generate", {
-                    "raw_output": result,
-                    "model": model,
-                    "backend": backend.__class__.__name__,
+                    "raw_output": result, "model": model, "backend": backend.__class__.__name__,
                     "latency_ms": backend_ms
                 }, latency_ms=backend_ms)
-            except Exception:
-                pass
-
-        # Save to cache (best-effort)
-        try:
-            cache[key] = result
-            with open(cache_path, "w", encoding="utf-8") as f:
-                json.dump(cache, f)
-        except Exception:
-            pass
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).warning("Could not record generation trace: %s", exc)
 
     total_ms = (time.perf_counter() - start_total) * 1000
 
@@ -126,7 +108,8 @@ def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: s
             "prompt_words": len(prompt.split()),
             "prompt_tokens_approx": int(len(prompt.split()) * 1.33),
             "chunk_count": chunk_count,
-            "num_predict": gen_cfg.get("num_predict") if gen_cfg else None,
+            "num_predict": gen_cfg.get("num_predict"),
+            "cache_key": key,
             "response_chars": len(result),
             "response_words": len(result.split()),
             "response_tokens_approx": int(len(result.split()) * 1.33),
@@ -135,7 +118,8 @@ def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: s
         }
         with open(LLM_METRICS_PATH, "a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry) + "\n")
-    except Exception:
-        pass
+    except OSError as exc:
+        import logging
+        logging.getLogger(__name__).warning("Could not append LLM metrics: %s", exc)
 
     return result

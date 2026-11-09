@@ -32,17 +32,9 @@ st.set_page_config(
 def _get_api_url():
     if "API_URL" in os.environ:
         return os.environ["API_URL"].rstrip("/")
-    try:
-        import yaml
-        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml")
-        if os.path.exists(config_path):
-            with open(config_path, "r", encoding="utf-8") as f:
-                cfg = yaml.safe_load(f)
-            port = cfg.get("ports", {}).get("api", 9001)
-            return f"http://localhost:{port}"
-    except Exception:
-        pass
-    return "http://localhost:9001"
+    from settings import get_settings
+    return f"http://localhost:{get_settings().ports.api}"
+
 
 API_URL = _get_api_url()
 

@@ -308,9 +308,11 @@ def clear_all_caches():
 
     try:
         from pathlib import Path
-        cache_path = Path("logs/llm_prompt_cache.json")
+        from settings import get_settings, resolve_project_path
+        import shutil
+        cache_path = resolve_project_path(get_settings().cache_dir) / "llm"
         if cache_path.exists():
-            cache_path.unlink()
+            shutil.rmtree(cache_path)
     except Exception as e:
         print(f"Error clearing LLM prompt cache: {e}")
 

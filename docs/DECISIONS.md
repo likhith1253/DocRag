@@ -15,3 +15,7 @@
 - **Prompt budget:** Reserve configured generation tokens from `prompt_token_budget` and enforce the remaining approximate token budget as a conservative context character cap. This is an approximation, not tokenizer-exact enforcement.
 - **Remote compute and APIs:** No authorization request is needed for current CPU code work; no remote login, paid API, or GPU service has been used. Avoid those unless later evidence shows CPU work cannot meet the planned study.
 - **Local registry:** Preserve the local `registry.json` because it contains pre-existing repository metadata; untrack it so neither user metadata nor test-generated records enter Git.
+
+- **CPU dependency lock:** Pin Torch to the official PyTorch CPU index and export the runtime requirements from `uv.lock`; avoid CUDA wheel downloads on laptop installs.
+- **Fast test scope:** Tests that initialize real embedding/vector-store models or invoke generation are marked `slow`. Broad test collection currently stalls before output despite targeted fast tests passing, so the fast suite is not yet declared green.
+- **Evaluation command:** Removed the premature `make reproduce` target because no canonical reproduction harness exists yet; it will return only when it runs real saved experiments.

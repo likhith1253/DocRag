@@ -8,7 +8,7 @@ Verifies:
   4. Repository isolation remains 100% intact (multi-repo retrieval boundary).
   5. Paper isolation remains 100% intact (single-paper query restricted).
   6. Evidence coverage remains intact (restores essential evidence from candidate pool).
-  7. ClaimEvidenceVerifier continues to correct known errors and verify claims.
+  7. Risk scan flags unsupported multi-digit numbers without rewriting claims.
   8. CPU execution works natively.
   9. GPU fallback behavior remains safe on failure.
   10. Caches enforce LRU max_size bounds without unbounded memory growth.
@@ -17,6 +17,9 @@ Verifies:
 import os
 import sys
 import unittest
+import pytest
+
+pytestmark = pytest.mark.slow
 from unittest.mock import patch, MagicMock
 import numpy as np
 
@@ -37,7 +40,7 @@ from retrieval.cross_encoder_rerank import (
 )
 from storage.registry import get_registry, RepoStatus
 from agents.orchestrator import _ensure_evidence_coverage, _dedup_and_filter_chunks, answer
-from agents.doc_agent import ClaimEvidenceVerifier, _extract_equation_labels, CANNOT_FIND_RESPONSE
+from agents.doc_agent import HighRiskGroundingScanner, _extract_equation_labels, CANNOT_FIND_RESPONSE
 
 
 class TestPhase6Performance(unittest.TestCase):
@@ -198,20 +201,13 @@ class TestPhase6Performance(unittest.TestCase):
         )
         self.assertTrue(any(c["id"] == "essential_eq" for c in restored))
 
-    def test_7_claim_evidence_verifier_correctness(self):
-        """7. ClaimEvidenceVerifier continues to correct known Phase 3 errors."""
-        chunks = [{
-            "content": "Asynchronous Methods: one-step Sarsa target is y = r + \\gamma Q(s', a'; \\theta^-). One-step Q-learning is y = r + \\gamma \\max_{a'} Q(s', a'; \\theta^-).",
-            "metadata": {"paper_title": "Asynchronous Methods for Deep Reinforcement Learning", "page_start": 4}
-        }]
-        verifier = ClaimEvidenceVerifier(chunks, question="What is the Sarsa update equation?")
-
-        bad_answer = "For one-step Sarsa, the target value is: \\[ y = r + \\gamma \\max_{a'} Q(s', a'; \\theta^-) \\]"
-        corrected = verifier.verify_and_align(bad_answer)
-
-        # Max operator should be removed from Sarsa
-        self.assertNotIn(r"\max_{a'}", corrected)
-        self.assertIn(r"y = r + \gamma Q(s', a'; \theta^-)", corrected)
+    def test_7_claim_evidence_verifier_logs_unsupported_number_without_rewriting(self):
+        chunks = [{"content": "The sample contains 64 items.", "metadata": {"paper_title": "Study Alpha", "page_start": 2}}]
+        verifier = HighRiskGroundingScanner(chunks, question="How large is the sample?")
+        answer = "The sample contains 128 items."
+        output = verifier.verify_and_align(answer)
+        self.assertEqual(output, answer)
+        self.assertEqual(verifier.records[0]["ungrounded_numbers"], ["128"])
 
     def test_8_cpu_execution_support(self):
         """8. Prewarming and execution work natively on CPU."""

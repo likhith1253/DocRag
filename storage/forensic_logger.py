@@ -20,8 +20,10 @@ import json
 import traceback
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).parent.parent
-DEBUG_DIR = ROOT_DIR / ".debug" / "current_query"
+from settings import PROJECT_ROOT, get_settings, resolve_project_path
+
+ROOT_DIR = PROJECT_ROOT
+DEBUG_DIR = resolve_project_path(get_settings().debug_dir)
 
 
 class ForensicLogger:

@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 import threading
 from enum import Enum
 from typing import Optional, Dict, List, Any
@@ -64,8 +65,10 @@ class RepositoryRegistry:
     """
     Central authority for multi-tenant repository management.
     """
-    def __init__(self, storage_path: str = "./registry.json"):
-        self.storage_path = storage_path
+    def __init__(self, storage_path: Optional[str] = None):
+        from settings import get_settings, resolve_project_path
+        configured_path = storage_path or get_settings().registry_path
+        self.storage_path = str(resolve_project_path(configured_path))
         self.repositories: Dict[str, Repository] = {}
         self._lock = threading.Lock()
         self._mtime: Optional[float] = None
@@ -152,7 +155,8 @@ class RepositoryRegistry:
         """
         import uuid
         rid = repo_id or str(uuid.uuid4())
-        coll_name = f"collection_{rid}"
+        from settings import get_settings
+        coll_name = f"{get_settings().collection_prefix}{rid}"
         now = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
 
         repo = Repository(
@@ -174,13 +178,15 @@ class RepositoryRegistry:
         return repo
 
     def _find_repository(self, repo_id: str) -> Optional[Repository]:
+        from settings import get_settings
         if repo_id in self.repositories:
             return self.repositories[repo_id]
         for repo in self.repositories.values():
             if repo.vector_collection == repo_id or getattr(repo, "collection_id", None) == repo_id:
                 return repo
-        if repo_id.startswith("collection_"):
-            stripped = repo_id[len("collection_"):]
+        prefix = get_settings().collection_prefix
+        if repo_id.startswith(prefix):
+            stripped = repo_id[len(prefix):]
             if stripped in self.repositories:
                 return self.repositories[stripped]
         return None
@@ -331,9 +337,11 @@ class RepositoryRegistry:
             pass
 
         # 4. Remove metadata & snapshot files
+        from settings import get_settings, resolve_project_path
+        settings = get_settings()
         for p in [
-            f"metadata_storage/{repo.metadata}.json",
-            f"snapshot_storage/{repo_id}.json",
+            resolve_project_path(Path(settings.metadata_dir) / f"{repo.metadata}.json"),
+            resolve_project_path(Path(settings.snapshot_dir) / f"{repo_id}.json"),
         ]:
             try:
                 if os.path.exists(p):
@@ -450,7 +458,7 @@ _registry_singleton: Optional["RepositoryRegistry"] = None
 _registry_singleton_path: Optional[str] = None
 
 
-def get_registry(storage_path: str = "./registry.json") -> "RepositoryRegistry":
+def get_registry(storage_path: Optional[str] = None) -> "RepositoryRegistry":
     """
     Return the process-level RepositoryRegistry singleton.
     Loads registry.json exactly once per process (or when storage_path changes).
@@ -458,8 +466,9 @@ def get_registry(storage_path: str = "./registry.json") -> "RepositoryRegistry":
     because they write through to disk AND update self.repositories in-place.
     """
     global _registry_singleton, _registry_singleton_path
-    if _registry_singleton is None or _registry_singleton_path != storage_path:
-        _registry_singleton = RepositoryRegistry(storage_path=storage_path)
-        _registry_singleton_path = storage_path
+    configured_path = storage_path or __import__("settings").get_settings().registry_path
+    if _registry_singleton is None or _registry_singleton_path != configured_path:
+        _registry_singleton = RepositoryRegistry(storage_path=configured_path)
+        _registry_singleton_path = configured_path
     return _registry_singleton
 

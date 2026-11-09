@@ -12,7 +12,7 @@ was asked to protect going into HPC/V100 validation:
   B. Repository isolation      (mismatch rejection, invalid repo id)
   C. Paper isolation           (acronym/alias matching stays conservative)
   D. Evidence quality          (equation/table/algorithm evidence preserved)
-  E. Technical grounding       (verify_high_risk_grounding, ClaimEvidenceVerifier)
+  E. Technical grounding       (verify_high_risk_grounding, HighRiskGroundingScanner)
   F. Cache isolation           (query-embedding, CE-score, paper-metadata caches)
   G. Lifecycle                 (CREATED->INDEXING->READY, FAILED, DELETING->DELETED)
   H. Failure handling          (canonical error strings, no raw tracebacks)
@@ -22,6 +22,9 @@ was asked to protect going into HPC/V100 validation:
 import os
 import sys
 import unittest
+import pytest
+
+pytestmark = pytest.mark.slow
 from unittest.mock import patch, MagicMock
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,7 +42,7 @@ from retrieval.paper_matcher import (
 )
 from storage.vector_store import get_query_embedding_cache
 import agents.orchestrator as orchestrator
-from agents.doc_agent import verify_high_risk_grounding, ClaimEvidenceVerifier
+from agents.doc_agent import verify_high_risk_grounding, HighRiskGroundingScanner
 
 
 def _make_chunk(text, file_path, collection_id, section="Body", page=1, **evidence_flags):
@@ -241,23 +244,19 @@ class TestEvidenceAndGroundingRegression(unittest.TestCase):
         result = verify_high_risk_grounding("The model uses 128 hidden units.", chunks)
         self.assertEqual(result["ungrounded_numbers"], [])
 
-    def test_claim_evidence_verifier_fixes_sarsa_naming_regression(self):
-        chunks = [_make_chunk(
-            "One-step Sarsa target: y = r + gamma Q(s', a'; theta^-)",
-            "A3C.pdf", "collA", contains_equation=True,
-        )]
-        verifier = ClaimEvidenceVerifier(chunks, "What does SARSA stand for?")
-        bad_answer = "SARSA (Synchronous Advantage Actor-Critic) is used for value estimation."
-        fixed = verifier.verify_and_align(bad_answer)
-        self.assertNotIn("Synchronous Advantage Actor-Critic", fixed)
-        self.assertIn("State-Action-Reward-State-Action", fixed)
+    def test_claim_evidence_verifier_does_not_inject_unseen_facts(self):
+        chunks = [_make_chunk("The measured sample contains 64 items.", "StudyAlpha.pdf", "collA")]
+        verifier = HighRiskGroundingScanner(chunks, "How large is the measured sample?")
+        answer = "The measured sample contains 128 items."
+        self.assertEqual(verifier.verify_and_align(answer), answer)
+        self.assertEqual(verifier.records[0]["ungrounded_numbers"], ["128"])
 
-    def test_claim_evidence_verifier_logs_claims(self):
-        chunks = [_make_chunk("Sarsa target without max.", "A3C.pdf", "collA")]
-        verifier = ClaimEvidenceVerifier(chunks, "What does SARSA stand for?")
-        verifier.verify_and_align("SARSA (Synchronous Advantage Actor-Critic)")
+    def test_grounding_scanner_records_high_risk_findings(self):
+        chunks = [_make_chunk("The sample contains 64 items.", "StudyAlpha.pdf", "collA")]
+        verifier = HighRiskGroundingScanner(chunks, "How many items are in the sample?")
+        verifier.verify_and_align("The sample contains 128 items.")
         self.assertTrue(len(verifier.records) >= 1)
-        self.assertIn("claim_type", verifier.records[0])
+        self.assertIn("ungrounded_numbers", verifier.records[0])
 
     def test_evidence_flags_survive_into_retrieved_chunk_metadata(self):
         chunk = _make_chunk("y = r + gamma max_a' Q(s', a')", "QL.pdf", "collA",

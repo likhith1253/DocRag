@@ -12,7 +12,7 @@ Performance changes vs original:
   - Per-stage wall-clock timings are logged with throughput (items/s).
   - A single failed PDF never stops the entire run; it is skipped with a warning
     and counted in progress.failed_files.
-  - Worker count is read from config.yaml workers.parse_workers (default: 4).
+  - Worker counts are read from the validated application settings.
 
 Preserved:
   - ProgressRegistry & IndexingProgressTracker
@@ -31,7 +31,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 import logging
 import threading
-import yaml
 
 try:
     from eval.production_validation._stage_profiler import StageProfiler
@@ -45,10 +44,6 @@ from storage.vector_store import VectorStoreManager
 from storage.metadata_store import MetadataStoreManager
 from storage.snapshot import SnapshotManager
 from ingestion.diff_engine import compute_file_diff
-
-CONFIG_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml"
-)
 
 # PDF extensions to index
 _PDF_EXTENSIONS = {".pdf"}
@@ -64,19 +59,13 @@ _PARSE_CACHE_LOCK = threading.Lock()
 
 
 def _load_indexing_config() -> dict:
-    if not os.path.exists(CONFIG_PATH):
-        return {}
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f).get("indexing", {})
+    from settings import get_settings
+    return get_settings().indexing.model_dump()
 
 
 def _load_worker_config() -> dict:
-    """Load workers block from config.yaml, with safe defaults."""
-    if not os.path.exists(CONFIG_PATH):
-        return {}
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        full = yaml.safe_load(f) or {}
-    return full.get("workers", {})
+    from settings import get_settings
+    return get_settings().workers.model_dump()
 
 
 def _batch_chunks(chunks: list, batch_size: int):
@@ -119,8 +108,10 @@ def log_indexing_stage(
     items: int = None,
     throughput: float = None,
 ):
-    os.makedirs("logs", exist_ok=True)
-    with open("logs/indexing.log", "a", encoding="utf-8") as f:
+    from settings import get_settings, resolve_project_path
+    log_path = resolve_project_path(get_settings().log_dir) / "indexing.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as f:
         msg = f"[{repo_id}] {stage} - {event}"
         if duration is not None:
             msg += f" | Duration: {duration:.2f}s"
@@ -360,7 +351,8 @@ def background_ingest_repository(
         # Handle zip extraction
         target_path = source_path
         if source_path.endswith(".zip"):
-            extract_dir = f"./repositories/{repo_id}"
+            from settings import get_settings, resolve_project_path
+            extract_dir = str(resolve_project_path(os.path.join(get_settings().repository_data_dir, repo_id)))
 
             def _extract():
                 os.makedirs(extract_dir, exist_ok=True)
@@ -400,8 +392,12 @@ def background_ingest_repository(
 
         # Qdrant zero-point guard: if Qdrant collection is currently empty, force full re-indexing of all PDFs
         repo = registry.get_repository(repo_id)
-        coll_name = (repo.collection_id or repo.vector_collection) if repo else f"collection_{repo_id}"
-        assert coll_name != "chunks", f"CRITICAL ISOLATION ERROR: Worker attempted to index repo '{repo_id}' into generic 'chunks' collection!"
+        from settings import get_settings
+        coll_name = (repo.collection_id or repo.vector_collection) if repo else f"{get_settings().collection_prefix}{repo_id}"
+        from settings import get_settings
+        assert coll_name != get_settings().default_collection_name, (
+            f"CRITICAL ISOLATION ERROR: Worker attempted to index repo '{repo_id}' into the default collection!"
+        )
         try:
             from storage.vector_store import VectorStoreManager
             vm = VectorStoreManager(collection_name=coll_name, repository_id=repo_id)
@@ -572,10 +568,10 @@ def background_ingest_repository(
         progress.update(stage="metadata_generation")
         log_indexing_stage(repo_id, "metadata_generation", "START")
 
-        os.makedirs("metadata_storage", exist_ok=True)
-        meta_manager = MetadataStoreManager(
-            f"metadata_storage/{repo.metadata}.json"
-        )
+        from settings import get_settings, resolve_project_path
+        metadata_path = resolve_project_path(os.path.join(get_settings().metadata_dir, f"{repo.metadata}.json"))
+        metadata_path.parent.mkdir(parents=True, exist_ok=True)
+        meta_manager = MetadataStoreManager(str(metadata_path))
         if chunks_hashes_to_delete:
             measure(
                 "Metadata deletion",

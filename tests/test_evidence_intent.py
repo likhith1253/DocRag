@@ -10,7 +10,7 @@ class TestEvidenceIntent(unittest.TestCase):
         for q in [
             "What is the objective function?",
             "Give the update equation.",
-            "What is the SAC maximum-entropy objective?",
+            "What is the optimization objective?",
         ]:
             self.assertTrue(detect_evidence_intent(q)["equation"], q)
 
@@ -52,7 +52,7 @@ class TestEvidenceIntent(unittest.TestCase):
         self.assertTrue(detect_evidence_intent("What were the Atari scores?")["numerical"])
 
     def test_comparison_query_can_be_numerical(self):
-        intent = detect_evidence_intent("Compare DQN, A3C and SAC based on their experimental results.")
+        intent = detect_evidence_intent("Compare three methods based on their experimental results.")
         self.assertTrue(intent["numerical"])
 
     def test_generic_query_has_no_evidence_intent(self):

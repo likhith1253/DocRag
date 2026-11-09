@@ -18,7 +18,6 @@ import sys
 import json
 import time
 import uuid
-import yaml
 import shutil
 import logging
 import traceback
@@ -36,9 +35,11 @@ if hasattr(sys.stdout, "reconfigure"):
 # ---------------------------------------------------------------------------
 # Directories & Paths Setup
 # ---------------------------------------------------------------------------
-ROOT_DIR = (Path(__file__).parent.parent).resolve()
-DEBUG_DIR = ROOT_DIR / ".debug" / "current_query"
-LOGS_DIR = ROOT_DIR / "logs"
+from settings import PROJECT_ROOT, get_settings, resolve_project_path
+
+ROOT_DIR = PROJECT_ROOT
+DEBUG_DIR = resolve_project_path(get_settings().debug_dir)
+LOGS_DIR = resolve_project_path(get_settings().log_dir)
 PROMPTS_DIR = LOGS_DIR / "prompts"
 MODEL_OUTPUTS_DIR = LOGS_DIR / "model_outputs"
 RETRIEVAL_DIR = LOGS_DIR / "retrieval"
@@ -51,7 +52,6 @@ RETRIEVAL_DIR.mkdir(parents=True, exist_ok=True)
 BACKEND_DEBUG_LOG_PATH = LOGS_DIR / "backend_debug.log"
 ERRORS_LOG_PATH = LOGS_DIR / "errors.log"
 DEBUG_LOG_PATH = LOGS_DIR / "pipeline_debug.jsonl"
-CONFIG_PATH = ROOT_DIR / "config.yaml"
 
 # Setup RotatingFileHandler
 _file_handler = RotatingFileHandler(
@@ -271,24 +271,12 @@ forensic_tracer = ForensicTracker()
 
 
 def get_config() -> Dict[str, Any]:
-    global _config_cache
-    if _config_cache is None:
-        if CONFIG_PATH.exists():
-            try:
-                with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                    _config_cache = yaml.safe_load(f) or {}
-            except Exception:
-                _config_cache = {}
-        else:
-            _config_cache = {}
-    return _config_cache
+    from settings import get_config_dict
+    return get_config_dict()
 
 
 def is_debug_mode() -> bool:
-    try:
-        return bool(get_config().get("debug_mode", True))
-    except Exception:
-        return True
+    return bool(get_settings().debug_mode)
 
 
 def generate_request_id() -> str:

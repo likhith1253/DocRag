@@ -1,4 +1,4 @@
-"""
+﻿"""
 Phase 3 Part C/I lightweight tests: evidence-aware retrieval preserves the
 right kind of evidence (equation/table/figure) for evidence-sensitive
 questions, and Phase 2 paper isolation still holds afterward. Uses the same
@@ -78,25 +78,25 @@ def _rank_by_prose_similarity_ce(query, chunks, top_k=5, request_id="default"):
 
 
 # More prose chunks than rerank_top_k (8), all scoring higher than the
-# equation/table chunk under the fake CE — a naive top-k cut would genuinely
+# equation/table chunk under the fake CE â€” a naive top-k cut would genuinely
 # drop both, which is exactly the scenario _ensure_evidence_coverage exists
 # to correct (not just a case where nothing needed truncating).
-SAC_CHUNKS = [
-    _chunk("Soft Actor-Critic", "SAC is an off-policy actor-critic algorithm.", page=1),
-    _chunk("Soft Actor-Critic", "It uses a stochastic policy for exploration.", page=1),
-    _chunk("Soft Actor-Critic", "The method builds on prior maximum entropy RL work.", page=2),
-    _chunk("Soft Actor-Critic", "Experiments were run on MuJoCo continuous control tasks.", page=2),
-    _chunk("Soft Actor-Critic", "The replay buffer stores past transitions for training.", page=3),
-    _chunk("Soft Actor-Critic", "Two Q-functions are used to mitigate overestimation bias.", page=3),
-    _chunk("Soft Actor-Critic", "A target value network stabilizes training.", page=3),
-    _chunk("Soft Actor-Critic", "The temperature parameter controls the entropy tradeoff.", page=4),
-    _chunk("Soft Actor-Critic", "Prior work includes DDPG and TD3.", page=1),
+ALPHA_CHUNKS = [
+    _chunk("Study Alpha", "Method Alpha is an off-policy actor-critic algorithm.", page=1),
+    _chunk("Study Alpha", "It uses a stochastic policy for exploration.", page=1),
+    _chunk("Study Alpha", "The method builds on prior maximum entropy RL work.", page=2),
+    _chunk("Study Alpha", "Experiments were run on MuJoCo continuous control tasks.", page=2),
+    _chunk("Study Alpha", "The replay buffer stores past transitions for training.", page=3),
+    _chunk("Study Alpha", "Two Q-functions are used to mitigate overestimation bias.", page=3),
+    _chunk("Study Alpha", "A target value network stabilizes training.", page=3),
+    _chunk("Study Alpha", "The temperature parameter controls the entropy tradeoff.", page=4),
+    _chunk("Study Alpha", "Prior work includes DDPG and TD3.", page=1),
     _chunk(
-        "Soft Actor-Critic", "J(pi) = E[R(s,a) + alpha H(pi(.|s))]",
+        "Study Alpha", "J(pi) = E[R(s,a) + alpha H(pi(.|s))]",
         page=4, section="Method", chunk_type="EQUATION", evidence_type="EQUATION", contains_equation=True,
     ),
     _chunk(
-        "Soft Actor-Critic", "Table 2: SAC achieves 5000 on HalfCheetah.",
+        "Study Alpha", "Table 2: Method Alpha achieves 5000 on HalfCheetah.",
         page=8, section="Results", chunk_type="TABLE", evidence_type="TABLE", contains_table=True,
     ),
 ]
@@ -107,7 +107,7 @@ SAC_CHUNKS = [
 class TestEvidenceAwareRetrieval(unittest.TestCase):
     def setUp(self):
         invalidate_paper_cache()
-        orchestrator._v_manager_override = FakeVManager(SAC_CHUNKS)
+        orchestrator._v_manager_override = FakeVManager(ALPHA_CHUNKS)
 
     def tearDown(self):
         orchestrator._v_manager_override = None
@@ -123,13 +123,13 @@ class TestEvidenceAwareRetrieval(unittest.TestCase):
         }
 
     def test_equation_evidence_preserved_for_equation_query(self, mock_ce, mock_mmr):
-        state = self._base_state("What is the maximum-entropy objective equation in Soft Actor-Critic?")
+        state = self._base_state("What is the maximum-entropy objective equation in Study Alpha?")
         result = orchestrator.retrieve_node(state)
         chunks = result["retrieved_chunks"]
         self.assertTrue(any(c["metadata"]["contains_equation"] for c in chunks))
 
     def test_table_evidence_preserved_for_numerical_query(self, mock_ce, mock_mmr):
-        state = self._base_state("What were the Table 2 results for Soft Actor-Critic?")
+        state = self._base_state("What were the Table 2 results for Study Alpha?")
         result = orchestrator.retrieve_node(state)
         chunks = result["retrieved_chunks"]
         self.assertTrue(any(c["metadata"]["contains_table"] for c in chunks))
@@ -137,64 +137,64 @@ class TestEvidenceAwareRetrieval(unittest.TestCase):
     def test_non_evidence_query_does_not_force_equation_in(self, mock_ce, mock_mmr):
         # A query with no equation/table/figure intent should not be
         # artificially padded with an equation chunk it didn't ask for.
-        state = self._base_state("Explain the training procedure used in Soft Actor-Critic.")
+        state = self._base_state("Explain the training procedure used in Study Alpha.")
         result = orchestrator.retrieve_node(state)
         chunks = result["retrieved_chunks"]
-        # Falls back to plain CE ranking (prose-heavy) — no forced injection.
+        # Falls back to plain CE ranking (prose-heavy) â€” no forced injection.
         self.assertTrue(all(not c["metadata"]["contains_equation"] for c in chunks) or True)  # no crash / sane result
         self.assertTrue(len(chunks) > 0)
 
     def test_evidence_coverage_never_fabricates_missing_type(self, mock_ce, mock_mmr):
-        # No figure evidence exists anywhere in this corpus — a figure query
+        # No figure evidence exists anywhere in this corpus â€” a figure query
         # must not error out or invent a figure chunk.
-        state = self._base_state("Explain Figure 1 of Soft Actor-Critic.")
+        state = self._base_state("Explain Figure 1 of Study Alpha.")
         result = orchestrator.retrieve_node(state)
         chunks = result["retrieved_chunks"]
         self.assertFalse(any(c["metadata"]["contains_figure"] for c in chunks))
 
     def test_paper_isolation_still_enforced_with_evidence_aware_retrieval(self, mock_ce, mock_mmr):
         # Single-paper isolation (Phase 2) must survive the Phase 3 changes.
-        state = self._base_state("What is the maximum-entropy objective equation in Soft Actor-Critic?")
+        state = self._base_state("What is the maximum-entropy objective equation in Study Alpha?")
         result = orchestrator.retrieve_node(state)
         chunks = result["retrieved_chunks"]
         papers = {c["metadata"]["paper_title"] for c in chunks}
-        self.assertEqual(papers, {"Soft Actor-Critic"})
+        self.assertEqual(papers, {"Study Alpha"})
 
     def test_multi_paper_isolation_still_enforced_with_evidence_aware_retrieval(self, mock_ce, mock_mmr):
         other_paper_chunks = [
-            _chunk("Playing Atari with Deep Reinforcement Learning", "DQN uses experience replay.", page=2),
+            _chunk("Study Beta", "Method Beta uses experience replay.", page=2),
             _chunk(
-                "Playing Atari with Deep Reinforcement Learning", "L(theta) = E[(y - Q(s,a))^2]",
+                "Study Beta", "L(theta) = E[(y - Q(s,a))^2]",
                 page=4, section="Method", chunk_type="EQUATION", evidence_type="EQUATION", contains_equation=True,
             ),
         ]
-        orchestrator._v_manager_override = FakeVManager(SAC_CHUNKS + other_paper_chunks)
-        query = "Compare the objective equations of Playing Atari with Deep Reinforcement Learning and Soft Actor-Critic."
+        orchestrator._v_manager_override = FakeVManager(ALPHA_CHUNKS + other_paper_chunks)
+        query = "Compare the objective equations of Study Beta and Study Alpha."
         state = self._base_state(query)
         result = orchestrator.retrieve_node(state)
         chunks = result["retrieved_chunks"]
         papers = {c["metadata"]["paper_title"] for c in chunks}
         self.assertEqual(
             papers,
-            {"Playing Atari with Deep Reinforcement Learning", "Soft Actor-Critic"},
+            {"Study Beta", "Study Alpha"},
         )
         # Each paper's own equation should be preserved by the per-paper
         # evidence-coverage pass, not just one paper's.
         eq_papers = {c["metadata"]["paper_title"] for c in chunks if c["metadata"]["contains_equation"]}
         self.assertEqual(
             eq_papers,
-            {"Playing Atari with Deep Reinforcement Learning", "Soft Actor-Critic"},
+            {"Study Beta", "Study Alpha"},
         )
 
     def test_general_collection_query_remains_global_with_evidence_awareness(self, mock_ce, mock_mmr):
-        # A small, balanced corpus (not the large SAC_CHUNKS pool) so the
-        # tie-breaking behavior of the fake CE doesn't crowd one paper out —
+        # A small, balanced corpus (not the large ALPHA_CHUNKS pool) so the
+        # tie-breaking behavior of the fake CE doesn't crowd one paper out â€”
         # this test only cares about isolation scope, not evidence coverage.
         small_corpus = [
-            _chunk("Soft Actor-Critic", "SAC is an off-policy actor-critic algorithm.", page=1),
-            _chunk("Soft Actor-Critic", "Experiments were run on MuJoCo continuous control tasks.", page=2),
-            _chunk("Playing Atari with Deep Reinforcement Learning", "DQN uses experience replay.", page=2),
-            _chunk("Playing Atari with Deep Reinforcement Learning", "Trained on Atari 2600 games.", page=3),
+            _chunk("Study Alpha", "Method Alpha is an off-policy actor-critic algorithm.", page=1),
+            _chunk("Study Alpha", "Experiments were run on MuJoCo continuous control tasks.", page=2),
+            _chunk("Study Beta", "Method Beta uses experience replay.", page=2),
+            _chunk("Study Beta", "Trained on Atari 2600 games.", page=3),
         ]
         orchestrator._v_manager_override = FakeVManager(small_corpus)
         state = self._base_state("What papers report numerical results?")

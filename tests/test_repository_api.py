@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.slow
 from fastapi.testclient import TestClient
 from api.main import app
 from storage.registry import RepoStatus

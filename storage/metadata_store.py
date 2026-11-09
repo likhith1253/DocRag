@@ -3,8 +3,9 @@ import json
 from typing import Dict, Any, List
 
 class MetadataStoreManager:
-    def __init__(self, storage_path: str = "./metadata_store.json"):
-        self.storage_path = storage_path
+    def __init__(self, storage_path: str | None = None):
+        from settings import get_settings, resolve_project_path
+        self.storage_path = str(resolve_project_path(storage_path or get_settings().metadata_store_path))
         self.store = {}
         self.load()
 

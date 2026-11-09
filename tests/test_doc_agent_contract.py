@@ -84,7 +84,7 @@ class TestDocAgentContract(unittest.TestCase):
         # Mock CrossEncoder predict method
         mock_model = MagicMock()
         # Chunks 1-3 (FPGA paper) get high scores (4.5, 4.2, 4.0)
-        # Chunks 4-6 (SAC / Atari / Power Grid off-topic papers) get low scores (1.0, 0.5, -3.0)
+        # Chunks 4-6 (unrelated research papers) get low scores (1.0, 0.5, -3.0)
         mock_model.predict.return_value = [4.5, 4.2, 4.0, 1.0, 0.5, -3.0]
         mock_cache_dict.__contains__.return_value = True
         mock_cache_dict.__getitem__.return_value = mock_model
@@ -111,7 +111,7 @@ class TestDocAgentContract(unittest.TestCase):
             {
                 "id": "c4",
                 "content": "Soft Actor Critic entropy",
-                "metadata": {"paper_title": "SAC Paper", "section": "4. RL"},
+                "metadata": {"paper_title": "Study Beta", "section": "4. RL"},
                 "score": 0.4,
             },
             {

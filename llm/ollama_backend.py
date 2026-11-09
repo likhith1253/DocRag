@@ -1,32 +1,23 @@
 import os
 import requests
-import yaml
-from pathlib import Path
 from llm.backend_factory import LLMBackend
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
-CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
-
 class OllamaBackend(LLMBackend):
     def __init__(self):
         self._session = requests.Session()
         self._gen_config = self._load_gen_config()
         
-        self.model_name = os.environ.get("LLM_MODEL") or os.environ.get("OLLAMA_MODEL") or "qwen2.5:3b-instruct"
+        from settings import get_settings
+        self.model_name = os.environ.get("LLM_MODEL") or os.environ.get("OLLAMA_MODEL") or get_settings().ollama_model
         print("=" * 40)
         print(f"LLM Backend : ollama")
         print(f"Model       : {self.model_name}")
         print("=" * 40)
 
     def _load_gen_config(self):
-        if CONFIG_PATH.exists():
-            try:
-                with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                    cfg = yaml.safe_load(f)
-                return cfg.get("generation", {}) if cfg else {}
-            except Exception:
-                return {}
-        return {}
+        from settings import get_config_dict
+        return get_config_dict()
 
     def generate(self, prompt: str, model: str) -> str:
         """
@@ -42,13 +33,9 @@ class OllamaBackend(LLMBackend):
             "stream": False,
         }
         options = {"num_predict": 1024, "temperature": 0.0, "top_p": 0.9}
-        if self._gen_config:
-            if "num_predict" in self._gen_config:
-                options["num_predict"] = int(self._gen_config["num_predict"])
-            if "temperature" in self._gen_config:
-                options["temperature"] = float(self._gen_config["temperature"])
-            if "top_p" in self._gen_config:
-                options["top_p"] = float(self._gen_config["top_p"])
+        gen_cfg = self._gen_config.get("generation", {})
+        if gen_cfg:
+            options.update({key: gen_cfg[key] for key in ("num_predict", "temperature", "top_p", "top_k", "seed", "repetition_penalty") if key in gen_cfg})
         payload["options"] = options
 
         try:
@@ -73,13 +60,9 @@ class OllamaBackend(LLMBackend):
             "stream": True,
         }
         options = {"num_predict": 1024, "temperature": 0.0, "top_p": 0.9}
-        if self._gen_config:
-            if "num_predict" in self._gen_config:
-                options["num_predict"] = int(self._gen_config["num_predict"])
-            if "temperature" in self._gen_config:
-                options["temperature"] = float(self._gen_config["temperature"])
-            if "top_p" in self._gen_config:
-                options["top_p"] = float(self._gen_config["top_p"])
+        gen_cfg = self._gen_config.get("generation", {})
+        if gen_cfg:
+            options.update({key: gen_cfg[key] for key in ("num_predict", "temperature", "top_p", "top_k", "seed", "repetition_penalty") if key in gen_cfg})
         payload["options"] = options
 
         try:

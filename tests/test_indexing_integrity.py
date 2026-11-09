@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.slow
 import os
 import unittest
 import shutil

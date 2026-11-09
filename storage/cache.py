@@ -32,8 +32,10 @@ def _is_cache_refusal_answer(answer: str) -> bool:
 
 
 class SemanticCache:
-    def __init__(self, db_path: str = "./semantic_cache.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str | None = None):
+        from settings import get_settings, resolve_project_path
+        self.db_path = str(resolve_project_path(db_path or get_settings().semantic_cache_path))
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self._init_db()
         
         config = _get_config()
@@ -163,8 +165,10 @@ class EmbeddingCache:
     """
     Persistent SQLite-based cache for dense embeddings to avoid re-encoding on CPU.
     """
-    def __init__(self, db_path: str = "./embedding_cache.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: str | None = None):
+        from settings import get_settings, resolve_project_path
+        self.db_path = str(resolve_project_path(db_path or get_settings().embedding_cache_path))
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self._init_db()
 
     def _get_conn(self):

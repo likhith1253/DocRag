@@ -24,8 +24,9 @@ class SnapshotManager:
     _snapshots: Dict[str, RepositorySnapshot] = {}
     _lock = threading.Lock()
     
-    def __init__(self, storage_dir: str = "./snapshot_storage"):
-        self.storage_dir = storage_dir
+    def __init__(self, storage_dir: str | None = None):
+        from settings import get_settings, resolve_project_path
+        self.storage_dir = str(resolve_project_path(storage_dir or get_settings().snapshot_dir))
         os.makedirs(self.storage_dir, exist_ok=True)
         
     def _get_path(self, repo_id: str) -> str:

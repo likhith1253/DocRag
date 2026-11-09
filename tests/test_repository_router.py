@@ -1,5 +1,7 @@
 import os
 import pytest
+
+pytestmark = pytest.mark.slow
 from datetime import datetime, timezone
 from storage.registry import RepositoryRegistry, Repository, RepoStatus
 from retrieval.repository_router import rank_repositories

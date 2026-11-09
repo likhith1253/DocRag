@@ -12,6 +12,7 @@ kg_storage/
 metadata_storage/
 snapshot_storage/
 logs/
+cache/
 .debug/
 scratch/
 benchmark_results/
@@ -35,3 +36,8 @@ data/source_papers_unverified/
 # Temporary text files
 *.txt
 !mistakes.txt
+
+# Build outputs
+/build/
+/dist/
+*.egg-info/

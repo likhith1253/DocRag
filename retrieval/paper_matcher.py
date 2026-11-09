@@ -26,7 +26,7 @@ _paper_cache: Dict[str, List[str]] = {}
 _collection_metadata_cache: Dict[str, Dict[str, Any]] = {}
 
 
-def invalidate_paper_cache(collection_name: str = None) -> None:
+def invalidate_paper_cache(collection_name: str | None = None) -> None:
     """Invalidate cached paper and collection metadata."""
     if collection_name is None:
         _paper_cache.clear()
@@ -63,8 +63,9 @@ def get_collection_metadata(v_manager) -> Dict[str, Any]:
     except Exception:
         pass
 
-    data = {
-        "paper_titles": sorted(titles),
+    title_list: List[str] = sorted(titles)
+    data: Dict[str, Any] = {
+        "paper_titles": title_list,
         "files": sorted(files),
         "chunk_count": chunk_count,
     }
@@ -114,36 +115,6 @@ def _compute_word_weights(available_titles: List[str]) -> Dict[str, float]:
     return {w: 1.0 / (1 + df) for w, df in doc_freq.items()}
 
 
-# Known seminal algorithm acronyms and aliases mapped to title keywords
-_SEMINAL_ALIASES: Dict[str, List[str]] = {
-    "dqn": ["playing atari", "human level control through deep reinforcement learning"],
-    "deep q network": ["playing atari"],
-    "deep q networks": ["playing atari"],
-    "playing atari": ["playing atari"],
-    "a3c": ["asynchronous methods for deep reinforcement learning"],
-    "asynchronous advantage actor critic": ["asynchronous methods for deep reinforcement learning"],
-    "async advantage actor critic": ["asynchronous methods for deep reinforcement learning"],
-    "asynchronous methods": ["asynchronous methods for deep reinforcement learning"],
-    "a2c": ["asynchronous methods for deep reinforcement learning"],
-    "sac": ["soft actor critic"],
-    "soft actor critic": ["soft actor critic"],
-    "ppo": ["proximal policy optimization"],
-    "proximal policy optimization": ["proximal policy optimization"],
-    "world models": ["world models"],
-    "world model": ["world models"],
-    "gan": ["generative adversarial nets", "generative adversarial networks"],
-    "gpt": ["language models are few shot learners"],
-    "gpt 3": ["language models are few shot learners"],
-    "gpt3": ["language models are few shot learners"],
-    "transformer": ["attention is all you need"],
-    "transformers": ["attention is all you need"],
-    "ddpg": ["continuous control with deep reinforcement learning"],
-    "trpo": ["trust region policy optimization"],
-    "ddpm": ["denoising diffusion probabilistic models"],
-    "resnet": ["deep residual learning for image recognition"],
-}
-
-
 def _title_prefix(title: str) -> str:
     """Extract the primary title prefix before delimiters like :, -, or --."""
     m = re.split(r"[:\-\u2013\u2014]", title, maxsplit=1)
@@ -153,15 +124,14 @@ def _title_prefix(title: str) -> str:
 def score_title_match(
     query: str,
     title: str,
-    acronym_tokens: List[str] = None,
-    word_weights: Dict[str, float] = None,
+    acronym_tokens: List[str] | None = None,
+    word_weights: Dict[str, float] | None = None,
 ) -> float:
     """
     Confidence (0..1) that `title` is explicitly named in `query`.
 
     - 1.0  the full normalized title (or primary prefix) appears verbatim in the query
-    - 0.95 seminal algorithm/paper alias match (e.g. "DQN" -> "Playing Atari", "A3C" -> "Asynchronous Methods")
-    - 0.9  short token matches the title's prefix initials (e.g. "SAC" -> "Soft Actor-Critic")
+    - 0.95 query acronym matches initials computed from the indexed title
     - 0..1 fraction of the title's significant words present in the query
     """
     title_norm = _normalize(title)
@@ -175,13 +145,13 @@ def score_title_match(
     if title_norm in query_norm:
         return 1.0
 
-    # 1b. Singular/plural normalization for short titles (e.g. "world model" <-> "world models")
+    # Normalize a simple plural difference in indexed titles.
     if title_norm.endswith("s") and title_norm[:-1] in query_norm:
         return 1.0
     if not title_norm.endswith("s") and f"{title_norm}s" in query_norm:
         return 1.0
 
-    # 2. Title prefix before delimiter (e.g. "soft actor critic", "asynchronous methods")
+    # 2. Title prefix before a common bibliographic delimiter
     prefix = _normalize(_title_prefix(title))
     if len(prefix) >= 4 and prefix in query_norm:
         return 1.0
@@ -190,26 +160,12 @@ def score_title_match(
     if not sig_words:
         return 0.0
 
-    # 3. Seminal algorithm alias matching
-    for alias, target_keys in _SEMINAL_ALIASES.items():
-        # Check if the alias is present in the query
-        alias_matched = False
-        if alias in query_words or (len(alias.split()) > 1 and alias in query_norm):
-            alias_matched = True
-        elif acronym_tokens and any(tok.lower() == alias for tok in acronym_tokens):
-            alias_matched = True
-
-        if alias_matched:
-            for tkey in target_keys:
-                if tkey in title_norm:
-                    return 0.95
-
     # 4. Acronym initials matching (both full initials and prefix initials)
     if acronym_tokens:
         candidate_initials = set()
         # Full initials
         candidate_initials.add(_initials(sig_words).lower())
-        # Prefix initials of length 2..5 (e.g. "Soft Actor-Critic" -> "sac")
+        # Prefix initials allow abbreviated forms derived from the title itself.
         for k in range(2, min(6, len(sig_words) + 1)):
             candidate_initials.add(_initials(sig_words[:k]).lower())
 
@@ -243,15 +199,14 @@ def match_papers_in_query(
     match trails it by more than `dominant_gap`, those trailing matches are
     dropped: a single dominant title match should not be diluted into a
     "multi-paper" query by a title that merely shares a few generic words
-    (e.g. "World Models" weakly overlapping "Auto-Encoding Variational
-    Bayes" on words like "model"/"variational"). This directly protects
+    (e.g. two titles sharing common terms). This directly protects
     single-paper retrieval isolation — see classify_paper_scope().
     """
     if not available_titles:
         return []
 
-    # Only genuine acronym-cased tokens (e.g. "VAE", "MDN", "SAC", "GPT3") —
-    # NOT any short lowercase word. The previous [A-Za-z0-9]{2,6} pattern
+    # Only acronym-cased query tokens are considered for title-derived initials,
+    # not any short lowercase word. The previous [A-Za-z0-9]{2,6} pattern
     # matched ordinary words like "of"/"the"/"role", which could coincide
     # with the computed prefix-initials of a completely unrelated title
     # (e.g. "of" == initials of "Overview_of_FPGA_deep_learning..."),

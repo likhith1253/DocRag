@@ -1,12 +1,9 @@
 import os
 import time
 import torch
-import yaml
-from pathlib import Path
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from llm.backend_factory import LLMBackend
-
-CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+from settings import get_settings, resolve_project_path
 
 class HFTransformersBackend(LLMBackend):
     def __init__(self, model_name: str = None):
@@ -14,22 +11,19 @@ class HFTransformersBackend(LLMBackend):
         
         # Model selection precedence:
         # 1. model_name parameter
-        # 2. Environment variables: HF_MODEL or LLM_MODEL
-        # 3. config.yaml (hf_model)
-        # 4. Default: "Qwen/Qwen2.5-3B-Instruct"
+        # 2. Validated application settings (including DOCRAG__HF_MODEL)
         if not model_name:
             model_name = os.environ.get("HF_MODEL") or os.environ.get("LLM_MODEL")
         if not model_name:
-            cfg_model = self._gen_config.get("hf_model") or self._gen_config.get("model") or self._gen_config.get("doc_agent_model")
-            if cfg_model and "/" in str(cfg_model):
-                model_name = str(cfg_model)
-        if not model_name:
-            model_name = "Qwen/Qwen2.5-3B-Instruct"
+            from settings import get_settings
+            model_name = get_settings().hf_model
             
         self.model_name = model_name
 
         # Automatic device and dtype selection
-        if torch.cuda.is_available():
+        settings = get_settings()
+        use_cuda = torch.cuda.is_available() and settings.device.lower() != "cpu"
+        if use_cuda:
             self.device = "cuda"
             self.gpu_name = torch.cuda.get_device_name(0)
             self.dtype = torch.float16
@@ -142,14 +136,8 @@ class HFTransformersBackend(LLMBackend):
         return self.model is not None and self.tokenizer is not None
 
     def _load_gen_config(self):
-        if CONFIG_PATH.exists():
-            try:
-                with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                    cfg = yaml.safe_load(f)
-                return cfg if cfg else {}
-            except Exception:
-                return {}
-        return {}
+        from settings import get_config_dict
+        return get_config_dict()
 
     def generate(self, prompt: str, model: str = None, request_id: str = "default", answer_depth: str = None) -> str:
         """
@@ -333,7 +321,7 @@ class HFTransformersBackend(LLMBackend):
         dec_ms = (t_dec_end - t_dec_start) * 1000
 
         # QUESTION 2 REQUIREMENT: Save raw generation to logs/raw_generation.txt
-        raw_gen_path = Path(__file__).parent.parent / "logs" / "raw_generation.txt"
+        raw_gen_path = resolve_project_path(get_settings().log_dir) / "raw_generation.txt"
         try:
             with open(raw_gen_path, "w", encoding="utf-8") as f:
                 f.write(response)

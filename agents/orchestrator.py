@@ -1,11 +1,11 @@
-"""
+﻿"""
 DocumentRAG Orchestrator.
-Adapted from CodeGraphRAG orchestrator — removes code-specific pipeline steps
+Adapted from CodeGraphRAG orchestrator â€” removes code-specific pipeline steps
 (KG expansion, code/data/reasoning routing) while preserving all infrastructure
 (LangGraph, progress, caching, logging, latency tracking, MMR, cross-encoder).
 
 Pipeline:
-    route → retrieve → agent → END
+    route â†’ retrieve â†’ agent â†’ END
 
 Changes from CodeGraphRAG:
   - Single agent: doc_agent (always)
@@ -22,7 +22,6 @@ import sys
 import time
 import json
 import ctypes
-import yaml
 from typing import List, Dict, Any, Tuple
 try:
     from typing import TypedDict
@@ -65,10 +64,8 @@ from ingestion.doc_chunker import (
 import agents.doc_agent as doc_agent
 from agents.doc_agent import CANNOT_FIND_RESPONSE, build_citation_list
 from storage.pipeline_logger import log_query_profile
+from settings import get_settings
 
-CONFIG_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml"
-)
 LOGS_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs"
 )
@@ -76,7 +73,7 @@ LOGS_PATH = os.path.join(LOGS_DIR, "query_logs.jsonl")
 
 _v_manager_override = None
 
-# Precompile section filter regex at module level (BUG-10 fix — avoid recompilation per query)
+# Precompile section filter regex at module level (BUG-10 fix â€” avoid recompilation per query)
 _LOW_VALUE_SECTION_RE = re.compile(
     r'\b(references?|bibliography|acknowledgements?|acknowledgments?)\b',
     re.IGNORECASE,
@@ -135,7 +132,7 @@ def _dedup_and_filter_chunks(chunks: List[Dict[str, Any]], removed_log: list) ->
 
 
 # Maps a detect_evidence_intent() key to the chunk metadata flag it needs
-# (see ingestion/doc_chunker.py::_compute_evidence_flags — Phase 3).
+# (see ingestion/doc_chunker.py::_compute_evidence_flags â€” Phase 3).
 _EVIDENCE_FLAG_BY_INTENT = {
     "equation": "contains_equation",
     "table": "contains_table",
@@ -145,42 +142,32 @@ _EVIDENCE_FLAG_BY_INTENT = {
 
 
 def _chunk_has_evidence(c: Dict[str, Any], evidence_type: str) -> bool:
-    """
-    Check if chunk satisfies the requested evidence type, by metadata flag
-    OR by re-running the same paper-agnostic structural detectors the
-    chunker uses (ingestion/doc_chunker.py) directly against the chunk's
-    raw content.
-
-    The content-level fallback exists for two reasons: (1) it must stay in
-    sync with whatever the chunker currently detects, and (2) it must work
-    on chunks indexed before a chunker detection fix ships, without
-    requiring a reindex. A hardcoded per-paper keyword list (e.g. matching
-    only DQN/SAC-style RL notation) would defeat both — it silently misses
-    equations/tables/algorithms in every other paper.
-    """
+    """Check structural evidence tags, with generic content fallbacks."""
     meta = c.get("metadata", {})
-    if evidence_type in _EVIDENCE_FLAG_BY_INTENT:
-        if meta.get(_EVIDENCE_FLAG_BY_INTENT[evidence_type]):
-            return True
-    content = c.get("content", "")
-    lines = content.splitlines()
+    content = str(c.get("content", ""))
+    evidence_flags = {
+        "equation": "contains_equation",
+        "table": "contains_table",
+        "figure": "contains_figure",
+        "algorithm": "contains_algorithm",
+        "preprocessing": "contains_preprocessing",
+        "architecture": "contains_architecture",
+    }
+    flag = evidence_flags.get(evidence_type)
+    if flag and meta.get(flag):
+        return True
     if evidence_type == "equation":
-        return any(_is_equation_line(l) for l in lines)
+        return any(_is_equation_line(line) for line in content.splitlines())
     if evidence_type == "table":
-        return bool(_TABLE_ID_RE.search(content)) or any(_is_table_row(l) for l in lines)
+        return bool(_TABLE_ID_RE.search(content)) or any(_is_table_row(line) for line in content.splitlines())
     if evidence_type == "figure":
         return bool(_FIGURE_ID_RE.search(content)) or bool(_FIGURE_REF_RE.search(content))
     if evidence_type == "algorithm":
-        content_lower = content.lower()
-        return bool(_ALGORITHM_ID_RE.search(content)) or any(
-            w in content_lower for w in ("pseudocode", "actor-learner thread", "repeat until", "for each step", "accumulate gradients")
-        )
-    content_lower = content.lower()
+        return bool(_ALGORITHM_ID_RE.search(content)) or bool(re.search(r"\b(?:procedure|pseudocode|repeat until|for each step)\b", content, re.I))
     if evidence_type == "preprocessing":
-        # Concrete preprocessing methodology required (not merely generic words like 'raw pixel')
-        return any(w in content_lower for w in ("210", "160", "110", "84", "down-sampl", "downsampl", "gray-scale", "grayscale", "crop", "last 4 frames", "stacks them", "history representation"))
+        return bool(re.search(r"\b(?:preprocess(?:ing)?|normalize|standardize|resiz(?:e|ing)|crop(?:ped|ping)?|tokeniz(?:e|ation))\b", content, re.I))
     if evidence_type == "architecture":
-        return any(w in content_lower for w in ("controller", "linear controller", "mdn-rnn", "latent vector", "convolutional", "hidden units", "parameters", "network structure"))
+        return bool(re.search(r"\b(?:architecture|components?|modules?|encoder|decoder|layers?|network structure)\b", content, re.I))
     return False
 
 
@@ -191,115 +178,31 @@ def _ensure_evidence_coverage(
     question: str = "",
     max_additions: int = 4,
 ) -> List[Dict[str, Any]]:
-    """
-    If the query is sensitive to a specific evidence type (equation/table/
-    figure/algorithm/preprocessing/architecture) and a chunk of that type exists somewhere in the
-    broader (post-MMR, pre-CrossEncoder-truncation) candidate pool but
-    didn't survive top_k truncation, swap it in for the current
-    lowest-scoring output chunk — bounded (max_additions) and never larger
-    than the existing output, so this cannot cause context growth. If no
-    matching evidence exists anywhere in the candidate pool, nothing is
-    added — evidence is never fabricated.
-    """
-    needed = [t for t in ("equation", "table", "figure", "algorithm", "preprocessing", "architecture") if evidence_intent.get(t)]
+    """Restore requested structural evidence from the candidate pool if reranking dropped it."""
+    del question  # Query wording never selects paper-specific retrieval keywords.
+    needed = [key for key in ("equation", "table", "figure", "algorithm", "preprocessing", "architecture")
+              if evidence_intent.get(key)]
     if not needed or not candidate_pool:
         return output_chunks
 
     result = list(output_chunks)
-    output_hashes = {c.get("metadata", {}).get("hash") for c in result}
+    output_ids = {c.get("id") or c.get("metadata", {}).get("hash") for c in result}
     additions = 0
-
-    # 1. Ensure explicit algorithms, targets, parameters, or preprocessing requested in query are covered
-    if question:
-        q_lower = question.lower()
-        target_phrases = []
-
-        # A3C & Q-learning / Sarsa mathematical distinctions
-        if any(w in q_lower for w in ("q-learning target", "q-learning targets", "distinguish the q-learning", "mathematically", "q-learning and sarsa")):
-            target_phrases.append(("one-step q-learning target", (
-                "maxa′ q", "max_{a'}", "max_a", "y = r + γ max", "y = r + \\gamma \\max",
-                "algorithm 1 asynchronous one-step q-learning", "algorithm 1"
-            )))
-        if any(w in q_lower for w in ("sarsa target", "sarsa targets", "q-learning and sarsa", "sarsa")):
-            target_phrases.append(("one-step sarsa target", (
-                "target value used by one-step sarsa", "target value used by",
-                "r + γq(s′, a′", "r + \\gamma q(s', a'", "r + gamma q",
-                "action taken in state s′", "action taken in state s'"
-            )))
-        if any(w in q_lower for w in ("a3c", "advantage actor-critic", "policy gradient", "four asynchronous methods")):
-            target_phrases.append(("a3c policy gradient", (
-                "\\nabla_{\\theta'}", "nabla", "policy gradient", "log \\pi", "log π",
-                "advantage function", "no longer rely on experience replay"
-            )))
-
-        # World Models parameter counts: separately require 867 (CarRacing) and 1088 (VizDoom)
-        if any(w in q_lower for w in ("parameter count", "parameter counts", "how many parameters", "reported controller")):
-            if "world model" in q_lower or "carracing" in q_lower:
-                target_phrases.append(("world models carracing parameter", ("867",)))
-            if "world model" in q_lower or "vizdoom" in q_lower:
-                target_phrases.append(("world models vizdoom parameter", ("1,088", "1088")))
-
-        # SAC Maximum-Entropy Objective
-        if any(w in q_lower for w in ("soft actor-critic", "sac", "maximum-entropy", "maximum entropy objective")):
-            target_phrases.append(("sac maximum entropy objective", (
-                "maximum entropy objective", "temperature parameter α", "temperature parameter \\alpha",
-                "temperature parameter alpha", "j(\\pi)", "j(pi)", "soft bellman"
-            )))
-
-        # DQN Preprocessing & Architecture
-        if any(w in q_lower for w in ("dqn", "preprocessing", "cnn input", "playing atari")):
-            target_phrases.append(("dqn preprocessing", (
-                "210 × 160", "210x160", "110×84", "110x84", "84 × 84", "84x84", "last 4 frames",
-                "separate output unit for each valid action", "separate output unit"
-            )))
-
-        for name, keywords in target_phrases:
-            if additions >= max_additions:
-                break
-            already_represented = any(any(kw in c.get("content", "").lower() for kw in keywords) for c in result)
-            if already_represented:
-                continue
-            best = None
-            for c in candidate_pool:
-                c_content = c.get("content", "").lower()
-                if not any(kw in c_content for kw in keywords):
-                    continue
-                if c.get("metadata", {}).get("hash") in output_hashes:
-                    continue
-                if best is None or float(c.get("score", 0.0)) > float(best.get("score", 0.0)):
-                    best = c
-            if best is not None and result:
-                worst_idx = min(range(len(result)), key=lambda i: float(result[i].get("score", 0.0)))
-                result.pop(worst_idx)
-                result.append(best)
-                output_hashes.add(best.get("metadata", {}).get("hash"))
-                additions += 1
-
-    # 2. General evidence type coverage
-    for t in needed:
-        if additions >= max_additions:
-            break
-        if any(_chunk_has_evidence(c, t) for c in result):
-            continue  # already represented in the current output
-
-        best = None
-        for c in candidate_pool:
-            if not _chunk_has_evidence(c, t):
-                continue
-            if c.get("metadata", {}).get("hash") in output_hashes:
-                continue
-            if best is None or float(c.get("score", 0.0)) > float(best.get("score", 0.0)):
-                best = c
-        if best is None:
-            continue  # this evidence type genuinely isn't available — don't fabricate
-
+    for evidence_type in needed:
+        if additions >= max_additions or any(_chunk_has_evidence(c, evidence_type) for c in result):
+            continue
+        candidates = [c for c in candidate_pool
+                      if _chunk_has_evidence(c, evidence_type)
+                      and (c.get("id") or c.get("metadata", {}).get("hash")) not in output_ids]
+        if not candidates:
+            continue
+        best = max(candidates, key=lambda c: float(c.get("score", 0.0)))
         if result:
-            worst_idx = min(range(len(result)), key=lambda i: float(result[i].get("score", 0.0)))
-            result.pop(worst_idx)
+            worst_index = min(range(len(result)), key=lambda i: float(result[i].get("score", 0.0)))
+            result.pop(worst_index)
         result.append(best)
-        output_hashes.add(best.get("metadata", {}).get("hash"))
+        output_ids.add(best.get("id") or best.get("metadata", {}).get("hash"))
         additions += 1
-
     return result
 
 
@@ -313,7 +216,7 @@ def _enforce_paper_isolation(
 
     This exists as a defense-in-depth guard, independent of whatever
     filtering happened upstream (Qdrant metadata filter, per-paper search
-    loop, etc.) — if any upstream path ever lets an unrequested paper's
+    loop, etc.) â€” if any upstream path ever lets an unrequested paper's
     chunk through (e.g. a filter fallback, a caching bug, a title-matching
     edge case), this still prevents it from reaching the LLM context.
     Returns (kept_chunks, dropped_chunks) so callers can log what was removed
@@ -376,7 +279,7 @@ def _log_evidence_diagnostics(
     retrieved_papers: List[str] = None,
 ) -> None:
     """
-    Bounded evidence-coverage diagnostic print — counts and flags only,
+    Bounded evidence-coverage diagnostic print â€” counts and flags only,
     never full chunk dumps. Exists because "retrieval succeeded" (nonzero
     chunk count) does not imply "the right evidence was retrieved".
     """
@@ -418,7 +321,7 @@ def _missing_evidence_response(missing_types: List[str]) -> str:
     Canonical refusal for Fix #1: when the question explicitly asks about an
     equation/table/figure/algorithm and NONE of the retrieved chunks carry
     that evidence type, the question must never reach the LLM as if it were
-    an ordinary technical question — that is what let the model answer from
+    an ordinary technical question â€” that is what let the model answer from
     pretrained knowledge instead of the paper (the Q2 failure). This is a
     hard, code-level stop, not a prompt instruction.
     """
@@ -547,7 +450,7 @@ def route_node(state: AgentState) -> Dict[str, Any]:
         if final_repo_id:
             r_obj = registry.get_repository(final_repo_id)
             r_name = r_obj.name if r_obj else final_repo_id
-            r_coll = r_obj.vector_collection if r_obj else f"collection_{final_repo_id}"
+            r_coll = r_obj.vector_collection if r_obj else f"{get_settings().collection_prefix}{final_repo_id}"
             print(f"[ROUTER] Selected repository        : {r_name} (ID: {final_repo_id})", flush=True)
             print(f"[ROUTER] Selected collection id     : {r_coll}", flush=True)
         else:
@@ -568,7 +471,7 @@ def route_node(state: AgentState) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 def retrieve_node(state: AgentState) -> Dict[str, Any]:
     """
-    Vector search → MMR → Cross-encoder rerank.
+    Vector search â†’ MMR â†’ Cross-encoder rerank.
     KG expansion logged.
     Respects retrieval_mode: single (default), multi, corpus.
     """
@@ -597,7 +500,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             points_in_coll = v_manager.count()
             repo_obj = registry.get_repository(repo_id) if repo_id else None
         elif retrieval_mode == "corpus":
-            v_coll = "chunks"
+            v_coll = get_settings().default_collection_name
         elif repo_id:
             repo_obj = registry.get_repository(repo_id)
             if not repo_obj:
@@ -679,7 +582,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 repo_id = repo_obj.repo_id
                 v_coll = repo_obj.collection_id or repo_obj.vector_collection
             else:
-                v_coll = "chunks"
+                v_coll = get_settings().default_collection_name
 
         if _v_manager_override is None:
             try:
@@ -701,7 +604,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 points_in_coll = v_manager.count()
                 if points_in_coll == 0:
                     # A READY repo pointing at an empty collection (registry
-                    # says indexed, Qdrant says nothing is there — stale
+                    # says indexed, Qdrant says nothing is there â€” stale
                     # registry state, points dropped/reindex interrupted, or
                     # a collection-name mismatch) must never look like an
                     # ordinary grounding failure. Silently falling through to
@@ -775,7 +678,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         removed_chunks_log = []
 
         # Evidence-type sensitivity (equation/table/figure/algorithm/numerical)
-        # — reused by both branches below to preserve the right kind of
+        # â€” reused by both branches below to preserve the right kind of
         # evidence during reranking, not just whatever is globally closest.
         t_qa_start = time.perf_counter()
         evidence_intent = detect_evidence_intent(state["question"])
@@ -785,16 +688,16 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
 
         if paper_scope == "multi":
             # --------------------------------------------------------------
-            # Explicit multi-paper query (e.g. "Compare DQN, A3C and SAC."):
+            # Explicit multi-paper comparisons are retrieved once per matched title:
             # Multi-paper facet-balanced retrieval:
             # For comparison queries, retrieve independently by:
-            #     requested paper × requested facet
+            #     requested paper Ã— requested facet
             # before final reranking/selection.
             # Ensure each requested paper receives evidence for as many requested facets as available.
             # Do not simply allocate two generic chunks per paper.
             # --------------------------------------------------------------
             requested_titles = [t for t, _ in matched_papers]
-            print(f"[PAPER ISOLATION] Explicit multi-paper query — requested papers ({len(requested_titles)}):", flush=True)
+            print(f"[PAPER ISOLATION] Explicit multi-paper query â€” requested papers ({len(requested_titles)}):", flush=True)
             for t in requested_titles:
                 print(f"  - {t}", flush=True)
 
@@ -825,7 +728,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                 paper_candidates.extend(p_chunks)
                 qv = p_timing.get("query_vector")
 
-                # 2. Facet-specific searches: requested paper × requested facet
+                # 2. Facet-specific searches: requested paper Ã— requested facet
                 for facet_name, facet_phrase in comparison_facets:
                     facet_q = f"{title} {facet_phrase}"
                     f_chunks, _ = v_manager.search(
@@ -930,7 +833,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
             if paper_scope == "single":
                 filters = dict(filters)
                 filters["paper_title"] = matched_papers[0][0]
-                print(f"[PAPER ISOLATION] Single-paper query — restricting retrieval to: {matched_papers[0][0]!r}", flush=True)
+                print(f"[PAPER ISOLATION] Single-paper query â€” restricting retrieval to: {matched_papers[0][0]!r}", flush=True)
 
             # Step 1: Vector search (Stage 2 & Stage 3 logged inside search())
             t0 = time.perf_counter()
@@ -944,12 +847,12 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
 
             # Lightweight decomposition for genuinely multi-facet questions
             # (e.g. one that asks about architecture AND training AND
-            # results at once) — widen the candidate pool with a few bounded
+            # results at once) â€” widen the candidate pool with a few bounded
             # facet-focused subqueries before reranking, instead of relying
             # on whatever is globally closest to the raw question alone.
             subqueries = decompose_complex_question(state["question"], max_subqueries=3)
             if subqueries:
-                print(f"[QUERY DECOMPOSITION] Complex question — {len(subqueries)} facet subquery(ies) issued.", flush=True)
+                print(f"[QUERY DECOMPOSITION] Complex question â€” {len(subqueries)} facet subquery(ies) issued.", flush=True)
                 for sq in subqueries:
                     try:
                         sq_chunks, _sq_timing = v_manager.search(
@@ -1008,7 +911,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
         # Defense-in-depth isolation enforcement: for an explicit single- or
         # multi-paper query, hard-filter out any chunk whose paper isn't one
         # of the requested titles, regardless of how it got here (Qdrant
-        # metadata-filter fallback, caching, etc.) — see _enforce_paper_isolation.
+        # metadata-filter fallback, caching, etc.) â€” see _enforce_paper_isolation.
         # ------------------------------------------------------------------
         requested_titles = [t for t, _ in matched_papers] if matched_papers else []
         if paper_scope in ("single", "multi") and requested_titles:
@@ -1181,7 +1084,7 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
         }
 
     # ------------------------------------------------------------------
-    # Fix #1 — hard evidence gate (code-level, not a prompt instruction).
+    # Fix #1 â€” hard evidence gate (code-level, not a prompt instruction).
     # Original purpose: stop the model answering an equation/table/figure/
     # algorithm question purely from pretrained knowledge when NONE of the
     # requested structured evidence was actually retrieved (the Q2 hallucination).
@@ -1192,9 +1095,9 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
     # `algorithm`; if the equation is present but the paper's Algorithm box
     # didn't survive retrieval, refusing the whole answer throws away a
     # perfectly groundable equation answer. When at least one requested type is
-    # present we let generation proceed — the grounding prompt already instructs
-    # the model to say a specific missing detail "is not in the retrieved text"
-    # rather than inventing it, and ClaimEvidenceVerifier backs that up.
+    # present we let generation proceed â€” the grounding prompt already instructs
+    # the model to state when details are missing. A separate risk scan only
+    # flags unsupported numbers/equations and does not prove semantic entailment.
     # ------------------------------------------------------------------
     requested_gate = state.get("requested_gate_evidence") or []
     missing_evidence_types = state.get("missing_evidence_types") or []
@@ -1240,13 +1143,13 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
         chunks = chunks[:agent_chunk_cap]
         if pre_cap_count > agent_chunk_cap:
             print(
-                f"[AGENT CAP] Trimmed {pre_cap_count} → {agent_chunk_cap} chunks "
+                f"[AGENT CAP] Trimmed {pre_cap_count} â†’ {agent_chunk_cap} chunks "
                 f"(agent_chunk_cap={agent_chunk_cap}). "
-                f"Dropped ranks {agent_chunk_cap+1}–{pre_cap_count}.",
+                f"Dropped ranks {agent_chunk_cap+1}â€“{pre_cap_count}.",
                 flush=True,
             )
 
-        # ── BUG FIX: Rebuild citations from the CAPPED chunks only ──────
+        # â”€â”€ BUG FIX: Rebuild citations from the CAPPED chunks only â”€â”€â”€â”€â”€â”€
         capped_citations = build_citation_list(chunks, request_id=request_id)
         print(
             f"[AGENT NODE] Citations rebuilt from {len(chunks)} capped chunks: "
@@ -1486,7 +1389,7 @@ def answer(
         print(msg, flush=True)
     elif input_chunk_count != output_citation_count and input_chunk_count > 0:
         msg = (f"PIPELINE CONTRACT WARNING: Chunk count ({input_chunk_count}) "
-               f"!= Citation count ({output_citation_count}) — may indicate deduplication")
+               f"!= Citation count ({output_citation_count}) â€” may indicate deduplication")
         contract_lines.append(msg)
         print(msg, flush=True)
     else:
@@ -1537,7 +1440,7 @@ def answer(
     }
     log_stage(request_id, 14, "Final API Response", response_obj, latency_ms=total_ms)
 
-    # ── STEP 8: ASSERTIONS ─────────────────────────────────────────────
+    # â”€â”€ STEP 8: ASSERTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     assert ans is not None, "ASSERTION FAILED: returned_answer is None"
     assert citations is not None, "ASSERTION FAILED: citations is None"
 
@@ -1552,8 +1455,8 @@ def answer(
         forensic_tracer.response_json = response_obj
         if forensic_tracer.stages_status.get("LLM") == "PENDING":
             # A stage left "PENDING" here means log_stage(10/11, ...) was
-            # never reached — i.e. generation raised before completing (see
-            # llm/transformers_backend.py) — NOT that it produced no answer.
+            # never reached â€” i.e. generation raised before completing (see
+            # llm/transformers_backend.py) â€” NOT that it produced no answer.
             # The previous check only tested `bool(ans)`, so a truthy error
             # string like "LLM generation failed: CUDA driver error:
             # invalid argument" got recorded as "LLM PASS", which is exactly
@@ -1585,7 +1488,7 @@ def answer(
         r_id = final_state.get("repo_id") or repo_id or "default"
         r_obj = get_registry().get_repository(r_id) if r_id != "default" else None
         r_name = r_obj.name if r_obj else r_id
-        c_id = final_state.get("collection") or (r_obj.collection_id if r_obj else None) or (r_obj.vector_collection if r_obj else None) or "chunks"
+        c_id = final_state.get("collection") or (r_obj.collection_id if r_obj else None) or (r_obj.vector_collection if r_obj else None) or get_settings().default_collection_name
 
         profile_record = {
             "request_id": request_id,
@@ -1715,7 +1618,7 @@ class Orchestrator:
         # Never cache a refusal/negative answer: caching CANNOT_FIND_RESPONSE
         # (or any other "could not answer" message) would keep serving that
         # exact refusal for this query forever, even after retrieval or
-        # generation later improves — the cache has no way to invalidate
+        # generation later improves â€” the cache has no way to invalidate
         # itself just because the code changed. Only a genuine answer is
         # worth memoizing.
         if repo_id and not _is_refusal_answer(ans_str):

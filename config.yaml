@@ -1,27 +1,41 @@
-debug_mode: true
+debug_mode: false
 chunking:
   max_chunk_tokens: 1024
   overlap_tokens: 128
   strategy: section_aware
-device: auto
-doc_agent_model: Qwen/Qwen2.5-3B-Instruct
-hf_model: Qwen/Qwen2.5-3B-Instruct
+device: cpu
+doc_agent_model: Qwen/Qwen2.5-1.5B-Instruct
+hf_model: Qwen/Qwen2.5-1.5B-Instruct
+ollama_model: qwen2.5:1.5b-instruct
 embedding:
-  device: auto
-  batch_size: 64
+  device: cpu
+  batch_size: 32
 embedding_model: intfloat/e5-base-v2
 generation:
-  num_predict: 768
+  num_predict: 256
   repetition_penalty: 1.1
   temperature: 0.0
   top_p: 0.9
 indexing:
-  background_batch_size: 64
+  background_batch_size: 16
 llm_backend: transformers
 ports:
   api: 9001
   ui: 8501
-qdrant_path: ./qdrant_storage
+qdrant_path: qdrant_storage
+default_collection_name: chunks
+collection_prefix: collection_
+registry_path: registry.json
+metadata_store_path: metadata_store.json
+metadata_dir: metadata_storage
+snapshot_dir: snapshot_storage
+repository_data_dir: repositories
+semantic_cache_path: semantic_cache.db
+embedding_cache_path: embedding_cache.db
+log_dir: logs
+debug_dir: .debug/current_query
+cache_dir: cache
+prompt_token_budget: 6144
 reranker_model: cross-encoder/ms-marco-MiniLM-L-6-v2
 retrieval:
   rerank_top_k: 8
@@ -35,6 +49,6 @@ retrieval:
 router:
   confidence_threshold: 0.6
 workers:
-  parse_workers: 4
-  qa_workers: 2
+  parse_workers: 2
+  qa_workers: 1
 

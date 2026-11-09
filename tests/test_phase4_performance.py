@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.slow
 """
 Unit tests for Phase 4: Reliability + Performance + Production Hardening.
 Covers:
@@ -255,7 +258,7 @@ class TestQueryProfiling(unittest.TestCase):
             "verifier_ms": 5.0,
             "formatting_ms": 1.1,
             "total_ms": 173.1,
-            "verifier_status": "PASSED"
+            "verifier_status": "RISK_SCAN_NO_HIGH_RISK_MISMATCH"
         }
 
         log_query_profile(test_record)
@@ -266,7 +269,7 @@ class TestQueryProfiling(unittest.TestCase):
         self.assertTrue(len(lines) > 0)
         last_entry = json.loads(lines[-1])
         self.assertEqual(last_entry["request_id"], "test_req_phase4")
-        self.assertEqual(last_entry["verifier_status"], "PASSED")
+        self.assertEqual(last_entry["verifier_status"], "RISK_SCAN_NO_HIGH_RISK_MISMATCH")
         self.assertEqual(last_entry["total_ms"], 173.1)
 
 

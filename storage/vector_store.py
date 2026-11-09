@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import yaml
 import uuid
 import threading
 
@@ -16,8 +15,7 @@ from sentence_transformers import SentenceTransformer
 from collections import OrderedDict
 from typing import List, Dict, Any, Tuple, Optional
 
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.yaml")
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from settings import PROJECT_ROOT
 
 # ---------------------------------------------------------------------------
 # Module-level singletons & Caches
@@ -28,7 +26,6 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # or any experimental result. It only eliminates repeated model loading.
 # ---------------------------------------------------------------------------
 _encoder_cache: Dict[str, SentenceTransformer] = {}
-_config_cache: Dict[str, Any] = {}
 _ensured_collections = set()
 _verified_collections = set()
 _encoder_lock = threading.Lock()
@@ -100,16 +97,13 @@ def _resolve_storage_path(path_value: str) -> str:
         return path_value
     if os.path.isabs(path_value):
         return path_value
-    return os.path.abspath(os.path.join(PROJECT_ROOT, path_value))
+    return os.path.abspath(os.path.join(str(PROJECT_ROOT), path_value))
 
 
 def _get_config() -> Dict[str, Any]:
-    """Load config.yaml once per process."""
-    global _config_cache
-    if not _config_cache:
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            _config_cache = yaml.safe_load(f)
-    return _config_cache
+    """Compatibility dictionary backed by the shared typed settings object."""
+    from settings import get_config_dict
+    return get_config_dict()
 
 
 def _get_embedding_device(config: Dict[str, Any] = None) -> str:
@@ -256,12 +250,14 @@ class VectorStoreManager:
     _clients = {}
     _all_chunks_cache = {}
 
-    def __init__(self, collection_name: str = "chunks", repository_id: Optional[str] = None):
+    def __init__(self, collection_name: Optional[str] = None, repository_id: Optional[str] = None):
         self.config = _get_config()
         self.repository_id = repository_id
 
-        self.qdrant_path = _resolve_storage_path(self.config.get("qdrant_path", "./qdrant_storage"))
-        self.embedding_model_name = self.config.get("embedding_model", "all-MiniLM-L6-v2")
+        from settings import get_settings
+        settings = get_settings()
+        self.qdrant_path = _resolve_storage_path(self.config.get("qdrant_path", settings.qdrant_path))
+        self.embedding_model_name = self.config.get("embedding_model", settings.embedding_model)
         self.device = _get_embedding_device(self.config)
 
         import threading
@@ -299,7 +295,7 @@ class VectorStoreManager:
             self.client = VectorStoreManager._clients[self.qdrant_path]
 
         self.encoder = _get_encoder(self.embedding_model_name, self.device)
-        self.collection_name = collection_name
+        self.collection_name = collection_name or settings.default_collection_name
 
         if hasattr(self.encoder, "get_embedding_dimension"):
             self.vector_size = self.encoder.get_embedding_dimension()
@@ -452,8 +448,9 @@ class VectorStoreManager:
 
     def _update_progress_heartbeat(self):
         try:
-            if self.collection_name.startswith("collection_"):
-                repo_id = self.collection_name.replace("collection_", "")
+            prefix = get_settings().collection_prefix
+            if self.collection_name.startswith(prefix):
+                repo_id = self.collection_name[len(prefix):]
                 from storage.progress import ProgressRegistry
                 ProgressRegistry.get_tracker(repo_id).update_heartbeat()
         except Exception:

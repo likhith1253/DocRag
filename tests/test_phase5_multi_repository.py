@@ -17,6 +17,9 @@ Critical requirements verified:
 import os
 import sys
 import unittest
+import pytest
+
+pytestmark = pytest.mark.slow
 from unittest.mock import patch, MagicMock
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

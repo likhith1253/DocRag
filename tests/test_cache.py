@@ -1,5 +1,7 @@
 import os
 import pytest
+
+pytestmark = pytest.mark.slow
 from storage.cache import SemanticCache
 
 @pytest.fixture

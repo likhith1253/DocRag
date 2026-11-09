@@ -1,22 +1,5 @@
 """
-Regression test -- ENUM_LIST prompt depth (algorithm/method list questions).
-
-Failure mode captured in forensic investigation:
-  Question: "What algorithms are proposed for AI-based power grid voltage control?"
-  The pipeline retrieved DQN, DDPG, SAC, and imitation learning from the correct paper,
-  but the answer (depth=CONCISE) omitted several algorithms.
-
-Fix: _detect_answer_depth() now returns ENUM_LIST for "what algorithms / what methods /
-     what approaches / what techniques / what models" questions.
-     _build_adaptive_prompt() renders step-by-step enumeration instructions for ENUM_LIST.
-
-These tests verify:
-  1. The failing question and similar phrasing yields answer_depth == ENUM_LIST.
-  2. ENUM_LIST does NOT fire for unrelated question forms.
-  3. The generated prompt for an ENUM_LIST question contains the enumeration directives
-     (scan, enumerate, explain, synthesis) ensuring the LLM is explicitly instructed
-     to collect ALL named entities.
-  4. CONCISE is NOT assigned to algorithm/method list questions.
+Regression tests for generic list-question classification and prompt instructions.
 """
 
 import unittest
@@ -53,7 +36,7 @@ class TestEnumListDepthDetection(unittest.TestCase):
     """ENUM_LIST fires for questions that ask for a list of named methods/algorithms."""
 
     _ENUM_QUESTIONS = [
-        "What algorithms are proposed for AI-based power grid voltage control?",
+        "What algorithms are proposed for the study?",
         "What methods are used in this system?",
         "What approaches does the paper present?",
         "Which techniques are applied in the experiments?",
@@ -66,7 +49,7 @@ class TestEnumListDepthDetection(unittest.TestCase):
 
     def test_algorithm_list_question_yields_enum_list(self):
         """The exact failing question must yield ENUM_LIST, not CONCISE."""
-        q = "What algorithms are proposed for AI-based power grid voltage control?"
+        q = "What algorithms are proposed for the study?"
         detect_question_type.cache_clear()
         result = detect_question_type(q)
         self.assertEqual(
@@ -108,7 +91,7 @@ class TestEnumListDoesNotFire(unittest.TestCase):
         "How does the reward function work?",
         "Why does the agent fail in sparse-reward settings?",
         "What is the learning rate used in training?",
-        "Compare DQN and DDPG performance.",
+        "Compare the two methods.",
         "Give an overview of reinforcement learning.",
         "What is the main contribution of this paper?",
     ]
@@ -136,15 +119,15 @@ class TestEnumListPromptContent(unittest.TestCase):
 
     def _make_chunks(self):
         return [
-            _make_chunk(i, "Power Grid RL Paper", f"Content about algorithm {i}")
+            _make_chunk(i, "Study Alpha", f"Content about algorithm {i}")
             for i in range(1, 5)
         ]
 
     @patch("agents.doc_agent.generate")
     def test_enum_list_prompt_contains_enumeration_directives(self, mock_generate):
-        mock_generate.return_value = "DQN and DDPG are proposed [Paper: X, Section: 3, Page 1]."
+        mock_generate.return_value = "Methods A and B are proposed [Paper: X, Section: 3, Page 1]."
     
-        q = "What algorithms are proposed for AI-based power grid voltage control?"
+        q = "What algorithms are proposed for the study?"
         chunks = self._make_chunks()
     
         detect_question_type.cache_clear()
@@ -166,7 +149,7 @@ class TestEnumListPromptContent(unittest.TestCase):
     def test_enum_list_not_assigned_concise(self, mock_generate):
         """'What is' should not trigger ENUM_LIST."""
         mock_generate.return_value = "It is an algorithm."
-        q = "What is DQN?"
+        q = "What is the proposed method?"
         chunks = self._make_chunks()
         detect_question_type.cache_clear()
         doc_agent.run(q, chunks, request_id="test_concise_no_enum")

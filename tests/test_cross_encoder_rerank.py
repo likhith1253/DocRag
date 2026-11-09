@@ -1,3 +1,6 @@
+import pytest
+
+pytestmark = pytest.mark.slow
 import unittest
 from retrieval.cross_encoder_rerank import rerank_cross_encoder
 

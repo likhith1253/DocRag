@@ -1,19 +1,11 @@
 import os
 import threading
-import yaml
 from abc import ABC, abstractmethod
-from pathlib import Path
 
-CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+from settings import get_config_dict, get_settings
 
 def _load_config():
-    if CONFIG_PATH.exists():
-        try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                return yaml.safe_load(f) or {}
-        except Exception:
-            return {}
-    return {}
+    return get_config_dict()
 
 class LLMBackend(ABC):
     @abstractmethod
@@ -33,9 +25,7 @@ def get_backend(backend_name: str = None) -> LLMBackend:
     Get or initialize the singleton LLM backend instance.
     Backend selection precedence:
     1. Parameter 'backend_name' if provided
-    2. Environment variable 'LLM_BACKEND'
-    3. Configuration file 'config.yaml' (llm_backend)
-    4. Default: 'transformers'
+    2. Validated application settings (including DOCRAG__LLM_BACKEND)
     """
     global _backend_instance
     if _backend_instance is not None:
@@ -46,10 +36,7 @@ def get_backend(backend_name: str = None) -> LLMBackend:
             return _backend_instance
 
         if not backend_name:
-            backend_name = os.environ.get("LLM_BACKEND")
-        if not backend_name:
-            config = _load_config()
-            backend_name = config.get("llm_backend", "transformers")
+            backend_name = get_settings().llm_backend
 
         backend_name = backend_name.lower().strip()
 

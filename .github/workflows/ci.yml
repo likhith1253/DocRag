@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main, research-overhaul]
+  pull_request:
+
+jobs:
+  fast-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Set up Python
+        run: uv python install
+      - name: Install locked environment
+        run: uv sync --locked --group dev
+      - name: Lint
+        run: uv run ruff check settings.py llm/cache.py retrieval/query_analyzer.py retrieval/paper_matcher.py
+      - name: Type check
+        run: uv run mypy
+      - name: Fast tests
+        run: uv run pytest -q -m "not slow and not gpu"

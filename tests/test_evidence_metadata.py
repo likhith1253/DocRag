@@ -30,7 +30,7 @@ class TestEvidenceMetadata(unittest.TestCase):
         return chunks[0]["metadata"]
 
     def test_table_content_flagged(self):
-        meta = self._chunk("Results:\n| Method | Score |\n| --- | --- |\n| SAC | 5000 |\nSee Table 2 for details.")
+        meta = self._chunk("Results:\n| Method | Score |\n| --- | --- |\n| Method Alpha | 5000 |\nSee Table 2 for details.")
         self.assertTrue(meta["contains_table"])
         self.assertIn("Table 2", meta["table_ids"])
         self.assertFalse(meta["contains_figure"])
