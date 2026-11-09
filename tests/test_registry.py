@@ -14,7 +14,9 @@ def registry():
     if os.path.exists(test_path):
         os.remove(test_path)
 
-def test_register_and_get(registry):
+def test_register_and_get(registry, monkeypatch):
+    from storage.vector_store import VectorStoreManager
+    monkeypatch.setattr(VectorStoreManager, "count", lambda self: 1)
     repo = Repository(
         repo_id="repo1",
         name="test_repo",
@@ -34,7 +36,9 @@ def test_register_and_get(registry):
     assert fetched.name == "test_repo"
     assert fetched.status == RepoStatus.READY
 
-def test_update_status(registry):
+def test_update_status(registry, monkeypatch):
+    from storage.vector_store import VectorStoreManager
+    monkeypatch.setattr(VectorStoreManager, "count", lambda self: 1)
     repo = Repository(
         repo_id="repo2",
         name="test_repo2",
@@ -51,6 +55,24 @@ def test_update_status(registry):
     
     fetched = registry.get_repository("repo2")
     assert fetched.status == RepoStatus.READY
+
+
+def test_ready_requires_nonempty_collection(registry, monkeypatch):
+    from storage.vector_store import VectorStoreManager
+    monkeypatch.setattr(VectorStoreManager, "count", lambda self: 0)
+    repo = Repository(
+        repo_id="empty_repo",
+        name="empty_repo",
+        vector_collection="empty_collection",
+        status=RepoStatus.READY,
+    )
+
+    registry.register(repo)
+
+    fetched = registry.get_repository("empty_repo")
+    assert fetched is not None
+    assert fetched.status == RepoStatus.FAILED
+    assert fetched.last_error == "Zero vectors indexed in collection."
 
 def test_delete_and_list(registry):
     repo3 = Repository(
