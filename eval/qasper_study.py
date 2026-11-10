@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib.metadata
+from itertools import combinations
 import json
 import os
 import platform
@@ -142,6 +143,23 @@ def verify_data(split: str) -> tuple[Path, dict[str, Any]]:
     return target, manifest
 
 
+def verify_test_protocol(manifest: dict[str, Any]) -> None:
+    expected_commit = manifest.get("test_protocol_commit")
+    expected_evaluator = manifest.get("test_evaluator_sha256")
+    if not expected_commit or not expected_evaluator:
+        raise RuntimeError("The frozen test protocol commit and evaluator hash are not recorded in the manifest.")
+    current_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    ancestor = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", expected_commit, current_commit], cwd=ROOT, check=False
+    )
+    if ancestor.returncode != 0:
+        raise RuntimeError(f"Test protocol commit {expected_commit} is not an ancestor of {current_commit}.")
+    if hashlib.sha256(Path(__file__).read_bytes()).hexdigest() != expected_evaluator:
+        raise RuntimeError("The evaluator differs from the frozen test protocol SHA-256.")
+    if subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip():
+        raise RuntimeError("The frozen test evaluation requires a clean Git worktree.")
+
+
 def _rank_metrics(ranked: list[str], relevant: set[str], k: int) -> dict[str, float]:
     if not relevant:
         return {"recall": float("nan"), "mrr": float("nan"), "ndcg": float("nan")}
@@ -189,6 +207,17 @@ def _rrf(rankings: list[list[str]], constant: int = 60) -> list[str]:
         for rank, item in enumerate(ranking, start=1):
             scores[item] = scores.get(item, 0.0) + 1.0 / (constant + rank)
     return sorted(scores, key=lambda item: (-scores[item], item))
+
+
+def _holm_adjust(p_values: dict[str, float]) -> dict[str, float]:
+    ordered = sorted(p_values.items(), key=lambda item: item[1])
+    adjusted: dict[str, float] = {}
+    running = 0.0
+    count = len(ordered)
+    for index, (name, p_value) in enumerate(ordered):
+        running = max(running, min(1.0, (count - index) * p_value))
+        adjusted[name] = running
+    return adjusted
 
 
 class EmbeddingDiskCache:
@@ -248,10 +277,11 @@ def evaluate(split: str, systems: list[str], top_k: int, candidate_k: int,
             raise PermissionError("Test split requires --allow-test after validation choices are frozen.")
         if limit is not None:
             raise ValueError("The registered experiment evaluates the complete official test split; --limit is development-only.")
-        expected_commit = manifest.get("test_protocol_commit")
-        current_commit = _run_id()[1]
-        if expected_commit and expected_commit != current_commit:
-            raise RuntimeError(f"Test protocol commit mismatch: expected {expected_commit}, got {current_commit}")
+        if set(systems) != {"bm25", "dense", "hybrid", "rerank", "mmr", "structure"} or len(systems) != 6:
+            raise ValueError("The frozen test run requires all six registered retrieval conditions.")
+        if top_k != 10 or candidate_k != 40 or embedding_model_id != EMBEDDING_MODEL:
+            raise ValueError("Test parameters must match the frozen cutoff, candidate pool, and embedding model.")
+        verify_test_protocol(manifest)
 
     frame = pd.read_parquet(dataset_path)
     paper_rows = {str(row["id"]): row for _, row in frame.iterrows()}
@@ -367,70 +397,71 @@ def evaluate(split: str, systems: list[str], top_k: int, candidate_k: int,
             rankings["dense"] = dense_ranked
             rankings["hybrid"] = _rrf([bm25_ranked, dense_ranked])
         chosen: dict[str, list[str]] = {}
-        for system in systems:
-            if system in rankings:
-                chosen[system] = rankings[system]
-            elif system in ("rerank", "mmr", "structure") and dense_ranked:
-                candidates = _rrf([bm25_ranked, dense_ranked])[:candidate_k]
-                if system in ("rerank", "mmr", "structure") and cross_encoder is not None:
-                    lookup = {p.id: p.text for p in passages}
-                    stage_start = time.perf_counter()
-                    scores = cross_encoder.predict([[question.text, lookup[pid]] for pid in candidates], show_progress_bar=False)
-                    stage_seconds["cross_encoder_scoring"] += time.perf_counter() - stage_start
-                    reranked = [
-                        pid for _, pid in sorted(
-                            zip(scores, candidates), key=lambda pair: (-float(pair[0]), candidates.index(pair[1]))
-                        )
-                    ]
-                    if system == "rerank":
-                        chosen[system] = reranked
-                    else:
-                        # MMR over the same cross-encoder candidate pool; relevance and
-                        # redundancy are cosine scores from the fixed dense encoder.
-                        qsim = {pid: float(np.dot(embedding_cache[pid], dense_query_vector)) for pid in candidates}
-                        by_rank = {pid: rank for rank, pid in enumerate(reranked)}
-                        selected: list[str] = []
-                        remaining = set(candidates)
-                        stage_start = time.perf_counter()
-                        while remaining and len(selected) < len(candidates):
-                            best = max(remaining, key=lambda pid: (
-                                0.7 * qsim[pid] - 0.3 * max(
-                                    (float(np.dot(embedding_cache[pid], embedding_cache[other])) for other in selected),
-                                    default=0.0,
+        chosen.update({name: rankings[name] for name in systems if name in rankings})
+        advanced = set(systems) & {"rerank", "mmr", "structure"}
+        if advanced:
+            if not dense_ranked or cross_encoder is None:
+                raise RuntimeError(f"Systems {sorted(advanced)} require dense and cross-encoder models")
+            candidates = rankings["hybrid"][:candidate_k]
+            passage_lookup = {p.id: p for p in passages}
+            stage_start = time.perf_counter()
+            scores = cross_encoder.predict(
+                [[question.text, passage_lookup[pid].text] for pid in candidates],
+                show_progress_bar=False,
+            )
+            stage_seconds["cross_encoder_scoring"] += time.perf_counter() - stage_start
+            candidate_position = {pid: index for index, pid in enumerate(candidates)}
+            reranked = sorted(candidates, key=lambda pid: (-float(scores[candidate_position[pid]]), candidate_position[pid]))
+            if "rerank" in advanced:
+                chosen["rerank"] = reranked
+
+            if advanced & {"mmr", "structure"}:
+                # MMR uses reranker order for relevance and E5 cosine for redundancy.
+                qsim = {pid: float(np.dot(embedding_cache[pid], dense_query_vector)) for pid in candidates}
+                by_rank = {pid: rank for rank, pid in enumerate(reranked)}
+                selected: list[str] = []
+                remaining = set(candidates)
+                stage_start = time.perf_counter()
+                while remaining:
+                    best = max(remaining, key=lambda pid: (
+                        0.7 * qsim[pid] - 0.3 * max(
+                            (float(np.dot(embedding_cache[pid], embedding_cache[other])) for other in selected),
+                            default=0.0,
+                        ),
+                        -by_rank[pid], pid,
+                    ))
+                    selected.append(best)
+                    remaining.remove(best)
+                stage_seconds["mmr_selection"] += time.perf_counter() - stage_start
+                if "mmr" in advanced:
+                    chosen["mmr"] = selected
+                if "structure" in advanced:
+                    from retrieval.query_analyzer import detect_question_type, score_chunk_for_question
+                    question_type = detect_question_type(question.text)["question_type"]
+                    rank_scores = {pid: 1.0 - rank / max(len(selected), 1) for rank, pid in enumerate(selected)}
+                    structural_scores = {
+                        pid: score_chunk_for_question({
+                            "content": passage_lookup[pid].text,
+                            "metadata": {
+                                "chunk_type": {"table": "TABLE", "figure": "FIGURE"}.get(
+                                    passage_lookup[pid].kind, "TEXT"
                                 ),
-                                -by_rank[pid], pid,
-                            ))
-                            selected.append(best)
-                            remaining.remove(best)
-                        stage_seconds["mmr_selection"] += time.perf_counter() - stage_start
-                        if system == "mmr":
-                            chosen[system] = selected
-                        else:
-                            from retrieval.query_analyzer import detect_question_type, score_chunk_for_question
-                            question_type = detect_question_type(question.text)["question_type"]
-                            lookup = {p.id: p for p in passages}
-                            rank_scores = {pid: 1.0 - rank / max(len(selected), 1) for rank, pid in enumerate(selected)}
-                            structural_scores = {
-                                pid: score_chunk_for_question({
-                                    "content": lookup[pid].text,
-                                    "metadata": {
-                                        "chunk_type": {"table": "TABLE", "figure": "FIGURE"}.get(lookup[pid].kind, "TEXT"),
-                                        "section": lookup[pid].section,
-                                        "contains_table": lookup[pid].kind == "table",
-                                        "contains_figure": lookup[pid].kind == "figure",
-                                    },
-                                }, question_type)
-                                for pid in selected
-                            }
-                            stage_start = time.perf_counter()
-                            chosen[system] = sorted(
-                                selected,
-                                key=lambda pid: (0.75 * rank_scores[pid] + 0.25 * structural_scores[pid], -by_rank[pid]),
-                                reverse=True,
-                            )
-                            stage_seconds["structure_ordering"] += time.perf_counter() - stage_start
-                else:
-                    raise RuntimeError(f"System {system!r} requires a dense encoder and cross-encoder")
+                                "section": passage_lookup[pid].section,
+                                "contains_table": passage_lookup[pid].kind == "table",
+                                "contains_figure": passage_lookup[pid].kind == "figure",
+                            },
+                        }, question_type)
+                        for pid in selected
+                    }
+                    stage_start = time.perf_counter()
+                    chosen["structure"] = sorted(
+                        selected,
+                        key=lambda pid: (
+                            0.75 * rank_scores[pid] + 0.25 * structural_scores[pid], -by_rank[pid]
+                        ),
+                        reverse=True,
+                    )
+                    stage_seconds["structure_ordering"] += time.perf_counter() - stage_start
         metrics = {}
         for name, order in chosen.items():
             at_5 = _rank_metrics(order, relevant, min(5, top_k))
@@ -449,12 +480,17 @@ def evaluate(split: str, systems: list[str], top_k: int, candidate_k: int,
             "question": question.text, "answerable": True,
             "mappable": True, "gold_passage_ids": sorted(relevant), "gold_types": sorted(set(gold_types)),
             "gold_evidence_text": list(question.gold_evidence),
-            "rankings": {name: order[:top_k] for name, order in chosen.items()}, "metrics": metrics,
+            "rankings": {name: order[:top_k] for name, order in chosen.items()},
+            "ranking_types": {
+                name: [next(p.kind for p in passages if p.id == pid) for pid in order[:top_k]]
+                for name, order in chosen.items()
+            },
+            "metrics": metrics,
         })
         if process is not None and len(records) % 50 == 0:
             peak_rss_bytes = max(peak_rss_bytes, process.memory_info().rss)
         if len(records) % 50 == 0:
-            print(f"Processed {len(records)}/{len(questions)} validation questions", flush=True)
+            print(f"Processed {len(records)}/{len(questions)} {split} questions", flush=True)
 
     duration_s = time.perf_counter() - start
     cache_stats = {"hits": vector_cache.hits, "misses": vector_cache.misses} if vector_cache else None
@@ -475,6 +511,30 @@ def evaluate(split: str, systems: list[str], top_k: int, candidate_k: int,
         comparisons["structure_minus_mmr_table_figure"] = _paired_inference(
             records, "structure", "mmr", subset="table_figure"
         )
+        subgroup = comparisons["structure_minus_mmr_table_figure"]
+        subgroup_ci = subgroup.get("bootstrap_95_ci")
+        subgroup["h1_supported"] = bool(
+            subgroup_ci and subgroup.get("mean_difference", 0) > 0 and subgroup_ci[0] > 0
+        )
+        overall = comparisons["structure_minus_mmr_all"]
+        overall_ci = overall.get("bootstrap_95_ci")
+        overall["h2_noninferiority_margin"] = -0.02
+        overall["h2_noninferiority_supported"] = bool(overall_ci and overall_ci[0] > -0.02)
+    pairwise: dict[str, Any] = {}
+    for first, second in combinations(systems, 2):
+        key = f"{first}_minus_{second}"
+        pairwise[key] = _paired_inference(records, first, second)
+    pairwise_p = {
+        name: result["paired_randomization_p"]
+        for name, result in pairwise.items()
+        if result.get("paired_randomization_p") is not None
+    }
+    for name, adjusted in _holm_adjust(pairwise_p).items():
+        pairwise[name]["holm_adjusted_p"] = adjusted
+    comparisons["pairwise_recall10_overall"] = {
+        "method": "paired bootstrap percentile CI and sign randomization; Holm correction across tested pairs",
+        "comparisons": pairwise,
+    }
     type_question_count = sum(
         1 for record in records if {"table_reference", "figure_reference"} & set(record.get("gold_types", []))
     )

@@ -1,0 +1,74 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[hidelinks]{hyperref}
+\usepackage{natbib}
+\title{Do Structural Signals Help Retrieve Annotated Evidence from Research Papers? A CPU-Reproducible Study on QASPER}
+\author{Author details to be supplied by the project owner}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Scientific question answering depends on retrieving evidence from long papers, including evidence recorded around tables and figures. We study whether a generic structure-aware ranking step improves recovery of QASPER evidence over a controlled sequence of lexical, dense, hybrid, reranked, and diversified retrieval systems. We evaluate the complete frozen QASPER test split with identical paper-local candidate units and report retrieval metrics, paired uncertainty, and retrieval failure categories. This manuscript's results table is generated from the saved raw run by the repository reproduction command. The study concerns evidence retrieval only; it does not establish answer-generation quality, citation faithfulness, equation parsing, or calibrated abstention.
+\end{abstract}
+
+\section{Introduction}
+Research papers are long, structured documents. A question-answering system must locate supporting passages before a generator can use them. QASPER provides question-answer pairs anchored in NLP research papers, together with evidence annotations \citep{dasigi-etal-2021-dataset}. This makes it possible to test retrieval separately from generation and judge whether retrieval changes recover annotated evidence.
+
+Our problem statement is narrow: given a question and its source paper, rank the paper's paragraphs and figure/table captions so that annotated evidence appears near the top. We test whether adding a generic structure-aware selection step to hybrid retrieval, cross-encoder reranking, and maximal marginal relevance improves Recall@10, especially when the annotated evidence or its text explicitly refers to a table or figure.
+
+The contribution is a controlled, reproducible retrieval analysis: (1) six retrieval conditions share the same source passages, candidate pool, and cutoff; (2) the structure-aware contrast is predeclared with paired uncertainty and falsification criteria; and (3) raw per-question rankings support a retrieval-specific failure taxonomy. Any reported conclusion is limited to the QASPER NLP-paper benchmark and its evidence annotations.
+
+\section{Related Work}
+QASPER is an information-seeking question-answering benchmark over research papers with evidence annotations \citep{dasigi-etal-2021-dataset}. We use those annotations to measure evidence retrieval rather than end-to-end generated answers. The retrieval components represent established approaches: E5 provides dense embeddings \citep{wang-etal-2022-e5}, RRF combines rankings \citep{cormack-clarke-buttcher-2009-rrf}, cross-encoders rescore query-passage pairs \citep{nogueira-cho-2019-passage-reranking}, and MMR trades relevance against redundancy \citep{carbonell-goldstein-1998-mmr}. Our study does not present these algorithms as new; it tests a generic structural signal under controlled evidence retrieval conditions. The evaluation does not introduce a new QA dataset or claim broad scientific-domain coverage.
+
+\section{Method}
+For each question, retrieval is restricted to the paper associated with that question. Candidate units are the dataset's source paragraphs and figure/table captions. Gold evidence is mapped to a candidate when its normalized text occurs in that source unit. Questions with no mapped answerable evidence are reported separately and excluded from ranking metrics.
+
+The systems are BM25; dense E5-small-v2 retrieval; reciprocal-rank fusion (RRF) of BM25 and dense rankings; RRF followed by a fixed cross-encoder; that reranked candidate set reordered by MMR; and MMR followed by a generic question-type and chunk-type selection score. The candidate pool is the top 40 RRF units and the reported cutoff is 10. The exact checkpoints, revisions, software versions, and parameters are recorded in each raw result. The implementation and protocol are in the repository.
+
+\section{Experimental Setup}
+We use the official QASPER validation split for development and the official test split for the final evaluation. The upstream dataset revision and SHA-256 hashes are frozen in the repository manifest. The test split is not used for choices or tuning. Retrieval runs on CPU. We report Recall@5 and Recall@10, mean reciprocal rank (MRR), and nDCG@10 over answerable questions with at least one mapped evidence unit. We compare structure-aware selection with MMR using paired bootstrap confidence intervals and a paired sign-randomization test. The table/figure subset is determined by the gold evidence's caption type or explicit figure/table reference. Full details and the non-inferiority margin are specified in the pre-registered protocol.
+
+\section{Results}
+Table~\ref{tab:main} is generated from the frozen test run's raw JSON by \texttt{make reproduce}. It reports all retrieval conditions. The paired comparison and subgroup sample count are recorded in the same raw JSON. No answer-quality score is computed in this retrieval-only study.
+
+\begin{table}[t]
+\centering
+\caption{Evidence retrieval on the frozen QASPER test split. Generated directly from raw per-question outputs.}
+\label{tab:main}
+\IfFileExists{generated/main_results.tex}{\input{generated/main_results.tex}}{\small Run \texttt{make reproduce} to generate this table from the frozen test evaluation.}
+\end{table}
+
+All pairwise differences are a secondary analysis; p-values are adjusted across the tested pairs with Holm's method.
+\begin{table}[t]
+\centering
+\caption{Pairwise overall Recall@10 comparisons. Positive values favor the first system in the contrast.}
+\label{tab:pairwise}
+\IfFileExists{generated/pairwise_comparisons.tex}{\input{generated/pairwise_comparisons.tex}}{Run \texttt{make reproduce} to generate these comparisons.}
+\end{table}
+
+\section{Failure Analysis}
+The reproduction command generates a retrieval failure report from the test raw file. It separates unanswerable questions, answerable questions whose annotated evidence could not be mapped to candidate units, retrieval misses, partial retrieval, and complete retrieval of mapped evidence at the cutoff. Table~\ref{tab:failures} reports counts for every system.
+
+\begin{table}[t]
+\centering
+\caption{Retrieval failure categories at the registered cutoff. Counts are generated from raw test rankings.}
+\label{tab:failures}
+\IfFileExists{generated/failure_analysis.tex}{\input{generated/failure_analysis.tex}}{Run \texttt{make reproduce} to generate the failure analysis.}
+\end{table}
+
+\IfFileExists{generated/failure_examples.tex}{\input{generated/failure_examples.tex}}{}
+
+Parser loss, generation errors, verifier misses, false refusals, and infrastructure failures are outside this experiment and are not inferred from retrieval rankings.
+
+\section{Limitations}
+QASPER focuses on NLP papers and does not support claims across scientific disciplines. Evidence mapping uses normalized substring matches and can fail when annotations are partial, paraphrased, or span multiple source units. The benchmark's provided structured text means this study does not evaluate PDF parsing, equation extraction, or reconstruction of visual content. Retrieval results do not establish that generated answers are correct, supported, or calibrated. The project source has no license yet; redistribution requires an ownership and license review.
+
+\section{Reproducibility}
+The pinned dataset manifest, locked dependencies, CPU retrieval harness, cache, raw JSON, generated summary table, and failure report are included or regenerated with \texttt{make reproduce}. Model and dataset revisions and hashes are stored with the raw run. The V100 generation diagnostic is not part of this experiment and remains NOT VERIFIED.
+
+\bibliography{../references}
+\bibliographystyle{plainnat}
+\end{document}

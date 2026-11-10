@@ -6,15 +6,16 @@ DocRag is an experimental system for indexing research papers and retrieving cit
 
 The primary study asks whether a simple, generic structure-aware retrieval step improves recovery of annotator-highlighted table/figure evidence on QASPER, compared with BM25, dense retrieval, reciprocal-rank fusion, cross-encoder reranking, and MMR. The full protocol and falsification criteria are in [docs/RESEARCH.md](docs/RESEARCH.md). QASPER was introduced by Dasigi et al. at NAACL 2021; the dataset release is identified by a pinned Hugging Face revision and file hashes in [data/frozen/qasper_manifest.json](data/frozen/qasper_manifest.json).
 
-The test split is frozen and the evaluator requires an explicit `--allow-test` flag. Development runs use the official validation split. No test scores have been inspected. Results will be reported only after the validation protocol is fixed and the test harness is committed.
+The test split is frozen and the evaluator requires an explicit `--allow-test` flag, the frozen evaluator hash, a clean Git worktree, and the registered test configuration. Development runs use the official validation split. The full validation run has completed as a dirty-worktree development run; it is preserved but is not cited as a paper result. The frozen test is still unscored.
 
 ## Status
 
-- The CPU-locked package, typed settings, generation cache, API/UI, and core regression tests are present. The full fast-test suite is not yet verified; see [docs/PLAN.md](docs/PLAN.md).
-- Retrieval-study implementation is in progress. No research result or improvement claim is currently reported.
+- The CPU-locked package, typed settings, generation cache, API/UI, and core regression tests are present. The deterministic fast suite passes locally; see [docs/PLAN.md](docs/PLAN.md).
+- The QASPER retrieval harness now implements BM25, dense E5, RRF hybrid, cross-encoder reranking, MMR, structure-aware ordering, paired bootstrap intervals, paired randomization tests, and a retrieval failure report. Full validation development has completed; the registered clean validation rerun and frozen test remain pending. No improvement claim is currently reported.
 - The V100 generation path, external API backends, and end-to-end answer quality are **NOT VERIFIED**.
 - PDFs preserved from the previous checkout have unresolved redistribution licenses and are excluded from all study runs.
 - The repository has no source-code license. Do not redistribute the application as open source until ownership and licensing are reviewed. The QASPER dataset itself is identified as CC BY 4.0 by its pinned dataset card; the data are downloaded locally rather than committed.
+- See the [model and data card](docs/DATA_MODEL_CARD.md) and [contribution guide](CONTRIBUTING.md) for provenance, license checks, and reproduction expectations.
 
 ## Setup
 
@@ -23,9 +24,12 @@ Requirements: Windows, Linux, or macOS; Python 3.12.5; `uv`. PyTorch is resolved
 ```bash
 uv sync --locked --group dev
 uv run pytest -q -m "not slow and not gpu"
-uv run ruff check settings.py llm/cache.py retrieval/query_analyzer.py retrieval/paper_matcher.py eval/qasper_study.py scripts/download_qasper.py scripts/smoke_generation.py scripts/verify_cuda_generation.py tests/test_qasper_study.py
+uv run ruff check settings.py llm/cache.py retrieval/query_analyzer.py retrieval/paper_matcher.py eval/qasper_study.py eval/failure_analysis.py eval/paper_table.py scripts/dataset_stats.py scripts/download_qasper.py scripts/reproduce.py scripts/smoke_generation.py scripts/verify_cuda_generation.py scripts/verify_project.py tests/test_qasper_study.py
 uv run mypy
+uv run python scripts/verify_project.py
 ```
+
+The verification command archives exact lint, type-check, fast-test, and package-build output with a configuration hash under `results/verification/`.
 
 On Windows PowerShell, use `uv.exe` and the same arguments. For the research dataset and retrieval model, network access to Hugging Face is required once.
 
@@ -35,27 +39,28 @@ Download the pinned QASPER files and verify their hashes:
 
 ```bash
 uv run python scripts/download_qasper.py
+uv run python scripts/dataset_stats.py
 ```
 
-Validation-only development run (first 25 question IDs is a smoke check):
+Full validation development run:
 
 ```bash
-uv run python -m eval.qasper_study --split validation --systems bm25,dense,hybrid --top-k 10 --limit 25
+make reproduce-dev
 ```
 
-Full validation run:
+This runs all six retrieval conditions, then generates the failure taxonomy and manuscript table from the saved raw run. The first 25-question validation prefix remains an optional schema/performance smoke check only.
 
 ```bash
-uv run python -m eval.qasper_study --split validation --systems bm25,dense,hybrid,rerank,mmr --top-k 10 --candidate-k 40
+uv run python -m eval.qasper_study --split validation --systems bm25,dense,hybrid,rerank,mmr,structure --top-k 10 --candidate-k 40 --limit 25
 ```
 
-After protocol/code choices are frozen and validation is complete, one test evaluation is permitted:
+After validation is complete and the protocol implementation is committed, run the frozen test once:
 
 ```bash
-uv run python -m eval.qasper_study --split test --allow-test --systems bm25,dense,hybrid,rerank,mmr --top-k 10 --candidate-k 40
+make reproduce
 ```
 
-Raw per-question rankings, metrics, configuration hash, data hash, hardware/runtime metadata, and commit are saved beneath `results/`. The current implementation does not yet implement confidence intervals or the structure-aware condition, so those commands are not a finished reproduction of the hypotheses in the protocol. Do not treat the current script output as final study results until those gaps are closed.
+Raw per-question rankings, metrics, configuration hash, data hash, hardware/runtime metadata, and commit are saved beneath `results/`. `make reproduce` requires network access to download the hash-verified dataset on a clean machine and CPU time for all models. It does not generate an answer-quality score: this is a retrieval-only study.
 
 ## Run the application
 

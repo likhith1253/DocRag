@@ -6,9 +6,13 @@ On QASPER's paper-level evidence retrieval task, does a lightweight structure-aw
 
 ## Motivation and base benchmark
 
-QASPER was introduced to measure information-seeking QA over complete NLP papers. Its authors report 5,049 questions over 1,585 papers and provide supporting evidence annotations. The benchmark card identifies CC BY 4.0 and an official train/validation/test split. We use its paper-level splits rather than the repository's old hand-authored QA artifacts. See the dataset card and verified bibliographic reference in `references.bib`.
+QASPER was introduced to measure information-seeking QA over complete NLP papers and provides supporting evidence annotations. The benchmark card identifies CC BY 4.0 and an official train/validation/test split. We use its paper-level splits rather than the repository's old hand-authored QA artifacts. See the dataset card and verified bibliographic reference in `references.bib`.
 
 Problem statement: scientific-paper QA depends on finding the source passages that support an answer. A retrieval system can fail even if its answer generator is capable, and evidence passages may be structurally different (ordinary prose, table/caption content, or figure/caption content). We will test whether a generic structural signal helps recover annotated evidence, holding the paper, query, chunking, corpus, and retrieval cutoff fixed.
+
+## Harness choice and legacy evaluation disagreement
+
+The sole research harness is `eval/qasper_study.py`; `scripts/reproduce.py` wraps it and derives the failure report and paper tables from the same raw run. The historical acceptance harness used regex/keyword checks authored around known system behavior after fixes. It checked answer form and selected terms, not evidence entailment, and could award a pass to factually incorrect statements. Other old evaluators differed in their paper/query inputs, prompt path, output parsing, pass thresholds, and metrics, so their scores did not estimate a shared target. They are removed or retained only as regression/history artifacts and are excluded from this paper. The current study uses one frozen dataset release, one paper-local evidence mapping, and one set of ranking metrics for every condition.
 
 ## Hypotheses and falsification
 
@@ -38,7 +42,7 @@ Retrieval is restricted to the question's source paper, as required by QASPER's 
 
 Primary outcome: Recall@10 of gold evidence paragraphs on the gold-referenced table/figure subset, with per-query paired bootstrap 95% confidence interval for B5 minus B4. Secondary outcomes: overall evidence Recall@5/10, MRR, nDCG@10; answerability-stratified retrieval; per-evidence-type retrieval; latency and peak process memory where measured. A retriever returns ranked chunk IDs; evidence recall counts any annotated evidence unit retrieved, and the exact matching rules are frozen in the evaluator and unit tests before test scoring.
 
-Use 10,000 fixed-seed paired bootstrap resamples over test questions and a 10,000-resample paired sign-randomization test; report absolute differences, percentile confidence intervals, p-values, and the number of questions. H1 compares B5 with B4 on questions whose gold evidence references a table or figure. H2 checks whether the lower confidence bound for overall Recall@10 difference (B5 minus B4) is greater than -0.02. Report all conditions and missingness. No significance claim is made if a test is not run or an interval crosses zero.
+Use 10,000 fixed-seed paired bootstrap resamples over test questions and a 10,000-resample paired sign-randomization test; report absolute differences, percentile confidence intervals, p-values, and the number of questions. H1 compares B5 with B4 on questions whose gold evidence references a table or figure. H2 checks whether the lower confidence bound for overall Recall@10 difference (B5 minus B4) is greater than -0.02. As a secondary analysis, report paired overall Recall@10 differences for every condition pair with Holm-adjusted p-values; these exploratory comparisons do not replace H1/H2. Report all conditions and missingness. No significance claim is made if a test is not run or an interval crosses zero.
 
 ## Scope limits
 
