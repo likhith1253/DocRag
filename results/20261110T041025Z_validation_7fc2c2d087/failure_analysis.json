@@ -1,0 +1,1195 @@
+{
+  "created_utc": "2026-11-10T04:14:09.920169+00:00",
+  "git_commit": "e808115750b1f9f3438a7fcfc4313bc7e0770395",
+  "git_worktree_dirty": true,
+  "analyzer_sha256": "b4c710ab745bda2ebbaf2183e3223fd678296b2c983691b42bbdb5a55816ad88",
+  "source_raw_sha256": "1a21d0affb9cce27b60c0ec11550f2428b9355331d94866e1bbcd04ae5cadf91",
+  "source_config_sha256": "7fc2c2d0870d3f226506f121ae232198278e7123b953a3cf7ec92fde7a9e694a",
+  "source_dataset_sha256": "111ec99b1ae1db8457dcef018302b30f6fb797cd10b1dcff26a0fa5d4b6e51e6",
+  "taxonomy_scope": "retrieval-only; parser loss, generation errors, verifier misses, false refusals, and infrastructure failures are not observed by this experiment",
+  "counts": {
+    "bm25": {
+      "unanswerable": 60,
+      "answerable_but_evidence_unmappable": 99,
+      "mappable_answerable": 846,
+      "retrieval_miss_at_10": 222,
+      "partial_evidence_retrieval_at_10": 172,
+      "all_mapped_evidence_retrieved_at_10": 452,
+      "table_figure_reference_questions": 137,
+      "table_figure_reference_miss_at_10": 42
+    },
+    "dense": {
+      "unanswerable": 60,
+      "answerable_but_evidence_unmappable": 99,
+      "mappable_answerable": 846,
+      "retrieval_miss_at_10": 148,
+      "partial_evidence_retrieval_at_10": 167,
+      "all_mapped_evidence_retrieved_at_10": 531,
+      "table_figure_reference_questions": 137,
+      "table_figure_reference_miss_at_10": 23
+    },
+    "hybrid": {
+      "unanswerable": 60,
+      "answerable_but_evidence_unmappable": 99,
+      "mappable_answerable": 846,
+      "retrieval_miss_at_10": 146,
+      "partial_evidence_retrieval_at_10": 176,
+      "all_mapped_evidence_retrieved_at_10": 524,
+      "table_figure_reference_questions": 137,
+      "table_figure_reference_miss_at_10": 25
+    },
+    "rerank": {
+      "unanswerable": 60,
+      "answerable_but_evidence_unmappable": 99,
+      "mappable_answerable": 846,
+      "retrieval_miss_at_10": 124,
+      "partial_evidence_retrieval_at_10": 146,
+      "all_mapped_evidence_retrieved_at_10": 576,
+      "table_figure_reference_questions": 137,
+      "table_figure_reference_miss_at_10": 29
+    },
+    "mmr": {
+      "unanswerable": 60,
+      "answerable_but_evidence_unmappable": 99,
+      "mappable_answerable": 846,
+      "retrieval_miss_at_10": 185,
+      "partial_evidence_retrieval_at_10": 194,
+      "all_mapped_evidence_retrieved_at_10": 467,
+      "table_figure_reference_questions": 137,
+      "table_figure_reference_miss_at_10": 40
+    },
+    "structure": {
+      "unanswerable": 60,
+      "answerable_but_evidence_unmappable": 99,
+      "mappable_answerable": 846,
+      "retrieval_miss_at_10": 169,
+      "partial_evidence_retrieval_at_10": 192,
+      "all_mapped_evidence_retrieved_at_10": 485,
+      "table_figure_reference_questions": 137,
+      "table_figure_reference_miss_at_10": 34
+    }
+  },
+  "representative_retrieval_misses": {
+    "bm25": [
+      {
+        "system": "bm25",
+        "question_id": "01a41c0a4a7365cd37d28690735114f2ff5229f2",
+        "paper_id": "1612.08205",
+        "question": "What social media platform did they look at?",
+        "gold_evidence_text": [
+          "We compile our industry-annotated dataset by identifying blogger profiles located in the U.S. on the profile finder on http://www.blogger.com, and scraping only those users that had the industry profile element completed."
+        ],
+        "gold_passage_ids": [
+          "1612.08205:p2:0"
+        ],
+        "retrieved_passage_ids": [
+          "1612.08205:p0:0",
+          "1612.08205:p1:0",
+          "1612.08205:p0:1",
+          "1612.08205:p7:1",
+          "1612.08205:p10:0",
+          "1612.08205:p1:1",
+          "1612.08205:p1:2",
+          "1612.08205:p9:3",
+          "1612.08205:p10:1",
+          "1612.08205:p4:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "bm25",
+        "question_id": "021bfb7e180d67112b74f05ecb3fa13acc036c86",
+        "paper_id": "1703.07476",
+        "question": "How is the vocabulary of word-like or phoneme-like units automatically discovered?",
+        "gold_evidence_text": [
+          "UTD aims to automatically identify and cluster repeated terms (e.g. words or phrases) from speech. To circumvent the exhaustive DTW-based search limited by INLINEFORM0 time BIBREF6 , we exploit the scalable UTD framework in the Zero Resource Toolkit (ZRTools) BIBREF7 , which permits search in INLINEFORM1 time."
+        ],
+        "gold_passage_ids": [
+          "1703.07476:p2:0"
+        ],
+        "retrieved_passage_ids": [
+          "1703.07476:p0:3",
+          "1703.07476:p0:2",
+          "1703.07476:p3:0",
+          "1703.07476:c0",
+          "1703.07476:p4:0",
+          "1703.07476:p2:7",
+          "1703.07476:p0:0",
+          "1703.07476:p6:3",
+          "1703.07476:p2:5",
+          "1703.07476:p7:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "bm25",
+        "question_id": "022c365a14fdec406c7a945a1a18e7e79df37f08",
+        "paper_id": "1909.07575",
+        "question": "What is the attention module pretrained on?",
+        "gold_evidence_text": [
+          "o sufficiently utilize the large dataset $\\mathcal {A}$ and $\\mathcal {M}$, the model is pre-trained on CTC-based ASR task and MT task in the pre-training stage."
+        ],
+        "gold_passage_ids": [
+          "1909.07575:p6:0"
+        ],
+        "retrieved_passage_ids": [
+          "1909.07575:p0:4",
+          "1909.07575:p2:1",
+          "1909.07575:p0:6",
+          "1909.07575:p4:0",
+          "1909.07575:p0:5",
+          "1909.07575:p3:0",
+          "1909.07575:p4:6",
+          "1909.07575:p2:2",
+          "1909.07575:p4:5",
+          "1909.07575:p13:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "bm25",
+        "question_id": "03ebb29c08375afc42a957c7b2dc1a42bed7b713",
+        "paper_id": "1909.05359",
+        "question": "How is the effectiveness of this pipeline approach evaluated?",
+        "gold_evidence_text": [
+          "Figure FIGREF23 shows the proposed ontology, which, in our evaluation procedure, was populated with 3121 events entries from 51 documents."
+        ],
+        "gold_passage_ids": [
+          "1909.05359:p8:14"
+        ],
+        "retrieved_passage_ids": [
+          "1909.05359:p9:1",
+          "1909.05359:p10:0",
+          "1909.05359:p1:0",
+          "1909.05359:p10:4",
+          "1909.05359:p0:4",
+          "1909.05359:p9:3",
+          "1909.05359:p0:2",
+          "1909.05359:p9:2",
+          "1909.05359:p7:0",
+          "1909.05359:p9:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "bm25",
+        "question_id": "051df74dc643498e95d16e58851701628fdfd43e",
+        "paper_id": "1911.01371",
+        "question": "How did they obtain the OSG dataset?",
+        "gold_evidence_text": [
+          "Datasets ::: OSG\nOur data has been developed by crawling and pre-processing an OSG web forum.",
+          "Our data has been developed by crawling and pre-processing an OSG web forum. The forum has a great variety of different groups such as depression, anxiety, stress, relationship, cancer, sexually transmitted diseases, etc.",
+          "PLEASE"
+        ],
+        "gold_passage_ids": [
+          "1911.01371:p5:0"
+        ],
+        "retrieved_passage_ids": [
+          "1911.01371:p3:0",
+          "1911.01371:p5:1",
+          "1911.01371:p0:2",
+          "1911.01371:p10:2",
+          "1911.01371:p2:9",
+          "1911.01371:p1:1",
+          "1911.01371:p4:0",
+          "1911.01371:p11:5",
+          "1911.01371:c3",
+          "1911.01371:p0:8"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph"
+        ]
+      }
+    ],
+    "dense": [
+      {
+        "system": "dense",
+        "question_id": "01a41c0a4a7365cd37d28690735114f2ff5229f2",
+        "paper_id": "1612.08205",
+        "question": "What social media platform did they look at?",
+        "gold_evidence_text": [
+          "We compile our industry-annotated dataset by identifying blogger profiles located in the U.S. on the profile finder on http://www.blogger.com, and scraping only those users that had the industry profile element completed."
+        ],
+        "gold_passage_ids": [
+          "1612.08205:p2:0"
+        ],
+        "retrieved_passage_ids": [
+          "1612.08205:p1:0",
+          "1612.08205:p10:0",
+          "1612.08205:p1:1",
+          "1612.08205:p0:0",
+          "1612.08205:p0:1",
+          "1612.08205:p1:3",
+          "1612.08205:p1:2",
+          "1612.08205:p7:0",
+          "1612.08205:p0:7",
+          "1612.08205:p4:6"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "dense",
+        "question_id": "022c365a14fdec406c7a945a1a18e7e79df37f08",
+        "paper_id": "1909.07575",
+        "question": "What is the attention module pretrained on?",
+        "gold_evidence_text": [
+          "o sufficiently utilize the large dataset $\\mathcal {A}$ and $\\mathcal {M}$, the model is pre-trained on CTC-based ASR task and MT task in the pre-training stage."
+        ],
+        "gold_passage_ids": [
+          "1909.07575:p6:0"
+        ],
+        "retrieved_passage_ids": [
+          "1909.07575:p0:4",
+          "1909.07575:p2:1",
+          "1909.07575:p4:0",
+          "1909.07575:p2:2",
+          "1909.07575:p13:2",
+          "1909.07575:p0:6",
+          "1909.07575:p13:4",
+          "1909.07575:p3:0",
+          "1909.07575:p0:5",
+          "1909.07575:p5:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "dense",
+        "question_id": "03ebb29c08375afc42a957c7b2dc1a42bed7b713",
+        "paper_id": "1909.05359",
+        "question": "How is the effectiveness of this pipeline approach evaluated?",
+        "gold_evidence_text": [
+          "Figure FIGREF23 shows the proposed ontology, which, in our evaluation procedure, was populated with 3121 events entries from 51 documents."
+        ],
+        "gold_passage_ids": [
+          "1909.05359:p8:14"
+        ],
+        "retrieved_passage_ids": [
+          "1909.05359:p9:3",
+          "1909.05359:p9:1",
+          "1909.05359:p10:4",
+          "1909.05359:p10:0",
+          "1909.05359:p0:2",
+          "1909.05359:p9:2",
+          "1909.05359:p9:0",
+          "1909.05359:p0:5",
+          "1909.05359:p0:4",
+          "1909.05359:p8:19"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "dense",
+        "question_id": "044f922604b4b3f42ae381419fd5cd5624fa0637",
+        "paper_id": "1710.03348",
+        "question": "In what cases is attention different from alignment?",
+        "gold_evidence_text": [
+          "As shown, the attention of NOUN is the closest to alignments on average. But the average attention loss for VERB is almost two times larger than the loss for NOUN.",
+          "FLOAT SELECTED: Figure 6: Correlation of attention entropy and word prediction loss for the input-feeding system.",
+          "While most word alignments only involve one or a few words, attention can be distributed more freely."
+        ],
+        "gold_passage_ids": [
+          "1710.03348:p5:0",
+          "1710.03348:p8:1"
+        ],
+        "retrieved_passage_ids": [
+          "1710.03348:p0:3",
+          "1710.03348:p0:4",
+          "1710.03348:p11:0",
+          "1710.03348:p3:0",
+          "1710.03348:p4:8",
+          "1710.03348:p0:5",
+          "1710.03348:p0:2",
+          "1710.03348:c2",
+          "1710.03348:p1:2",
+          "1710.03348:p1:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "dense",
+        "question_id": "0682bf049f96fa603d50f0fdad0b79a5c55f6c97",
+        "paper_id": "2003.03014",
+        "question": "Do they analyze specific derogatory words?",
+        "gold_evidence_text": [
+          "FLOAT SELECTED: Table 3: Nearest words to weighted average of all LGBTQ terms’ vectors in 1986, 2000, and 2015",
+          "For the other techniques, we extract paragraphs containing any word from a predetermined list of LGTBQ terms (shown in Table TABREF19).",
+          "The Gallup survey asked for opinions on legality of “homosexual relations\" until 2008, but then changed the wording to “gay and lesbian relations\". This was likely because many people who identify as gay and lesbian find the word homosexual to be outdated and derogatory."
+        ],
+        "gold_passage_ids": [
+          "2003.03014:p15:0",
+          "2003.03014:p4:1"
+        ],
+        "retrieved_passage_ids": [
+          "2003.03014:p3:1",
+          "2003.03014:p1:3",
+          "2003.03014:p31:2",
+          "2003.03014:p32:3",
+          "2003.03014:p9:2",
+          "2003.03014:p1:4",
+          "2003.03014:p34:0",
+          "2003.03014:p1:2",
+          "2003.03014:p33:1",
+          "2003.03014:p22:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "hybrid": [
+      {
+        "system": "hybrid",
+        "question_id": "01a41c0a4a7365cd37d28690735114f2ff5229f2",
+        "paper_id": "1612.08205",
+        "question": "What social media platform did they look at?",
+        "gold_evidence_text": [
+          "We compile our industry-annotated dataset by identifying blogger profiles located in the U.S. on the profile finder on http://www.blogger.com, and scraping only those users that had the industry profile element completed."
+        ],
+        "gold_passage_ids": [
+          "1612.08205:p2:0"
+        ],
+        "retrieved_passage_ids": [
+          "1612.08205:p1:0",
+          "1612.08205:p0:0",
+          "1612.08205:p10:0",
+          "1612.08205:p0:1",
+          "1612.08205:p1:1",
+          "1612.08205:p1:2",
+          "1612.08205:p10:1",
+          "1612.08205:p1:4",
+          "1612.08205:p2:3",
+          "1612.08205:p4:6"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "hybrid",
+        "question_id": "03ebb29c08375afc42a957c7b2dc1a42bed7b713",
+        "paper_id": "1909.05359",
+        "question": "How is the effectiveness of this pipeline approach evaluated?",
+        "gold_evidence_text": [
+          "Figure FIGREF23 shows the proposed ontology, which, in our evaluation procedure, was populated with 3121 events entries from 51 documents."
+        ],
+        "gold_passage_ids": [
+          "1909.05359:p8:14"
+        ],
+        "retrieved_passage_ids": [
+          "1909.05359:p9:1",
+          "1909.05359:p10:0",
+          "1909.05359:p9:3",
+          "1909.05359:p10:4",
+          "1909.05359:p0:2",
+          "1909.05359:p0:4",
+          "1909.05359:p9:2",
+          "1909.05359:p9:0",
+          "1909.05359:p0:0",
+          "1909.05359:p0:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "hybrid",
+        "question_id": "0689904db9b00a814e3109fb1698086370a28fa2",
+        "paper_id": "1811.05711",
+        "question": "Which text embedding methodologies are used?",
+        "gold_evidence_text": [
+          "Here, we use the Gensim Python library BIBREF23 to train the PV-DBOW model.",
+          "We then train a paragraph vector model using the Document to Vector (Doc2Vec) framework BIBREF7 on the whole set (13 million) of preprocessed text records, although training on smaller sets (1 million) also produces good results.",
+          "We trained Doc2Vec models using text corpora of different sizes and content with different sets of hyper-parameters, in order to characterise the usability and quality of models."
+        ],
+        "gold_passage_ids": [
+          "1811.05711:p1:1",
+          "1811.05711:p4:3"
+        ],
+        "retrieved_passage_ids": [
+          "1811.05711:p0:3",
+          "1811.05711:p1:0",
+          "1811.05711:p12:5",
+          "1811.05711:c0",
+          "1811.05711:p3:0",
+          "1811.05711:p0:2",
+          "1811.05711:p0:4",
+          "1811.05711:c1",
+          "1811.05711:p10:0",
+          "1811.05711:p11:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "hybrid",
+        "question_id": "06b5272774ec43ee5facfa7111033386f06cf448",
+        "paper_id": "1905.07791",
+        "question": "Is an instance a sentence or an IE tuple?",
+        "gold_evidence_text": [
+          "Table 1 shows an example of difficult and easy examples according to our definition of difficulty. The underlined text demarcates the (consensus) reference label provided by domain experts. In the difficult examples, crowd workers marked text distinct from these reference annotations; whereas in the easy cases they reproduced them with reasonable fidelity. The difficult sentences usually exhibit complicated structure and feature jargon."
+        ],
+        "gold_passage_ids": [
+          "1905.07791:p2:1"
+        ],
+        "retrieved_passage_ids": [
+          "1905.07791:p2:2",
+          "1905.07791:p1:2",
+          "1905.07791:p3:2",
+          "1905.07791:p14:1",
+          "1905.07791:p9:1",
+          "1905.07791:p9:0",
+          "1905.07791:p0:2",
+          "1905.07791:p3:0",
+          "1905.07791:p5:1",
+          "1905.07791:p3:7"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "hybrid",
+        "question_id": "0752d71a0a1f73b3482a888313622ce9e9870d6e",
+        "paper_id": "1708.01464",
+        "question": "what was the baseline?",
+        "gold_evidence_text": [
+          "Results on LangID and NoLangID are compared to the system presented by deri2016grapheme, which is identified in our results as wFST."
+        ],
+        "gold_passage_ids": [
+          "1708.01464:p9:0"
+        ],
+        "retrieved_passage_ids": [
+          "1708.01464:p11:0",
+          "1708.01464:p7:0",
+          "1708.01464:p12:0",
+          "1708.01464:p16:1",
+          "1708.01464:p0:1",
+          "1708.01464:p12:1",
+          "1708.01464:p1:2",
+          "1708.01464:c2",
+          "1708.01464:p3:11",
+          "1708.01464:p14:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "rerank": [
+      {
+        "system": "rerank",
+        "question_id": "01f4a0a19467947a8f3bdd7ec9fac75b5222d710",
+        "paper_id": "1906.10225",
+        "question": "what were the evaluation metrics?",
+        "gold_evidence_text": [
+          "FLOAT SELECTED: Table 1: Unlabeled sentence-level F1 scores on PTB and CTB test sets. Top shows results from previous work while the rest of the results are from this paper. Mean/Max scores are obtained from 4 runs of each model with different random seeds. Oracle is the maximum score obtainable with binarized trees, since we compare against the non-binarized gold trees per convention. Results with † are trained on a version of PTB with punctuation, and hence not strictly comparable to the present work. For URNNG/DIORA, we take the parsed test set provided by the authors from their best runs and evaluate F1 with our evaluation setup, which ignores punctuation. ough hyperparameter search.13 See appendix A.2 for the full results (including corpus-level F1) broken down by sentence length.",
+          "FLOAT SELECTED: Table 2: (Top) Mean F1 similarity against Gold, Left, Right, and Self trees. Self F1 score is calculated by averaging over all 6 pairs obtained from 4 different runs. (Bottom) Fraction of ground truth constituents that were predicted as a constituent by the models broken down by label (i.e. label recall).",
+          "FLOAT SELECTED: Table 3: Results from training RNNGs on induced trees from various models (Induced RNNG) on the PTB. Induced URNNG indicates fine-tuning with the URNNG objective. We show perplexity (PPL), grammaticality judgment performance (Syntactic Eval.), and unlabeled F1. PPL/F1 are calculated on the PTB test set and Syntactic Eval. is from Marvin and Linzen (2018)’s dataset. Results on top do not make any use of annotated trees, while the bottom two results are trained on binarized gold trees. The perplexity numbers here are not comparable to standard results on the PTB since our models are generative model of sentences and hence we do not carry information across sentence boundaries. Also note that all the RNN-based models above (i.e. LSTM/PRPN/ON/RNNG/URNNG) have roughly the same model capacity (see appendix A.3).",
+          "Table TABREF23 shows the unlabeled INLINEFORM0 scores for our models and various baselines."
+        ],
+        "gold_passage_ids": [
+          "1906.10225:p4:0"
+        ],
+        "retrieved_passage_ids": [
+          "1906.10225:p10:5",
+          "1906.10225:p10:6",
+          "1906.10225:c1",
+          "1906.10225:p10:1",
+          "1906.10225:p4:1",
+          "1906.10225:p10:0",
+          "1906.10225:c9",
+          "1906.10225:p5:0",
+          "1906.10225:p0:0",
+          "1906.10225:c4"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "figure"
+        ]
+      },
+      {
+        "system": "rerank",
+        "question_id": "03ebb29c08375afc42a957c7b2dc1a42bed7b713",
+        "paper_id": "1909.05359",
+        "question": "How is the effectiveness of this pipeline approach evaluated?",
+        "gold_evidence_text": [
+          "Figure FIGREF23 shows the proposed ontology, which, in our evaluation procedure, was populated with 3121 events entries from 51 documents."
+        ],
+        "gold_passage_ids": [
+          "1909.05359:p8:14"
+        ],
+        "retrieved_passage_ids": [
+          "1909.05359:p9:1",
+          "1909.05359:p0:4",
+          "1909.05359:p9:3",
+          "1909.05359:p0:2",
+          "1909.05359:p9:2",
+          "1909.05359:p9:0",
+          "1909.05359:p10:0",
+          "1909.05359:p10:4",
+          "1909.05359:p0:1",
+          "1909.05359:p10:5"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "rerank",
+        "question_id": "0689904db9b00a814e3109fb1698086370a28fa2",
+        "paper_id": "1811.05711",
+        "question": "Which text embedding methodologies are used?",
+        "gold_evidence_text": [
+          "Here, we use the Gensim Python library BIBREF23 to train the PV-DBOW model.",
+          "We then train a paragraph vector model using the Document to Vector (Doc2Vec) framework BIBREF7 on the whole set (13 million) of preprocessed text records, although training on smaller sets (1 million) also produces good results.",
+          "We trained Doc2Vec models using text corpora of different sizes and content with different sets of hyper-parameters, in order to characterise the usability and quality of models."
+        ],
+        "gold_passage_ids": [
+          "1811.05711:p1:1",
+          "1811.05711:p4:3"
+        ],
+        "retrieved_passage_ids": [
+          "1811.05711:p3:0",
+          "1811.05711:p0:3",
+          "1811.05711:p1:0",
+          "1811.05711:c0",
+          "1811.05711:p0:4",
+          "1811.05711:p11:1",
+          "1811.05711:p12:5",
+          "1811.05711:p4:0",
+          "1811.05711:p11:0",
+          "1811.05711:p7:3"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "rerank",
+        "question_id": "06b5272774ec43ee5facfa7111033386f06cf448",
+        "paper_id": "1905.07791",
+        "question": "Is an instance a sentence or an IE tuple?",
+        "gold_evidence_text": [
+          "Table 1 shows an example of difficult and easy examples according to our definition of difficulty. The underlined text demarcates the (consensus) reference label provided by domain experts. In the difficult examples, crowd workers marked text distinct from these reference annotations; whereas in the easy cases they reproduced them with reasonable fidelity. The difficult sentences usually exhibit complicated structure and feature jargon."
+        ],
+        "gold_passage_ids": [
+          "1905.07791:p2:1"
+        ],
+        "retrieved_passage_ids": [
+          "1905.07791:p14:1",
+          "1905.07791:c0",
+          "1905.07791:p14:0",
+          "1905.07791:p3:0",
+          "1905.07791:c5",
+          "1905.07791:p13:0",
+          "1905.07791:p9:0",
+          "1905.07791:p0:2",
+          "1905.07791:p1:2",
+          "1905.07791:p2:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "rerank",
+        "question_id": "0752d71a0a1f73b3482a888313622ce9e9870d6e",
+        "paper_id": "1708.01464",
+        "question": "what was the baseline?",
+        "gold_evidence_text": [
+          "Results on LangID and NoLangID are compared to the system presented by deri2016grapheme, which is identified in our results as wFST."
+        ],
+        "gold_passage_ids": [
+          "1708.01464:p9:0"
+        ],
+        "retrieved_passage_ids": [
+          "1708.01464:p11:0",
+          "1708.01464:p12:0",
+          "1708.01464:p8:1",
+          "1708.01464:p8:2",
+          "1708.01464:p8:3",
+          "1708.01464:p9:2",
+          "1708.01464:p7:0",
+          "1708.01464:p5:2",
+          "1708.01464:p1:0",
+          "1708.01464:p12:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "mmr": [
+      {
+        "system": "mmr",
+        "question_id": "01a41c0a4a7365cd37d28690735114f2ff5229f2",
+        "paper_id": "1612.08205",
+        "question": "What social media platform did they look at?",
+        "gold_evidence_text": [
+          "We compile our industry-annotated dataset by identifying blogger profiles located in the U.S. on the profile finder on http://www.blogger.com, and scraping only those users that had the industry profile element completed."
+        ],
+        "gold_passage_ids": [
+          "1612.08205:p2:0"
+        ],
+        "retrieved_passage_ids": [
+          "1612.08205:p1:0",
+          "1612.08205:p10:0",
+          "1612.08205:p1:1",
+          "1612.08205:p0:0",
+          "1612.08205:p1:3",
+          "1612.08205:p1:2",
+          "1612.08205:p0:1",
+          "1612.08205:p7:0",
+          "1612.08205:p11:0",
+          "1612.08205:c1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table"
+        ]
+      },
+      {
+        "system": "mmr",
+        "question_id": "01f4a0a19467947a8f3bdd7ec9fac75b5222d710",
+        "paper_id": "1906.10225",
+        "question": "what were the evaluation metrics?",
+        "gold_evidence_text": [
+          "FLOAT SELECTED: Table 1: Unlabeled sentence-level F1 scores on PTB and CTB test sets. Top shows results from previous work while the rest of the results are from this paper. Mean/Max scores are obtained from 4 runs of each model with different random seeds. Oracle is the maximum score obtainable with binarized trees, since we compare against the non-binarized gold trees per convention. Results with † are trained on a version of PTB with punctuation, and hence not strictly comparable to the present work. For URNNG/DIORA, we take the parsed test set provided by the authors from their best runs and evaluate F1 with our evaluation setup, which ignores punctuation. ough hyperparameter search.13 See appendix A.2 for the full results (including corpus-level F1) broken down by sentence length.",
+          "FLOAT SELECTED: Table 2: (Top) Mean F1 similarity against Gold, Left, Right, and Self trees. Self F1 score is calculated by averaging over all 6 pairs obtained from 4 different runs. (Bottom) Fraction of ground truth constituents that were predicted as a constituent by the models broken down by label (i.e. label recall).",
+          "FLOAT SELECTED: Table 3: Results from training RNNGs on induced trees from various models (Induced RNNG) on the PTB. Induced URNNG indicates fine-tuning with the URNNG objective. We show perplexity (PPL), grammaticality judgment performance (Syntactic Eval.), and unlabeled F1. PPL/F1 are calculated on the PTB test set and Syntactic Eval. is from Marvin and Linzen (2018)’s dataset. Results on top do not make any use of annotated trees, while the bottom two results are trained on binarized gold trees. The perplexity numbers here are not comparable to standard results on the PTB since our models are generative model of sentences and hence we do not carry information across sentence boundaries. Also note that all the RNN-based models above (i.e. LSTM/PRPN/ON/RNNG/URNNG) have roughly the same model capacity (see appendix A.3).",
+          "Table TABREF23 shows the unlabeled INLINEFORM0 scores for our models and various baselines."
+        ],
+        "gold_passage_ids": [
+          "1906.10225:p4:0"
+        ],
+        "retrieved_passage_ids": [
+          "1906.10225:p10:6",
+          "1906.10225:c2",
+          "1906.10225:p5:0",
+          "1906.10225:p7:0",
+          "1906.10225:p10:5",
+          "1906.10225:p8:2",
+          "1906.10225:c3",
+          "1906.10225:p0:3",
+          "1906.10225:p4:1",
+          "1906.10225:c6"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "table"
+        ]
+      },
+      {
+        "system": "mmr",
+        "question_id": "022c365a14fdec406c7a945a1a18e7e79df37f08",
+        "paper_id": "1909.07575",
+        "question": "What is the attention module pretrained on?",
+        "gold_evidence_text": [
+          "o sufficiently utilize the large dataset $\\mathcal {A}$ and $\\mathcal {M}$, the model is pre-trained on CTC-based ASR task and MT task in the pre-training stage."
+        ],
+        "gold_passage_ids": [
+          "1909.07575:p6:0"
+        ],
+        "retrieved_passage_ids": [
+          "1909.07575:p0:4",
+          "1909.07575:p2:1",
+          "1909.07575:p4:0",
+          "1909.07575:p2:2",
+          "1909.07575:p13:2",
+          "1909.07575:p4:6",
+          "1909.07575:p7:3",
+          "1909.07575:p13:4",
+          "1909.07575:p0:3",
+          "1909.07575:p15:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "mmr",
+        "question_id": "03ebb29c08375afc42a957c7b2dc1a42bed7b713",
+        "paper_id": "1909.05359",
+        "question": "How is the effectiveness of this pipeline approach evaluated?",
+        "gold_evidence_text": [
+          "Figure FIGREF23 shows the proposed ontology, which, in our evaluation procedure, was populated with 3121 events entries from 51 documents."
+        ],
+        "gold_passage_ids": [
+          "1909.05359:p8:14"
+        ],
+        "retrieved_passage_ids": [
+          "1909.05359:p9:3",
+          "1909.05359:p8:19",
+          "1909.05359:p0:1",
+          "1909.05359:p9:1",
+          "1909.05359:p8:5",
+          "1909.05359:p0:5",
+          "1909.05359:p10:0",
+          "1909.05359:p8:13",
+          "1909.05359:p0:2",
+          "1909.05359:p10:4"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "mmr",
+        "question_id": "044f922604b4b3f42ae381419fd5cd5624fa0637",
+        "paper_id": "1710.03348",
+        "question": "In what cases is attention different from alignment?",
+        "gold_evidence_text": [
+          "As shown, the attention of NOUN is the closest to alignments on average. But the average attention loss for VERB is almost two times larger than the loss for NOUN.",
+          "FLOAT SELECTED: Figure 6: Correlation of attention entropy and word prediction loss for the input-feeding system.",
+          "While most word alignments only involve one or a few words, attention can be distributed more freely."
+        ],
+        "gold_passage_ids": [
+          "1710.03348:p5:0",
+          "1710.03348:p8:1"
+        ],
+        "retrieved_passage_ids": [
+          "1710.03348:p0:3",
+          "1710.03348:p3:0",
+          "1710.03348:p0:4",
+          "1710.03348:c2",
+          "1710.03348:p11:0",
+          "1710.03348:p4:8",
+          "1710.03348:p1:2",
+          "1710.03348:p0:2",
+          "1710.03348:p4:2",
+          "1710.03348:p0:5"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "structure": [
+      {
+        "system": "structure",
+        "question_id": "01a41c0a4a7365cd37d28690735114f2ff5229f2",
+        "paper_id": "1612.08205",
+        "question": "What social media platform did they look at?",
+        "gold_evidence_text": [
+          "We compile our industry-annotated dataset by identifying blogger profiles located in the U.S. on the profile finder on http://www.blogger.com, and scraping only those users that had the industry profile element completed."
+        ],
+        "gold_passage_ids": [
+          "1612.08205:p2:0"
+        ],
+        "retrieved_passage_ids": [
+          "1612.08205:p1:0",
+          "1612.08205:p10:0",
+          "1612.08205:p1:1",
+          "1612.08205:p0:0",
+          "1612.08205:p1:3",
+          "1612.08205:p1:2",
+          "1612.08205:p0:1",
+          "1612.08205:p7:0",
+          "1612.08205:p11:0",
+          "1612.08205:p2:3"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "structure",
+        "question_id": "01f4a0a19467947a8f3bdd7ec9fac75b5222d710",
+        "paper_id": "1906.10225",
+        "question": "what were the evaluation metrics?",
+        "gold_evidence_text": [
+          "FLOAT SELECTED: Table 1: Unlabeled sentence-level F1 scores on PTB and CTB test sets. Top shows results from previous work while the rest of the results are from this paper. Mean/Max scores are obtained from 4 runs of each model with different random seeds. Oracle is the maximum score obtainable with binarized trees, since we compare against the non-binarized gold trees per convention. Results with † are trained on a version of PTB with punctuation, and hence not strictly comparable to the present work. For URNNG/DIORA, we take the parsed test set provided by the authors from their best runs and evaluate F1 with our evaluation setup, which ignores punctuation. ough hyperparameter search.13 See appendix A.2 for the full results (including corpus-level F1) broken down by sentence length.",
+          "FLOAT SELECTED: Table 2: (Top) Mean F1 similarity against Gold, Left, Right, and Self trees. Self F1 score is calculated by averaging over all 6 pairs obtained from 4 different runs. (Bottom) Fraction of ground truth constituents that were predicted as a constituent by the models broken down by label (i.e. label recall).",
+          "FLOAT SELECTED: Table 3: Results from training RNNGs on induced trees from various models (Induced RNNG) on the PTB. Induced URNNG indicates fine-tuning with the URNNG objective. We show perplexity (PPL), grammaticality judgment performance (Syntactic Eval.), and unlabeled F1. PPL/F1 are calculated on the PTB test set and Syntactic Eval. is from Marvin and Linzen (2018)’s dataset. Results on top do not make any use of annotated trees, while the bottom two results are trained on binarized gold trees. The perplexity numbers here are not comparable to standard results on the PTB since our models are generative model of sentences and hence we do not carry information across sentence boundaries. Also note that all the RNN-based models above (i.e. LSTM/PRPN/ON/RNNG/URNNG) have roughly the same model capacity (see appendix A.3).",
+          "Table TABREF23 shows the unlabeled INLINEFORM0 scores for our models and various baselines."
+        ],
+        "gold_passage_ids": [
+          "1906.10225:p4:0"
+        ],
+        "retrieved_passage_ids": [
+          "1906.10225:c2",
+          "1906.10225:c3",
+          "1906.10225:c6",
+          "1906.10225:c7",
+          "1906.10225:p10:5",
+          "1906.10225:p10:6",
+          "1906.10225:p7:0",
+          "1906.10225:p5:0",
+          "1906.10225:c5",
+          "1906.10225:p8:2"
+        ],
+        "retrieved_types": [
+          "table",
+          "table",
+          "table",
+          "table",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "structure",
+        "question_id": "022c365a14fdec406c7a945a1a18e7e79df37f08",
+        "paper_id": "1909.07575",
+        "question": "What is the attention module pretrained on?",
+        "gold_evidence_text": [
+          "o sufficiently utilize the large dataset $\\mathcal {A}$ and $\\mathcal {M}$, the model is pre-trained on CTC-based ASR task and MT task in the pre-training stage."
+        ],
+        "gold_passage_ids": [
+          "1909.07575:p6:0"
+        ],
+        "retrieved_passage_ids": [
+          "1909.07575:p0:4",
+          "1909.07575:p2:1",
+          "1909.07575:p4:0",
+          "1909.07575:p2:2",
+          "1909.07575:p13:2",
+          "1909.07575:p4:6",
+          "1909.07575:p7:3",
+          "1909.07575:p13:4",
+          "1909.07575:p0:3",
+          "1909.07575:p15:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "structure",
+        "question_id": "03ebb29c08375afc42a957c7b2dc1a42bed7b713",
+        "paper_id": "1909.05359",
+        "question": "How is the effectiveness of this pipeline approach evaluated?",
+        "gold_evidence_text": [
+          "Figure FIGREF23 shows the proposed ontology, which, in our evaluation procedure, was populated with 3121 events entries from 51 documents."
+        ],
+        "gold_passage_ids": [
+          "1909.05359:p8:14"
+        ],
+        "retrieved_passage_ids": [
+          "1909.05359:p9:3",
+          "1909.05359:p8:19",
+          "1909.05359:p0:1",
+          "1909.05359:p9:1",
+          "1909.05359:p8:5",
+          "1909.05359:p0:5",
+          "1909.05359:p10:0",
+          "1909.05359:p8:13",
+          "1909.05359:p0:2",
+          "1909.05359:p10:4"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "structure",
+        "question_id": "044f922604b4b3f42ae381419fd5cd5624fa0637",
+        "paper_id": "1710.03348",
+        "question": "In what cases is attention different from alignment?",
+        "gold_evidence_text": [
+          "As shown, the attention of NOUN is the closest to alignments on average. But the average attention loss for VERB is almost two times larger than the loss for NOUN.",
+          "FLOAT SELECTED: Figure 6: Correlation of attention entropy and word prediction loss for the input-feeding system.",
+          "While most word alignments only involve one or a few words, attention can be distributed more freely."
+        ],
+        "gold_passage_ids": [
+          "1710.03348:p5:0",
+          "1710.03348:p8:1"
+        ],
+        "retrieved_passage_ids": [
+          "1710.03348:p0:3",
+          "1710.03348:p3:0",
+          "1710.03348:p0:4",
+          "1710.03348:p11:0",
+          "1710.03348:p4:8",
+          "1710.03348:p1:2",
+          "1710.03348:p0:2",
+          "1710.03348:p4:2",
+          "1710.03348:p0:5",
+          "1710.03348:p4:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ]
+  }
+}

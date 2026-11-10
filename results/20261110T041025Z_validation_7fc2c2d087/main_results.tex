@@ -1,0 +1,16 @@
+% Generated from raw.json. Do not edit by hand.
+% config_sha256=7fc2c2d0870d3f226506f121ae232198278e7123b953a3cf7ec92fde7a9e694a
+\begin{tabular}{lrrrr}
+\toprule
+System & Recall@5 & Recall@10 & MRR & nDCG@10 \\
+\midrule
+BM25 & 0.440 & 0.629 & 0.335 & 0.381 \\
+Dense & 0.571 & 0.725 & 0.445 & 0.486 \\
+BM25 + Dense (RRF) & 0.573 & 0.723 & 0.436 & 0.478 \\
+Hybrid + Cross-Encoder & 0.597 & 0.769 & 0.493 & 0.532 \\
+Hybrid + Reranker + MMR & 0.478 & 0.665 & 0.414 & 0.439 \\
+MMR + Structure & 0.503 & 0.686 & 0.414 & 0.445 \\
+\bottomrule
+\end{tabular}
+\par\smallskip\footnotesize Structure-aware minus MMR on the predeclared table/figure subset: \Delta Recall@10=0.040, 95\% CI [0.010, 0.074], paired randomization \emph{p}=0.0129; n=137.
+\par\footnotesize Overall structure-aware minus MMR: \Delta Recall@10=0.022, 95\% CI [0.012, 0.032], paired randomization \emph{p}=0.0001; n=846.
