@@ -1,11 +1,14 @@
 import os
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
-    except Exception:
-        pass
+    except (OSError, ValueError) as exc:
+        logger.debug("Could not configure stdout encoding: %s", exc)
 import numpy as np
 from typing import List, Dict, Any, Optional
 

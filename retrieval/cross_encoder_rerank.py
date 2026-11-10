@@ -1,12 +1,15 @@
 import os
 import sys
 import math
+import logging
+
+logger = logging.getLogger(__name__)
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
-    except Exception:
-        pass
+    except (OSError, ValueError) as exc:
+        logger.debug("Could not configure stdout encoding: %s", exc)
 from collections import OrderedDict
 import threading
 from sentence_transformers import CrossEncoder
@@ -308,8 +311,8 @@ def rerank_cross_encoder(
     try:
         from storage.pipeline_logger import forensic_tracer
         forensic_tracer.retrieval_diagnostics = retrieval_diagnostics
-    except Exception:
-        pass
+    except (ImportError, AttributeError, OSError) as exc:
+        logger.debug("Could not publish optional retrieval diagnostics: %s", exc)
 
     stage6_data = {
         "cross_encoder_enabled": True,

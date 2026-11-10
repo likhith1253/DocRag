@@ -116,7 +116,7 @@ class TestIndexingIntegrityRegression(unittest.TestCase):
         repo_id = f"test_p7_failed_{self._testMethodName}"
         try:
             registry.delete_repository(repo_id)
-        except Exception:
+        except ValueError:
             pass
         repo = registry.create_repository("Empty repo", repo_id=repo_id, source_path="dataset/none")
         # Never indexed -> zero vectors -> marking READY must be rejected.
@@ -136,7 +136,7 @@ class TestRepositoryIsolationRegression(unittest.TestCase):
         repo_id = "test_p7_mismatch_repo"
         try:
             registry.delete_repository(repo_id)
-        except Exception:
+        except ValueError:
             pass
         registry.create_repository("Mismatch Repo", repo_id=repo_id, source_path="dataset/x")
         vm = VectorStoreManager(collection_name="collection_totally_different", repository_id=repo_id)
@@ -166,7 +166,7 @@ class TestRepositoryIsolationRegression(unittest.TestCase):
         for rid in (a_id, b_id):
             try:
                 registry.delete_repository(rid)
-            except Exception:
+            except ValueError:
                 pass
         repo_a = registry.create_repository("A", repo_id=a_id, source_path="dataset/a")
         repo_b = registry.create_repository("B", repo_id=b_id, source_path="dataset/b")
@@ -322,7 +322,7 @@ class TestLifecycleRegression(unittest.TestCase):
         repo_id = "test_p7_lifecycle_ready"
         try:
             registry.delete_repository(repo_id)
-        except Exception:
+        except ValueError:
             pass
         repo = registry.create_repository("Lifecycle Repo", repo_id=repo_id, source_path="dataset/x")
         self.assertEqual(repo.status, RepoStatus.CREATED)
@@ -340,7 +340,7 @@ class TestLifecycleRegression(unittest.TestCase):
         repo_id = "test_p7_lifecycle_update"
         try:
             registry.delete_repository(repo_id)
-        except Exception:
+        except ValueError:
             pass
         repo = registry.create_repository("Update Repo", repo_id=repo_id, source_path="dataset/x")
         vm = VectorStoreManager(collection_name=repo.vector_collection, repository_id=repo_id)
@@ -357,7 +357,7 @@ class TestLifecycleRegression(unittest.TestCase):
         repo_id = "test_p7_lifecycle_delete"
         try:
             registry.delete_repository(repo_id)
-        except Exception:
+        except ValueError:
             pass
         repo = registry.create_repository("Delete Repo", repo_id=repo_id, source_path="dataset/x")
         vm = VectorStoreManager(collection_name=repo.vector_collection, repository_id=repo_id)
@@ -372,7 +372,7 @@ class TestLifecycleRegression(unittest.TestCase):
         repo_id = "test_p7_lifecycle_list"
         try:
             registry.delete_repository(repo_id)
-        except Exception:
+        except ValueError:
             pass
         registry.create_repository("List Repo", repo_id=repo_id, source_path="dataset/x")
         registry.delete(repo_id)  # soft-delete

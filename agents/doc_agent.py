@@ -20,15 +20,18 @@ import re
 import sys
 import json
 import datetime
+import logging
 from pathlib import Path
 import threading
 from typing import List, Dict, Any, Optional
 
+logger = logging.getLogger(__name__)
+
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
-    except Exception:
-        pass
+    except (OSError, ValueError) as exc:
+        logger.debug("Could not configure stdout encoding: %s", exc)
 
 from llm.backend import generate
 from settings import get_settings, resolve_project_path
@@ -738,8 +741,8 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         try:
             from storage.vector_store import _get_config
             agent_chunk_cap = int(_get_config().get("retrieval", {}).get("agent_chunk_cap", 8))
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as exc:
+            logger.warning("Could not load retrieval chunk cap; using default: %s", exc)
 
         distinct_papers = {
             c.get("metadata", {}).get("paper_title")
@@ -873,16 +876,16 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         try:
             with open(trace_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(prompt_trace_lines) + "\n")
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Could not save prompt append trace: %s", exc)
 
         # Save final_prompt.txt
         final_prompt_path = Path(LOGS_DIR) / "final_prompt.txt"
         try:
             with open(final_prompt_path, "w", encoding="utf-8") as f:
                 f.write(full_prompt)
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Could not save final prompt artifact: %s", exc)
 
         # Verify prompt was saved correctly
         try:
@@ -894,8 +897,8 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
                 )
         except AssertionError:
             raise
-        except Exception:
-            pass  # File read failure is non-fatal
+        except OSError as exc:
+            logger.warning("Could not verify saved prompt artifact: %s", exc)
 
         t_gen_start = time.perf_counter()
         result = generate(
@@ -916,8 +919,8 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         try:
             with open(raw_llm_path, "w", encoding="utf-8") as f:
                 f.write(result or "")
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Could not save raw LLM output artifact: %s", exc)
 
         # STAGE 11: RAW LLM OUTPUT
         stage11_data = {
@@ -985,8 +988,8 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
         try:
             from storage.pipeline_logger import forensic_tracer
             forensic_tracer.record_stage("LLM", "FAIL", 0.0, {}, err_str, f"doc_agent exception: {err_str}")
-        except Exception:
-            pass
+        except (ImportError, AttributeError, OSError, RuntimeError) as trace_error:
+            logger.error("Could not record LLM failure in forensic trace: %s", trace_error)
         if "timed out" in err_lower or "timeout" in err_lower:
             return "LLM generation timed out."
         # A real backend/generation failure (CUDA driver error, CUDA OOM, a raised exception
@@ -1005,8 +1008,8 @@ def run(question: str, chunks: List[Dict[str, Any]], request_id: str = "default"
             contract_path = Path(LOGS_DIR) / "pipeline_contract_check.txt"
             with open(contract_path, "a", encoding="utf-8") as f:
                 f.write("\n".join(contract_lines) + "\n\n")
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Could not append pipeline contract record: %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -1080,7 +1083,7 @@ def build_citation_list(chunks: List[Dict[str, Any]], request_id: str = "default
         citation_trace_path = Path(LOGS_DIR) / "citation_trace.txt"
         with open(citation_trace_path, "a", encoding="utf-8") as f:
             f.write("\n".join(citation_trace) + "\n\n")
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("Could not save citation trace: %s", exc)
 
     return citations

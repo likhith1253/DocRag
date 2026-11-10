@@ -127,7 +127,7 @@ class TestPhase6Performance(unittest.TestCase):
         for rid in [repo_a_id, repo_b_id]:
             try:
                 self.registry.delete_repository(rid)
-            except Exception:
+            except ValueError:
                 pass
 
         self.registry.create_repository("Repo A", repo_id=repo_a_id, source_path="dataset/a")

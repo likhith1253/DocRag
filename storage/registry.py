@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from pathlib import Path
 import threading
@@ -6,6 +7,8 @@ from enum import Enum
 from typing import Optional, Dict, List, Any
 from pydantic import BaseModel
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 class RepoStatus(str, Enum):
     CREATED = "CREATED"
@@ -83,13 +86,12 @@ class RepositoryRegistry:
     def _load(self):
         self.repositories = {}
         if os.path.exists(self.storage_path):
-            try:
-                with open(self.storage_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    for repo_id, repo_data in data.items():
-                        self.repositories[repo_id] = Repository(**repo_data)
-            except Exception as e:
-                print(f"Failed to load registry from {self.storage_path}: {e}")
+            with open(self.storage_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, dict):
+                raise ValueError(f"Repository registry must contain a JSON object: {self.storage_path}")
+            for repo_id, repo_data in data.items():
+                self.repositories[repo_id] = Repository(**repo_data)
         self._mtime = self._disk_mtime()
 
     def _reload_if_stale(self) -> None:
@@ -137,11 +139,8 @@ class RepositoryRegistry:
             self.repositories[repo.repo_id] = repo
             self._save()
 
-        try:
-            from retrieval.repository_router import invalidate_router_cache
-            invalidate_router_cache(repo.repo_id)
-        except Exception:
-            pass
+        from retrieval.repository_router import invalidate_router_cache
+        invalidate_router_cache(repo.repo_id)
 
     def create_repository(
         self,
@@ -229,6 +228,7 @@ class RepositoryRegistry:
                     except Exception as e:
                         status = RepoStatus.FAILED
                         repo.last_error = f"Vector count verification failed: {e}"
+                        logger.warning("Vector count verification failed for %s: %s", repo_id, e)
 
                 repo.status = status
                 repo.updated_at = datetime.now(timezone.utc)
@@ -236,11 +236,8 @@ class RepositoryRegistry:
             else:
                 raise ValueError(f"Repository {repo_id} not found in registry.")
 
-        try:
-            from retrieval.repository_router import invalidate_router_cache
-            invalidate_router_cache(repo_id)
-        except Exception:
-            pass
+        from retrieval.repository_router import invalidate_router_cache
+        invalidate_router_cache(repo_id)
 
     def update_repository(
         self,
@@ -273,11 +270,8 @@ class RepositoryRegistry:
             repo.updated_at = datetime.now(timezone.utc)
             self._save()
 
-        try:
-            from retrieval.repository_router import invalidate_router_cache
-            invalidate_router_cache(repo_id)
-        except Exception:
-            pass
+        from retrieval.repository_router import invalidate_router_cache
+        invalidate_router_cache(repo_id)
         return repo
 
     def delete(self, repo_id: str) -> None:
@@ -290,11 +284,8 @@ class RepositoryRegistry:
             else:
                 raise ValueError(f"Repository {repo_id} not found in registry.")
 
-        try:
-            from retrieval.repository_router import invalidate_router_cache
-            invalidate_router_cache(repo_id)
-        except Exception:
-            pass
+        from retrieval.repository_router import invalidate_router_cache
+        invalidate_router_cache(repo_id)
 
     def delete_repository(self, repo_id: str, hard_delete: bool = True) -> Dict[str, Any]:
         """
@@ -310,31 +301,19 @@ class RepositoryRegistry:
         self.update_status(repo_id, RepoStatus.DELETING)
 
         # 2. Drop Qdrant vector collection
-        try:
-            from storage.vector_store import VectorStoreManager
-            vm = VectorStoreManager(collection_name=repo.vector_collection)
-            vm.drop_collection()
-        except Exception as e:
-            print(f"[Delete] Warning dropping collection {repo.vector_collection}: {e}", flush=True)
+        from storage.vector_store import VectorStoreManager
+        vm = VectorStoreManager(collection_name=repo.vector_collection)
+        vm.drop_collection()
 
         # 3. Invalidate caches for this collection/repository only
-        try:
-            from retrieval.paper_matcher import invalidate_paper_cache
-            invalidate_paper_cache(repo.vector_collection)
-        except Exception:
-            pass
+        from retrieval.paper_matcher import invalidate_paper_cache
+        invalidate_paper_cache(repo.vector_collection)
 
-        try:
-            from storage.cache import SemanticCache
-            SemanticCache().clear_for_repo(repo_id)
-        except Exception:
-            pass
+        from storage.cache import SemanticCache
+        SemanticCache().clear_for_repo(repo_id)
 
-        try:
-            from retrieval.cross_encoder_rerank import get_ce_score_cache
-            get_ce_score_cache().clear_for_collection(repo.vector_collection)
-        except Exception:
-            pass
+        from retrieval.cross_encoder_rerank import get_ce_score_cache
+        get_ce_score_cache().clear_for_collection(repo.vector_collection)
 
         # 4. Remove metadata & snapshot files
         from settings import get_settings, resolve_project_path
@@ -346,15 +325,12 @@ class RepositoryRegistry:
             try:
                 if os.path.exists(p):
                     os.remove(p)
-            except Exception:
-                pass
+            except OSError as exc:
+                logger.warning("Could not remove repository artifact %s: %s", p, exc)
 
         # 5. Remove from progress registry
-        try:
-            from storage.progress import ProgressRegistry
-            ProgressRegistry.delete_tracker(repo_id)
-        except Exception:
-            pass
+        from storage.progress import ProgressRegistry
+        ProgressRegistry.delete_tracker(repo_id)
 
         # 6. Remove or mark deleted in registry
         with self._lock:
@@ -365,11 +341,8 @@ class RepositoryRegistry:
                 repo.updated_at = datetime.now(timezone.utc)
             self._save()
 
-        try:
-            from retrieval.repository_router import invalidate_router_cache
-            invalidate_router_cache(repo_id)
-        except Exception:
-            pass
+        from retrieval.repository_router import invalidate_router_cache
+        invalidate_router_cache(repo_id)
 
         return {"deleted": True, "repo_id": repo_id, "name": repo.name}
 
@@ -385,29 +358,17 @@ class RepositoryRegistry:
             raise ValueError(f"Repository '{repo.name}' has no source_path to reindex from.")
 
         # Clear snapshot and caches for this repo only
-        try:
-            from storage.snapshot import SnapshotManager
-            SnapshotManager().delete_snapshot(repo_id)
-        except Exception:
-            pass
+        from storage.snapshot import SnapshotManager
+        SnapshotManager().delete_snapshot(repo_id)
 
-        try:
-            from retrieval.paper_matcher import invalidate_paper_cache
-            invalidate_paper_cache(repo.vector_collection)
-        except Exception:
-            pass
+        from retrieval.paper_matcher import invalidate_paper_cache
+        invalidate_paper_cache(repo.vector_collection)
 
-        try:
-            from storage.cache import SemanticCache
-            SemanticCache().clear_for_repo(repo_id)
-        except Exception:
-            pass
+        from storage.cache import SemanticCache
+        SemanticCache().clear_for_repo(repo_id)
 
-        try:
-            from retrieval.cross_encoder_rerank import get_ce_score_cache
-            get_ce_score_cache().clear_for_collection(repo.vector_collection)
-        except Exception:
-            pass
+        from retrieval.cross_encoder_rerank import get_ce_score_cache
+        get_ce_score_cache().clear_for_collection(repo.vector_collection)
 
         self.update_status(repo_id, RepoStatus.UPDATING)
 
@@ -430,7 +391,8 @@ class RepositoryRegistry:
             from storage.vector_store import VectorStoreManager
             vm = VectorStoreManager(collection_name=repo.vector_collection)
             qdrant_points = vm.count()
-        except Exception:
+        except Exception as exc:
+            logger.warning("Could not query Qdrant status for %s; using persisted count: %s", repo_id, exc)
             qdrant_points = repo.tier2_indexed_chunks
 
         return {

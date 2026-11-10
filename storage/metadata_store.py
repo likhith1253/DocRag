@@ -11,11 +11,11 @@ class MetadataStoreManager:
 
     def load(self):
         if os.path.exists(self.storage_path):
-            try:
-                with open(self.storage_path, "r", encoding="utf-8") as f:
-                    self.store = json.load(f)
-            except Exception:
-                self.store = {}
+            with open(self.storage_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, dict):
+                raise ValueError(f"Metadata store must contain a JSON object: {self.storage_path}")
+            self.store = data
 
     def save(self):
         with open(self.storage_path, "w", encoding="utf-8") as f:

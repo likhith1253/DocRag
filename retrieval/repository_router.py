@@ -1,7 +1,10 @@
 import numpy as np
+import logging
 from typing import List, Dict, Optional
 from storage.vector_store import _get_encoder, _get_config, _get_embedding_device
 from storage.registry import RepositoryRegistry, RepoStatus, QUERYABLE_REPO_STATUSES
+
+logger = logging.getLogger(__name__)
 
 # Cache: repo_id -> description embedding (numpy array)
 _repo_desc_cache: Dict[str, np.ndarray] = {}
@@ -12,7 +15,8 @@ def _build_collection_description(repo, model_name: str) -> str:
     """
     Build a rich semantic description of a collection from its actual indexed chunks.
     Uses paper titles, abstract snippets, and section headings from the Qdrant index.
-    Falls back to collection name if chunk retrieval fails.
+    Uses the collection name only when the collection has no chunks. Query
+    failures propagate so a collection outage is not mistaken for empty content.
     """
     try:
         from storage.vector_store import VectorStoreManager
@@ -60,7 +64,8 @@ def _build_collection_description(repo, model_name: str) -> str:
         return desc
 
     except Exception:
-        return f"Document collection: {repo.name}."
+        logger.exception("Could not build description for repository %s", repo.repo_id)
+        raise
 
 
 def _get_repo_embedding(repo, encoder, model_name: str) -> Optional[np.ndarray]:

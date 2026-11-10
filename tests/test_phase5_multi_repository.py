@@ -47,7 +47,7 @@ class TestPhase5MultiRepository(unittest.TestCase):
         for rid in [cls.repo_a_id, cls.repo_b_id]:
             try:
                 cls.registry.delete_repository(rid)
-            except Exception:
+            except ValueError:
                 pass
 
         # Create Repository A
@@ -168,7 +168,7 @@ class TestPhase5MultiRepository(unittest.TestCase):
         for rid in [cls.repo_a_id, cls.repo_b_id, "test_phase5_repo_c"]:
             try:
                 cls.registry.delete_repository(rid)
-            except Exception:
+            except ValueError:
                 pass
         orchestrator._v_manager_override = None
 

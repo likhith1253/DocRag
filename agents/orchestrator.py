@@ -22,7 +22,10 @@ import sys
 import time
 import json
 import ctypes
+import logging
 from typing import List, Dict, Any, Tuple
+
+logger = logging.getLogger(__name__)
 try:
     from typing import TypedDict
 except ImportError:
@@ -39,8 +42,8 @@ except ImportError:
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
-    except Exception:
-        pass
+    except (OSError, ValueError) as exc:
+        logger.debug("Could not configure stdout encoding: %s", exc)
 
 from storage.vector_store import VectorStoreManager, _get_config
 from storage.registry import RepositoryRegistry, get_registry
@@ -357,8 +360,8 @@ def get_process_memory() -> float:
         counters.cb = ctypes.sizeof(PROCESS_MEMORY_COUNTERS)
         if GetProcessMemoryInfo(process, ctypes.byref(counters), counters.cb):
             return counters.WorkingSetSize / (1024 * 1024)
-    except Exception:
-        pass
+    except (AttributeError, OSError, TypeError, ValueError) as exc:
+        logger.debug("Process memory measurement is unavailable: %s", exc)
     return 0.0
 
 
@@ -433,7 +436,8 @@ def route_node(state: AgentState) -> Dict[str, Any]:
                             updates["repo_id"] = rid
                             break
                     except Exception:
-                        pass
+                        logger.exception("Paper-filtered search failed for repository %s", rid)
+                        raise
         # Otherwise if no repo_id supplied, invoke semantic router
         if not updates.get("repo_id") and not repo_id and retrieval_mode != "corpus":
             from retrieval.repository_router import rank_repositories
@@ -860,7 +864,7 @@ def retrieve_node(state: AgentState) -> Dict[str, Any]:
                         )
                         chunks.extend(sq_chunks)
                     except Exception:
-                        pass
+                        logger.exception("Facet subquery retrieval failed for repository %s", repo_id)
 
             # Stage 4: FILTERING
             t_filter_start = time.perf_counter()
@@ -1363,8 +1367,8 @@ def answer(
 
     try:
         f_logger.finalize(ans, citations, latency_breakdown)
-    except Exception:
-        pass
+    except (OSError, RuntimeError, ValueError) as exc:
+        logger.warning("Forensic finalization failed for request %s: %s", request_id, exc, exc_info=True)
 
     # STAGE 13: CITATION ASSEMBLY
     t_stage13_start = time.perf_counter()
@@ -1399,8 +1403,8 @@ def answer(
         contract_path = os.path.join(LOGS_DIR, "pipeline_contract_check.txt")
         with open(contract_path, "a", encoding="utf-8") as _f:
             _f.write("\n".join(contract_lines) + "\n\n")
-    except Exception:
-        pass
+    except OSError as exc:
+        logger.warning("Could not append pipeline contract record: %s", exc)
 
     for idx, cite in enumerate(citations, start=1):
         f = cite.get("file")
@@ -1468,8 +1472,8 @@ def answer(
                 forensic_tracer.record_stage("LLM", "FAIL", 0.0, {}, ans, "LLM generation did not complete successfully")
         forensic_tracer.write_artifacts()
         forensic_tracer.print_terminal_summary()
-    except Exception:
-        pass
+    except (ImportError, AttributeError, OSError, RuntimeError, ValueError) as exc:
+        logger.warning("Could not write forensic request artifacts: %s", exc, exc_info=True)
 
     # Phase 4 Query Profiling & Observability
     try:
@@ -1478,7 +1482,8 @@ def answer(
         emb_dev, _ = policy.get_embedding_device()
         ce_dev, _ = policy.get_reranker_device()
         llm_dev, _ = policy.get_llm_device()
-    except Exception:
+    except (ImportError, OSError, RuntimeError, ValueError) as exc:
+        logger.warning("Device profiling unavailable; reporting CPU fallback: %s", exc)
         emb_dev, ce_dev, llm_dev = "cpu", "cpu", "cpu"
 
     agent_timings = doc_agent.get_latest_agent_timings(request_id) if hasattr(doc_agent, "get_latest_agent_timings") else {}
@@ -1523,13 +1528,13 @@ def answer(
             "verifier_status": agent_timings.get("verifier_status", "N/A"),
         }
         log_query_profile(profile_record)
-    except Exception:
-        pass
+    except (OSError, RuntimeError, TypeError, ValueError) as exc:
+        logger.warning("Could not record query profile: %s", exc, exc_info=True)
 
     try:
         _write_log(query, chunks, citations, agent, latency, memory_diff, ans, latency_breakdown)
-    except Exception:
-        pass
+    except (OSError, RuntimeError, TypeError, ValueError) as exc:
+        logger.warning("Could not write request log: %s", exc, exc_info=True)
     return ans, latency_breakdown, chunks, citations
 
 

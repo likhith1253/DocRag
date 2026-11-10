@@ -48,20 +48,17 @@ def get_collection_metadata(v_manager) -> Dict[str, Any]:
     titles = set()
     files = set()
     chunk_count = 0
-    try:
-        chunks = v_manager.get_all_chunks() if hasattr(v_manager, "get_all_chunks") else []
-        for c in chunks:
-            chunk_count += 1
-            meta = c.get("metadata", {})
-            title = meta.get("paper_title") or meta.get("file") or ""
-            title = title.strip()
-            if title:
-                titles.add(title)
-            f = meta.get("file")
-            if f:
-                files.add(str(f).strip())
-    except Exception:
-        pass
+    chunks = v_manager.get_all_chunks() if hasattr(v_manager, "get_all_chunks") else []
+    for c in chunks:
+        chunk_count += 1
+        meta = c.get("metadata", {})
+        title = meta.get("paper_title") or meta.get("file") or ""
+        title = title.strip()
+        if title:
+            titles.add(title)
+        f = meta.get("file")
+        if f:
+            files.add(str(f).strip())
 
     title_list: List[str] = sorted(titles)
     data: Dict[str, Any] = {

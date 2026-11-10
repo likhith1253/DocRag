@@ -713,11 +713,7 @@ def background_ingest_repository(
             lambda: snapshot_manager.save_snapshot(repo_id, snapshot),
         )
 
-        final_points = 0
-        try:
-            final_points = v_manager.count()
-        except Exception:
-            pass
+        final_points = v_manager.count()
 
         documents_parsed_ok = len(files_to_parse) - failed_parse_count
 
@@ -772,27 +768,18 @@ def background_ingest_repository(
         registry.register(repo)
 
         # Invalidate content-aware router cache so next query uses fresh chunk embeddings
-        try:
-            from retrieval.repository_router import invalidate_router_cache
-            invalidate_router_cache(repo_id)
-        except Exception:
-            pass
+        from retrieval.repository_router import invalidate_router_cache
+        invalidate_router_cache(repo_id)
 
         # Invalidate the per-collection paper-title cache used for explicit
         # paper-isolation matching, so a re-index (new/renamed papers) is
         # reflected immediately rather than serving a stale title list.
-        try:
-            from retrieval.paper_matcher import invalidate_paper_cache
-            invalidate_paper_cache(repo.vector_collection)
-        except Exception:
-            pass
+        from retrieval.paper_matcher import invalidate_paper_cache
+        invalidate_paper_cache(repo.vector_collection)
 
         # Invalidate cross-encoder score cache for this collection
-        try:
-            from retrieval.cross_encoder_rerank import get_ce_score_cache
-            get_ce_score_cache().clear_for_collection(repo.vector_collection)
-        except Exception:
-            pass
+        from retrieval.cross_encoder_rerank import get_ce_score_cache
+        get_ce_score_cache().clear_for_collection(repo.vector_collection)
 
         progress.update(status=RepoStatus.READY, stage="completed", percentage=100.0)
         log_indexing_stage(
@@ -813,8 +800,11 @@ def background_ingest_repository(
             if repo:
                 repo.last_error = str(e)
                 registry.register(repo)
-        except Exception:
-            pass
+        except (OSError, ValueError, RuntimeError) as persistence_error:
+            logger.error(
+                "Could not persist ingestion failure details for %s: %s",
+                repo_id, persistence_error, exc_info=True,
+            )
         registry.update_status(repo_id, RepoStatus.FAILED)
         progress.update(status=RepoStatus.FAILED, stage="failed", percentage=0.0)
         log_indexing_stage(repo_id, "overall", f"FAILED | Error: {str(e)}")

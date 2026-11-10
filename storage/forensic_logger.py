@@ -18,6 +18,7 @@ import sys
 import time
 import json
 import traceback
+import logging
 from pathlib import Path
 
 from settings import PROJECT_ROOT, get_settings, resolve_project_path
@@ -110,8 +111,8 @@ class ForensicLogger:
             from storage.pipeline_logger import is_debug_mode
             if not is_debug_mode():
                 return
-        except Exception:
-            pass
+        except ImportError as exc:
+            logging.getLogger(__name__).warning("Could not determine forensic debug mode: %s", exc)
 
         # Best-effort diagnostic dump: a disk/permission failure here must
         # never fail a request whose answer has already been computed.

@@ -61,10 +61,7 @@ class TestIndexingIntegrity(unittest.TestCase):
         self.manager._ensure_collection()
 
     def tearDown(self):
-        try:
-            self.manager.drop_collection()
-        except Exception:
-            pass
+        self.manager.drop_collection()
 
     def test_deterministic_point_ids_across_runs(self):
         """Same chunk hash indexed twice (two separate add_chunks calls,

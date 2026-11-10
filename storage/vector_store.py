@@ -3,12 +3,15 @@ import sys
 import time
 import uuid
 import threading
+import logging
+
+logger = logging.getLogger(__name__)
 
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
-    except Exception:
-        pass
+    except (OSError, ValueError) as exc:
+        logger.debug("Could not configure stdout encoding: %s", exc)
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams, PointStruct
 from sentence_transformers import SentenceTransformer
@@ -125,7 +128,8 @@ def _get_embedding_device(config: Dict[str, Any] = None) -> str:
         mgr = get_device_policy_manager()
         dev, _ = mgr.get_embedding_device(device)
         return dev
-    except Exception:
+    except (ImportError, OSError, RuntimeError, ValueError) as exc:
+        logger.warning("Embedding device policy unavailable; using configured device: %s", exc)
         dev = str(device or "cpu").lower()
         if dev == "auto":
             try:
@@ -144,15 +148,16 @@ def _load_sentence_transformer(model_name: str, device: str) -> SentenceTransfor
     for local_only in (True, False):
         try:
             return SentenceTransformer(model_name, device=device, model_kwargs={"low_cpu_mem_usage": False}, local_files_only=local_only)
-        except (TypeError, Exception):
-            pass
+        except (OSError, RuntimeError, ValueError, TypeError) as exc:
+            logger.warning("SentenceTransformer load failed (local_files_only=%s): %s", local_only, exc)
 
     try:
         from sentence_transformers import models
         word_embedding_model = models.Transformer(model_name, model_args={"low_cpu_mem_usage": False})
         pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension())
         return SentenceTransformer(modules=[word_embedding_model, pooling_model], device=device)
-    except Exception:
+    except (OSError, RuntimeError, ValueError, TypeError) as exc:
+        logger.warning("Composed SentenceTransformer load failed; retrying standard loader: %s", exc)
         return SentenceTransformer(model_name, device=device)
 
 
@@ -209,8 +214,8 @@ def _log_device_selection(kind: str, model_name: str, device: str, reason: str =
         try:
             import torch
             print(f"GPU: {torch.cuda.get_device_name(0)}", flush=True)
-        except Exception:
-            pass
+        except (ImportError, RuntimeError) as exc:
+            logger.debug("Could not read optional GPU name: %s", exc)
     elif reason:
         print(f"Reason: {reason}", flush=True)
 
@@ -309,25 +314,19 @@ class VectorStoreManager:
         if cache_key in _ensured_collections:
             return
 
-        try:
-            collections = self.client.get_collections().collections
-            exists = any(c.name == self.collection_name for c in collections)
-        except Exception:
-            exists = False
+        collections = self.client.get_collections().collections
+        exists = any(c.name == self.collection_name for c in collections)
 
         if exists:
-            try:
-                info = self.client.get_collection(self.collection_name)
-                existing_size = info.config.params.vectors.size
-                if existing_size != self.vector_size:
-                    print(
-                        f"[Qdrant] Dimension mismatch for '{self.collection_name}': existing {existing_size} != expected {self.vector_size}. Re-creating collection...",
-                        flush=True,
-                    )
-                    self.client.delete_collection(self.collection_name)
-                    exists = False
-            except Exception as e:
-                print(f"[Qdrant] Error checking collection size for '{self.collection_name}': {e}")
+            info = self.client.get_collection(self.collection_name)
+            existing_size = info.config.params.vectors.size
+            if existing_size != self.vector_size:
+                print(
+                    f"[Qdrant] Dimension mismatch for '{self.collection_name}': existing {existing_size} != expected {self.vector_size}. Re-creating collection...",
+                    flush=True,
+                )
+                self.client.delete_collection(self.collection_name)
+                exists = False
 
         if not exists:
             self.client.create_collection(
@@ -352,18 +351,12 @@ class VectorStoreManager:
             _ensured_collections.discard(cache_key)
             _verified_collections.discard(self.collection_name)
             VectorStoreManager._all_chunks_cache.pop(cache_key, None)
-            try:
-                from retrieval.paper_matcher import invalidate_paper_cache
-                invalidate_paper_cache(self.collection_name)
-            except Exception:
-                pass
+            from retrieval.paper_matcher import invalidate_paper_cache
+            invalidate_paper_cache(self.collection_name)
 
     def count(self) -> int:
         """Returns total number of vector points stored in this collection."""
-        try:
-            return self.client.get_collection(self.collection_name).points_count
-        except Exception:
-            return 0
+        return self.client.get_collection(self.collection_name).points_count
 
     def add_chunks(self, chunks: List[Dict[str, Any]]):
         """
@@ -440,11 +433,8 @@ class VectorStoreManager:
         cache_key = f"{self.qdrant_path}::{self.collection_name}"
         if cache_key in VectorStoreManager._all_chunks_cache:
             del VectorStoreManager._all_chunks_cache[cache_key]
-        try:
-            from retrieval.paper_matcher import invalidate_paper_cache
-            invalidate_paper_cache(self.collection_name)
-        except Exception:
-            pass
+        from retrieval.paper_matcher import invalidate_paper_cache
+        invalidate_paper_cache(self.collection_name)
 
     def _update_progress_heartbeat(self):
         try:
@@ -453,8 +443,8 @@ class VectorStoreManager:
                 repo_id = self.collection_name[len(prefix):]
                 from storage.progress import ProgressRegistry
                 ProgressRegistry.get_tracker(repo_id).update_heartbeat()
-        except Exception:
-            pass
+        except (OSError, KeyError, ValueError) as exc:
+            logger.warning("Could not update ingestion heartbeat for %s: %s", self.collection_name, exc)
 
 
 
@@ -509,11 +499,8 @@ class VectorStoreManager:
         cache_key = f"{self.qdrant_path}::{self.collection_name}"
         if cache_key in VectorStoreManager._all_chunks_cache:
             del VectorStoreManager._all_chunks_cache[cache_key]
-        try:
-            from retrieval.paper_matcher import invalidate_paper_cache
-            invalidate_paper_cache(self.collection_name)
-        except Exception:
-            pass
+        from retrieval.paper_matcher import invalidate_paper_cache
+        invalidate_paper_cache(self.collection_name)
 
     def get_all_chunks(self) -> List[Dict[str, Any]]:
         """Retrieve all chunks from Qdrant, using memory cache to avoid repeated DB scans."""
@@ -521,21 +508,16 @@ class VectorStoreManager:
         if cache_key in VectorStoreManager._all_chunks_cache:
             return VectorStoreManager._all_chunks_cache[cache_key]
             
-        all_chunks = []
-        try:
-            scroll_res = self.client.scroll(
-                collection_name=self.collection_name,
-                limit=10000,
-                with_payload=True
-            )
-            all_chunks = [
-                {"content": p.payload["content"], "metadata": p.payload["metadata"]}
-                for p in scroll_res[0]
-            ]
-            VectorStoreManager._all_chunks_cache[cache_key] = all_chunks
-        except Exception as e:
-            print(f"[Qdrant] Error fetching all chunks: {e}")
-            
+        scroll_res = self.client.scroll(
+            collection_name=self.collection_name,
+            limit=10000,
+            with_payload=True
+        )
+        all_chunks = [
+            {"content": p.payload["content"], "metadata": p.payload["metadata"]}
+            for p in scroll_res[0]
+        ]
+        VectorStoreManager._all_chunks_cache[cache_key] = all_chunks
         return all_chunks
 
     def search(
@@ -655,11 +637,8 @@ class VectorStoreManager:
             import traceback
             tb_str = traceback.format_exc()
             print(f"[VECTOR SEARCH FATAL ERROR] Failed querying collection '{self.collection_name}':\n{tb_str}", flush=True)
-            try:
-                from storage.pipeline_logger import log_exception
-                log_exception(qdrant_err, f"VectorStoreManager.search({self.collection_name})")
-            except Exception:
-                pass
+            from storage.pipeline_logger import log_exception
+            log_exception(qdrant_err, f"VectorStoreManager.search({self.collection_name})")
             raise RuntimeError(
                 f"Vector search failed: {qdrant_err}"
             ) from qdrant_err
@@ -739,8 +718,8 @@ class VectorStoreManager:
                                 if first:
                                     entry["vector"] = first
                             retrieved.append(entry)
-            except Exception:
-                pass
+            except (AttributeError, KeyError, TypeError, ValueError) as exc:
+                logger.warning("Skipping malformed Qdrant result in %s: %s", self.collection_name, exc)
 
         qdrant_ms = (t_qdrant_end - t_qdrant_start) * 1000
 

@@ -36,7 +36,8 @@ class HFTransformersBackend(LLMBackend):
             major_cc = 0
             try:
                 major_cc, _ = torch.cuda.get_device_capability(0)
-            except Exception:
+            except RuntimeError as exc:
+                logger.warning("CUDA capability detection failed; using conservative attention path: %s", exc)
                 major_cc = 0
 
             # V100 is Volta architecture with compute capability 7.0 (major_cc < 8).
@@ -54,8 +55,8 @@ class HFTransformersBackend(LLMBackend):
                     torch.backends.cuda.enable_flash_sdp(False)
                     torch.backends.cuda.enable_mem_efficient_sdp(False)
                     torch.backends.cuda.enable_math_sdp(True)
-                except Exception:
-                    pass
+                except (AttributeError, RuntimeError) as exc:
+                    logger.error("Could not disable unsupported CUDA SDP kernels: %s", exc)
                 self.attn_implementation = "eager"
             else:
                 self.attn_implementation = "sdpa"
@@ -162,8 +163,8 @@ class HFTransformersBackend(LLMBackend):
             try:
                 from storage.pipeline_logger import forensic_tracer
                 forensic_tracer.record_stage("LLM", "FAIL", 0.0, {}, str(load_err), f"Model loading failed: {load_err}")
-            except Exception:
-                pass
+            except (ImportError, AttributeError, OSError, RuntimeError) as trace_error:
+                logger.error("Could not record model-load failure in forensic trace: %s", trace_error)
             raise RuntimeError(f"LLM generation failed during model loading: {load_err}") from load_err
 
         from storage.pipeline_logger import log_stage
@@ -267,8 +268,8 @@ class HFTransformersBackend(LLMBackend):
             if self.device == "cuda":
                 try:
                     torch.cuda.empty_cache()
-                except Exception:
-                    pass
+                except RuntimeError as exc:
+                    logger.debug("CUDA cache cleanup before generation failed: %s", exc)
             with torch.inference_mode():
                 output_ids = self.model.generate(**inputs, **gen_kwargs)
         except torch.cuda.OutOfMemoryError as oom:
@@ -286,14 +287,14 @@ class HFTransformersBackend(LLMBackend):
             self._cuda_context_poisoned = True
             try:
                 torch.cuda.empty_cache()
-            except Exception:
-                pass
+            except RuntimeError as cleanup_error:
+                logger.warning("CUDA cache cleanup after OOM failed: %s", cleanup_error)
             print(f"[LLM GENERATION FATAL] CUDA OOM at input_tokens={input_length}, max_new_tokens={max_new_tokens}: {oom}", flush=True)
             try:
                 from storage.pipeline_logger import forensic_tracer
                 forensic_tracer.record_stage("LLM", "FAIL", 0.0, {"input_tokens": input_length}, str(oom), f"CUDA OOM: {oom}")
-            except Exception:
-                pass
+            except (ImportError, AttributeError, OSError, RuntimeError) as trace_error:
+                logger.error("Could not record CUDA OOM in forensic trace: %s", trace_error)
             raise RuntimeError(
                 f"LLM generation failed: CUDA out of memory (prompt={input_length} tokens, "
                 f"max_new_tokens={max_new_tokens}). This process's CUDA context may now need a restart."
@@ -305,8 +306,8 @@ class HFTransformersBackend(LLMBackend):
             try:
                 from storage.pipeline_logger import forensic_tracer
                 forensic_tracer.record_stage("LLM", "FAIL", 0.0, {"input_tokens": input_length}, str(gen_err), f"LLM generation failed: {type(gen_err).__name__}: {gen_err}")
-            except Exception:
-                pass
+            except (ImportError, AttributeError, OSError, RuntimeError) as trace_error:
+                logger.error("Could not record generation failure in forensic trace: %s", trace_error)
             raise RuntimeError(f"LLM generation failed: {type(gen_err).__name__}: {gen_err}") from gen_err
         finally:
             stop_heartbeat.set()

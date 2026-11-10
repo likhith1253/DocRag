@@ -29,8 +29,8 @@ from typing import Dict, Any, List, Optional
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
-    except Exception:
-        pass
+    except (OSError, ValueError) as exc:
+        logging.getLogger(__name__).debug("Could not configure stdout encoding: %s", exc)
 
 # ---------------------------------------------------------------------------
 # Directories & Paths Setup
@@ -121,8 +121,8 @@ class ForensicTracker:
                     if f.is_file():
                         try:
                             f.unlink()
-                        except Exception:
-                            pass
+                        except OSError as exc:
+                            logger.warning("Could not remove stale diagnostic artifact %s: %s", f, exc)
             except Exception as e:
                 sys.stderr.write(f"[FORENSIC ERROR] Failed cleaning .debug/current_query: {e}\n")
 
@@ -288,8 +288,8 @@ def append_debug_log(entry: Dict[str, Any]):
         with _log_lock:
             with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, default=str) + "\n")
-    except Exception:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        logger.warning("Could not append pipeline debug record: %s", exc)
 
 
 def log_stage(
@@ -393,8 +393,8 @@ def save_prompt_artifact(request_id: str, prompt_text: str):
         file_path = PROMPTS_DIR / f"{request_id[:8]}_prompt.txt"
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(prompt_text)
-    except Exception:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        logger.warning("Could not save prompt artifact for request %s: %s", request_id, exc)
 
 
 def save_model_output_artifact(request_id: str, raw_response: str):
@@ -403,8 +403,8 @@ def save_model_output_artifact(request_id: str, raw_response: str):
         file_path = MODEL_OUTPUTS_DIR / f"{request_id[:8]}_response.txt"
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(raw_response or "")
-    except Exception:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        logger.warning("Could not save model-output artifact for request %s: %s", request_id, exc)
 
 
 def save_retrieval_json_artifact(
@@ -430,8 +430,8 @@ def save_retrieval_json_artifact(
         }
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, default=str)
-    except Exception:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        logger.warning("Could not save retrieval artifact for request %s: %s", request_id, exc)
 
 
 def log_exception(e: Exception, context: str = ""):
@@ -443,8 +443,8 @@ def log_exception(e: Exception, context: str = ""):
             with open(ERRORS_LOG_PATH, "a", encoding="utf-8") as f:
                 f.write(msg + "\n")
         logger.error(msg)
-    except Exception:
-        pass
+    except (OSError, TypeError, ValueError) as exc:
+        logger.error("Could not persist exception diagnostic (%s): %s", context, exc)
 
 
 QUERY_PROFILE_LOG_PATH = LOGS_DIR / "query_profile.jsonl"

@@ -18,8 +18,11 @@ Guarantees:
 
 import os
 import sys
+import logging
 import threading
 from typing import Dict, Any, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _DEFAULT_SAFE_VRAM_MARGIN_MB = 3500
@@ -56,7 +59,8 @@ class DevicePolicyManager:
         try:
             import torch
             return bool(torch.cuda.is_available())
-        except Exception:
+        except (ImportError, RuntimeError) as exc:
+            logger.debug("CUDA availability could not be determined: %s", exc)
             return False
 
     def _get_cuda_memory_mb(self) -> Tuple[int, int]:
@@ -71,7 +75,8 @@ class DevicePolicyManager:
             # mem_get_info returns (free_bytes, total_bytes)
             free_bytes, total_bytes = torch.cuda.mem_get_info()
             return int(free_bytes / (1024 * 1024)), int(total_bytes / (1024 * 1024))
-        except Exception:
+        except (ImportError, AttributeError, RuntimeError, OSError) as exc:
+            logger.debug("CUDA memory could not be queried: %s", exc)
             return 0, 0
 
     def can_allocate_aux_gpu(self, margin_mb: Optional[int] = None) -> Tuple[bool, str]:
