@@ -1,5 +1,8 @@
 import unittest
+import pytest
 from retrieval.mmr_rerank import mmr_rerank
+
+pytestmark = pytest.mark.slow
 
 class TestMMRRerank(unittest.TestCase):
     def test_mmr_rerank(self):

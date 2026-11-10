@@ -70,9 +70,10 @@ class PortConfig(ConfigModel):
 class Settings(ConfigModel):
     debug_mode: bool = False
     llm_backend: str = "transformers"
-    hf_model: str = "Qwen/Qwen2.5-1.5B-Instruct"
-    doc_agent_model: str = "Qwen/Qwen2.5-1.5B-Instruct"
-    ollama_model: str = "qwen2.5:1.5b-instruct"
+    hf_model: str = "Qwen/Qwen2.5-0.5B-Instruct"
+    doc_agent_model: str = "Qwen/Qwen2.5-0.5B-Instruct"
+    hf_model_revision: str = "7ae557604adf67be50417f59c2c2f167def9a775"
+    ollama_model: str = "qwen2.5:0.5b-instruct"
     embedding_model: str = "intfloat/e5-base-v2"
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     device: str = "cpu"

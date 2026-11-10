@@ -11,9 +11,11 @@ class TestLLMBackends(unittest.TestCase):
 
     def tearDown(self):
         from llm.backend_factory import reset_backend
+        from settings import clear_settings_cache
         reset_backend()
-        if "LLM_BACKEND" in os.environ:
-            del os.environ["LLM_BACKEND"]
+        os.environ.pop("LLM_BACKEND", None)
+        os.environ.pop("DOCRAG__LLM_BACKEND", None)
+        clear_settings_cache()
 
     def test_default_backend_factory_selection(self):
         from llm.backend_factory import get_backend
@@ -49,7 +51,9 @@ class TestLLMBackends(unittest.TestCase):
             self.assertIs(results[0], results[1])
 
     def test_ollama_backend_factory_selection(self):
-        os.environ["LLM_BACKEND"] = "ollama"
+        os.environ["DOCRAG__LLM_BACKEND"] = "ollama"
+        from settings import clear_settings_cache
+        clear_settings_cache()
         from llm.backend_factory import get_backend
         from llm.ollama_backend import OllamaBackend
         
@@ -57,7 +61,9 @@ class TestLLMBackends(unittest.TestCase):
         self.assertIsInstance(backend, OllamaBackend)
 
     def test_transformers_backend_factory_selection(self):
-        os.environ["LLM_BACKEND"] = "transformers"
+        os.environ["DOCRAG__LLM_BACKEND"] = "transformers"
+        from settings import clear_settings_cache
+        clear_settings_cache()
         from llm.backend_factory import get_backend
         from llm.transformers_backend import HFTransformersBackend
         

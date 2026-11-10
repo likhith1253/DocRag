@@ -1,8 +1,6 @@
 import os
-import hashlib
 import json
 import time
-from pathlib import Path
 
 from settings import get_settings, resolve_project_path
 
@@ -44,6 +42,8 @@ def generate(prompt: str, model_key: str, chunk_count: int = None, request_id: s
     decoding = dict(gen_cfg)
     decoding["backend"] = config.get("llm_backend", "transformers")
     decoding["answer_depth"] = answer_depth
+    configured_model = get_settings().hf_model
+    decoding["model_revision"] = get_settings().hf_model_revision if model == configured_model else None
     key = cache_key(str(model), prompt, decoding)
     force_generation = os.environ.get("DOCRAG_FORCE_GENERATION", "").lower() in ("1", "true", "yes")
 

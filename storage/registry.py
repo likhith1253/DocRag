@@ -5,7 +5,7 @@ import threading
 from enum import Enum
 from typing import Optional, Dict, List, Any
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 
 class RepoStatus(str, Enum):
     CREATED = "CREATED"
@@ -59,7 +59,7 @@ class Repository(BaseModel):
         if self.chunk_count == 0 and self.tier2_total_chunks > 0:
             self.chunk_count = self.tier2_total_chunks
         if not self.created_at:
-            self.created_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+            self.created_at = datetime.now(timezone.utc)
 
 class RepositoryRegistry:
     """
@@ -157,7 +157,7 @@ class RepositoryRegistry:
         rid = repo_id or str(uuid.uuid4())
         from settings import get_settings
         coll_name = f"{get_settings().collection_prefix}{rid}"
-        now = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         repo = Repository(
             repo_id=rid,
@@ -231,7 +231,7 @@ class RepositoryRegistry:
                         repo.last_error = f"Vector count verification failed: {e}"
 
                 repo.status = status
-                repo.updated_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+                repo.updated_at = datetime.now(timezone.utc)
                 self._save()
             else:
                 raise ValueError(f"Repository {repo_id} not found in registry.")
@@ -270,7 +270,7 @@ class RepositoryRegistry:
             if chunk_count is not None:
                 repo.chunk_count = chunk_count
                 repo.tier2_total_chunks = chunk_count
-            repo.updated_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+            repo.updated_at = datetime.now(timezone.utc)
             self._save()
 
         try:
@@ -285,7 +285,7 @@ class RepositoryRegistry:
         with self._lock:
             if repo_id in self.repositories:
                 self.repositories[repo_id].status = RepoStatus.DELETED
-                self.repositories[repo_id].updated_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+                self.repositories[repo_id].updated_at = datetime.now(timezone.utc)
                 self._save()
             else:
                 raise ValueError(f"Repository {repo_id} not found in registry.")
@@ -362,7 +362,7 @@ class RepositoryRegistry:
                 self.repositories.pop(repo_id, None)
             else:
                 repo.status = RepoStatus.DELETED
-                repo.updated_at = datetime.now(timezone.utc) if 'timezone' in globals() else datetime.utcnow()
+                repo.updated_at = datetime.now(timezone.utc)
             self._save()
 
         try:

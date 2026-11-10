@@ -5,6 +5,11 @@ from agents.orchestrator import Orchestrator, answer, CANNOT_FIND_RESPONSE
 
 
 class _FakeVectorManager:
+    collection_name = "chunks"
+
+    def count(self):
+        return 1
+
     def search(self, query, top_k=30, metadata_filters=None, request_id="default"):
         chunks = [
             {

@@ -20,3 +20,11 @@ def test_invalid_setting_type_fails_early():
 
     with pytest.raises(ValidationError):
         load_settings(environ={"DOCRAG__PORTS__API": "not-a-port"})
+
+
+def test_cpu_defaults_choose_the_small_open_generator():
+    settings = load_settings(environ={})
+    assert settings.device == "cpu"
+    assert settings.hf_model == "Qwen/Qwen2.5-0.5B-Instruct"
+    assert settings.hf_model_revision == "7ae557604adf67be50417f59c2c2f167def9a775"
+    assert settings.doc_agent_model == settings.hf_model

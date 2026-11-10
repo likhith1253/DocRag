@@ -4,9 +4,10 @@ chunking:
   overlap_tokens: 128
   strategy: section_aware
 device: cpu
-doc_agent_model: Qwen/Qwen2.5-1.5B-Instruct
-hf_model: Qwen/Qwen2.5-1.5B-Instruct
-ollama_model: qwen2.5:1.5b-instruct
+doc_agent_model: Qwen/Qwen2.5-0.5B-Instruct
+hf_model: Qwen/Qwen2.5-0.5B-Instruct
+hf_model_revision: 7ae557604adf67be50417f59c2c2f167def9a775
+ollama_model: qwen2.5:0.5b-instruct
 embedding:
   device: cpu
   batch_size: 32

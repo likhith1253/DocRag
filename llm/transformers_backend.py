@@ -1,13 +1,17 @@
 import os
 import time
+import logging
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from llm.backend_factory import LLMBackend
 from settings import get_settings, resolve_project_path
 
+logger = logging.getLogger(__name__)
+
 class HFTransformersBackend(LLMBackend):
     def __init__(self, model_name: str = None):
         self._gen_config = self._load_gen_config()
+        settings = get_settings()
         
         # Model selection precedence:
         # 1. model_name parameter
@@ -15,13 +19,12 @@ class HFTransformersBackend(LLMBackend):
         if not model_name:
             model_name = os.environ.get("HF_MODEL") or os.environ.get("LLM_MODEL")
         if not model_name:
-            from settings import get_settings
-            model_name = get_settings().hf_model
+            model_name = settings.hf_model
             
         self.model_name = model_name
+        self.model_revision = settings.hf_model_revision if model_name == settings.hf_model else None
 
         # Automatic device and dtype selection
-        settings = get_settings()
         use_cuda = torch.cuda.is_available() and settings.device.lower() != "cpu"
         if use_cuda:
             self.device = "cuda"
@@ -89,7 +92,7 @@ class HFTransformersBackend(LLMBackend):
 
         # Startup logging
         print("=" * 40)
-        print(f"LLM Backend : transformers")
+        print("LLM Backend : transformers")
         print(f"Model       : {self.model_name}")
         print(f"Device      : {self.device}")
         if self.device == "cuda":
@@ -102,6 +105,7 @@ class HFTransformersBackend(LLMBackend):
         print(f"Loading HuggingFace tokenizer '{self.model_name}'...")
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_name,
+            revision=self.model_revision,
             trust_remote_code=True
         )
         if self.tokenizer.pad_token_id is None:
@@ -111,6 +115,7 @@ class HFTransformersBackend(LLMBackend):
         if self.device == "cuda":
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
+                revision=self.model_revision,
                 torch_dtype=self.dtype,
                 device_map="auto",
                 trust_remote_code=True,
@@ -119,6 +124,7 @@ class HFTransformersBackend(LLMBackend):
         else:
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
+                revision=self.model_revision,
                 torch_dtype=self.dtype,
                 trust_remote_code=True,
                 attn_implementation=self.attn_implementation,
@@ -177,6 +183,7 @@ class HFTransformersBackend(LLMBackend):
         inputs = {k: v.to(self.device) if hasattr(v, "to") else v for k, v in inputs.items()}
         input_length = inputs["input_ids"].shape[1]
         t_tok_end = time.perf_counter()
+        tokenization_ms = (t_tok_end - t_tok_start) * 1000
 
         # QUESTION 8 CHECK: If prompt exceeds model context, STOP immediately and raise RuntimeError
         max_context_length = getattr(self.model.config, "max_position_embeddings", 32768) if self.model else 32768
@@ -232,9 +239,9 @@ class HFTransformersBackend(LLMBackend):
         if repetition_penalty != 1.0:
             gen_kwargs["repetition_penalty"] = repetition_penalty
 
-        print(f"\n==================================================", flush=True)
-        print(f"STAGE 10: STAGE 10 INVOCATION (HFTransformersBackend)", flush=True)
-        print(f"==================================================", flush=True)
+        print("\n==================================================", flush=True)
+        print("STAGE 10: STAGE 10 INVOCATION (HFTransformersBackend)", flush=True)
+        print("==================================================", flush=True)
         print(f"Device: {self.device} ({cuda_device_str}) | dtype: {self.dtype_str}", flush=True)
         print(f"Generation Config: max_new_tokens={max_new_tokens}, temp={temperature}, top_p={top_p}, do_sample={gen_kwargs.get('do_sample')}", flush=True)
         print(f"Input Token Count: {input_length} | Prompt Chars: {len(prompt)}", flush=True)
@@ -325,8 +332,8 @@ class HFTransformersBackend(LLMBackend):
         try:
             with open(raw_gen_path, "w", encoding="utf-8") as f:
                 f.write(response)
-        except Exception:
-            pass
+        except OSError as exc:
+            logger.warning("Could not write raw generation trace: %s", exc)
 
         stage10_data = {
             "device": self.device,
@@ -341,6 +348,10 @@ class HFTransformersBackend(LLMBackend):
                 "repetition_penalty": repetition_penalty
             },
             "input_token_count": input_length,
+            "tokenization_time_ms": round(tokenization_ms, 2),
+            "decode_time_ms": round(dec_ms, 2),
+            "input_tensor_device": input_tensor_device,
+            "model_device": model_device,
             "prompt_length_chars": len(prompt),
             "generation_time_ms": round(gen_ms, 2),
             "generated_token_count": generated_token_count,

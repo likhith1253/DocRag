@@ -60,7 +60,8 @@ class TestGpuEmbeddingSelection(unittest.TestCase):
 
     def test_embedding_device_auto_resolves_by_cuda_availability(self):
         with patch("torch.cuda.is_available", return_value=True):
-            self.assertEqual(_get_embedding_device({"embedding": {"device": "auto"}}), "cuda")
+            with patch("torch.cuda.mem_get_info", return_value=(8 * 1024**3, 16 * 1024**3)):
+                self.assertEqual(_get_embedding_device({"embedding": {"device": "auto"}}), "cuda")
         with patch("torch.cuda.is_available", return_value=False):
             self.assertEqual(_get_embedding_device({"embedding": {"device": "auto"}}), "cpu")
 
