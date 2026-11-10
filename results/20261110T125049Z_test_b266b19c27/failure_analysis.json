@@ -1,0 +1,1230 @@
+{
+  "created_utc": "2026-11-10T12:51:05.174562+00:00",
+  "git_commit": "26fbcfc14712f3c7d59e4587e88a17be74618c2d",
+  "git_worktree_dirty": true,
+  "analyzer_sha256": "b4c710ab745bda2ebbaf2183e3223fd678296b2c983691b42bbdb5a55816ad88",
+  "source_raw_sha256": "baaec713a94f23a3b7dc640bbf9727de28de81403d4f8947445fa44fa54b0faf",
+  "source_config_sha256": "b266b19c27a868af9bb7303fd3d6d7850acec89218a77b4576d5b798e5549e3a",
+  "source_dataset_sha256": "071f79659d4c60b50dadbcdc9a2db0e1ab29a73c2ac779e94b1aa1991187b07b",
+  "taxonomy_scope": "retrieval-only; parser loss, generation errors, verifier misses, false refusals, and infrastructure failures are not observed by this experiment",
+  "counts": {
+    "bm25": {
+      "unanswerable": 79,
+      "answerable_but_evidence_unmappable": 100,
+      "mappable_answerable": 1272,
+      "retrieval_miss_at_10": 329,
+      "partial_evidence_retrieval_at_10": 349,
+      "all_mapped_evidence_retrieved_at_10": 594,
+      "table_figure_reference_questions": 220,
+      "table_figure_reference_miss_at_10": 56
+    },
+    "dense": {
+      "unanswerable": 79,
+      "answerable_but_evidence_unmappable": 100,
+      "mappable_answerable": 1272,
+      "retrieval_miss_at_10": 193,
+      "partial_evidence_retrieval_at_10": 311,
+      "all_mapped_evidence_retrieved_at_10": 768,
+      "table_figure_reference_questions": 220,
+      "table_figure_reference_miss_at_10": 30
+    },
+    "hybrid": {
+      "unanswerable": 79,
+      "answerable_but_evidence_unmappable": 100,
+      "mappable_answerable": 1272,
+      "retrieval_miss_at_10": 205,
+      "partial_evidence_retrieval_at_10": 311,
+      "all_mapped_evidence_retrieved_at_10": 756,
+      "table_figure_reference_questions": 220,
+      "table_figure_reference_miss_at_10": 35
+    },
+    "rerank": {
+      "unanswerable": 79,
+      "answerable_but_evidence_unmappable": 100,
+      "mappable_answerable": 1272,
+      "retrieval_miss_at_10": 151,
+      "partial_evidence_retrieval_at_10": 313,
+      "all_mapped_evidence_retrieved_at_10": 808,
+      "table_figure_reference_questions": 220,
+      "table_figure_reference_miss_at_10": 29
+    },
+    "mmr": {
+      "unanswerable": 79,
+      "answerable_but_evidence_unmappable": 100,
+      "mappable_answerable": 1272,
+      "retrieval_miss_at_10": 256,
+      "partial_evidence_retrieval_at_10": 363,
+      "all_mapped_evidence_retrieved_at_10": 653,
+      "table_figure_reference_questions": 220,
+      "table_figure_reference_miss_at_10": 44
+    },
+    "structure": {
+      "unanswerable": 79,
+      "answerable_but_evidence_unmappable": 100,
+      "mappable_answerable": 1272,
+      "retrieval_miss_at_10": 234,
+      "partial_evidence_retrieval_at_10": 365,
+      "all_mapped_evidence_retrieved_at_10": 673,
+      "table_figure_reference_questions": 220,
+      "table_figure_reference_miss_at_10": 42
+    }
+  },
+  "representative_retrieval_misses": {
+    "bm25": [
+      {
+        "system": "bm25",
+        "question_id": "00e4c9aa87411dfc5455fc92f10e5c9266e7b95e",
+        "paper_id": "1710.06923",
+        "question": "Which dataset do they use?",
+        "gold_evidence_text": [
+          "We downloaded this survey data and hand crafted a total of 293 textual questions BIBREF13 which could answer the survey data. A set of 6 people (L2 English) generated 50 queries each with the only constraint that these queries should be able to answer the survey data. In all a set of 300 queries were crafted of which duplicate queries were removed to leave 293 queries in all. Of these, we chose 250 queries randomly and distributed among 5 Indian speakers, who were asked to read aloud the queries into a custom-built audio data collecting application. So, in all we had access to 250 audio queries spoken by 5 different Indian speakers; each speaking 50 queries.",
+          "We present the results of our experiments with both the Evo-Devo and the Machine Learning mechanisms described earlier using the U.S. Census Bureau conducted Annual Retail Trade Survey of U.S. Retail and Food Services Firms for the period of 1992 to 2013 BIBREF12 ."
+        ],
+        "gold_passage_ids": [
+          "1710.06923:p4:0",
+          "1710.06923:p5:0"
+        ],
+        "retrieved_passage_ids": [
+          "1710.06923:p1:3",
+          "1710.06923:p1:5",
+          "1710.06923:p1:2",
+          "1710.06923:p2:4",
+          "1710.06923:p1:6",
+          "1710.06923:p0:0",
+          "1710.06923:p3:3",
+          "1710.06923:p3:16",
+          "1710.06923:p6:1",
+          "1710.06923:p8:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "bm25",
+        "question_id": "014830892d93e3c01cb659ad31c90de4518d48f3",
+        "paper_id": "2004.02143",
+        "question": "How much did the model outperform",
+        "gold_evidence_text": [
+          "FLOAT SELECTED: Table 3: A relative performance (on test dataset of HotPotQA ) of different variants of the proposed method, by adding one model component.",
+          "FLOAT SELECTED: Table 4: Human evaluation results for our proposed approach and the NQG model. Naturalness and difficulty are rated on a 1–5 scale and SF coverage is in percentage (%).",
+          "The proposed MultiHop-QG model achieves the absolute improvement of $4.02$ and $3.18$ points compared to NQG and Max-out Pointer model, respectively, in terms of BLEU-4 metric."
+        ],
+        "gold_passage_ids": [
+          "2004.02143:p15:0"
+        ],
+        "retrieved_passage_ids": [
+          "2004.02143:p10:1",
+          "2004.02143:p16:0",
+          "2004.02143:p14:3",
+          "2004.02143:p4:0",
+          "2004.02143:p16:1",
+          "2004.02143:p3:0",
+          "2004.02143:c0",
+          "2004.02143:p15:1",
+          "2004.02143:p7:0",
+          "2004.02143:p14:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "bm25",
+        "question_id": "014a3aa07686ee18a86c977bf0701db082e8480b",
+        "paper_id": "1908.06493",
+        "question": "What does post-processing do to the output?",
+        "gold_evidence_text": [
+          "For the HMC subtask B, we used a simple threshold based on the results obtained for LCA. Especially, using multiple models per node could cause a different scaling.",
+          "Many classifiers can predict a score or confidence about the prediction. Turning this score into the prediction is usually performed by setting a threshold, such as 0 and 0.5, so labels which have a score assigned greater than that are assigned to the sample. This might be not the optimal threshold in the multi-label classification setup and there are many approaches to set it (BIBREF9). Although these methods concentrate in the sample or label, we have had good results with a much more general approach.",
+          "Many classifiers can predict a score or confidence about the prediction. Turning this score into the prediction is usually performed by setting a threshold, such as 0 and 0.5, so labels which have a score assigned greater than that are assigned to the sample. This might be not the optimal threshold in the multi-label classification setup and there are many approaches to set it (BIBREF9). Although these methods concentrate in the sample or label, we have had good results with a much more general approach.\n\nAs described in BIBREF1, Read and Pfahringer BIBREF10 introduce a method (referred hereinafter to as LCA) to estimate the threshold globally. Their method chooses the threshold that minimizes the difference between the label cardinality of the training set and the predicted set.",
+          "We also tested this method not for the label cardinality over all samples and labels but only labelwise."
+        ],
+        "gold_passage_ids": [
+          "1908.06493:p8:0",
+          "1908.06493:p8:2",
+          "1908.06493:p8:3"
+        ],
+        "retrieved_passage_ids": [
+          "1908.06493:p11:2",
+          "1908.06493:p0:2",
+          "1908.06493:p12:0",
+          "1908.06493:p1:3",
+          "1908.06493:p6:0",
+          "1908.06493:p14:0",
+          "1908.06493:p11:5",
+          "1908.06493:p0:0",
+          "1908.06493:p8:1",
+          "1908.06493:p13:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "bm25",
+        "question_id": "018b81f810a39b3f437a85573d24531efccd835f",
+        "paper_id": "1906.11085",
+        "question": "what shortcomings of previous datasets are mentioned?",
+        "gold_evidence_text": [
+          "For example, using a keyword-based approach would yield a sequence labeled population and methods with the label P, but such abstract sections were not purely about the population and contained information about the interventions and study design making them poor candidates for a P label.",
+          "Moreover, in the dataset from BIBREF12 , a section labeled as P that contained more than one sentence would be split into multiple P sentences to be included in the dataset.",
+          "Moreover, in the dataset from BIBREF12 , a section labeled as P that contained more than one sentence would be split into multiple P sentences to be included in the dataset. We avoided this approach and kept the full abstract sections.",
+          "Moreover, in the dataset from BIBREF12 , a section labeled as P that contained more than one sentence would be split into multiple P sentences to be included in the dataset. We avoided this approach and kept the full abstract sections. The full abstracts were kept in conjunction with our belief that keeping the full section retains more feature-rich sequences for each sequence, and that individual sentences from long abstract sections can be poor candidates for the corresponding label.",
+          "Since our goal was to collect sequences that are uniquely representative of a description of Population, Intervention, and Outcome, we avoided a keyword-based approach such as in BIBREF12 . For example, using a keyword-based approach would yield a sequence labeled population and methods with the label P, but such abstract sections were not purely about the population and contained information about the interventions and study design making them poor candidates for a P label.",
+          "The present approach is an improvement over a similar approach used in BIBREF12 ."
+        ],
+        "gold_passage_ids": [
+          "1906.11085:p1:0",
+          "1906.11085:p1:2"
+        ],
+        "retrieved_passage_ids": [
+          "1906.11085:p0:3",
+          "1906.11085:p3:3",
+          "1906.11085:p3:1",
+          "1906.11085:p5:3",
+          "1906.11085:p0:2",
+          "1906.11085:p5:1",
+          "1906.11085:p0:1",
+          "1906.11085:p6:0",
+          "1906.11085:p4:0",
+          "1906.11085:p3:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "bm25",
+        "question_id": "028d0d9b7a71133e51a14a32cd09dea1e2f39f05",
+        "paper_id": "1804.01155",
+        "question": "How did they define standard language?",
+        "gold_evidence_text": [
+          "In written French, adjectives and nouns are marked as being plural by generally adding the letters s or x at the end of the word.",
+          "The basic form of negation in French includes two negative particles: ne (no) before the verb and another particle after the verb that conveys more accurate meaning: pas (not), jamais (never), personne (no one), rien (nothing), etc. Due to this double construction, the first part of the negation (ne) is optional in spoken French, but it is obligatory in standard writing.",
+          "We identified the following three linguistic markers to study across users from different socioeconomic backgrounds: Correlation with SES has been evidenced for all of them. The optional deletion of negation is typical of spoken French, whereas the omission of the mute letters marking the plural in the nominal phrase is a variable cue of French writing. The third linguistic variable is a global measure of the lexical diversity of the Twitter users."
+        ],
+        "gold_passage_ids": [
+          "1804.01155:p6:0",
+          "1804.01155:p7:0",
+          "1804.01155:p8:0"
+        ],
+        "retrieved_passage_ids": [
+          "1804.01155:p0:5",
+          "1804.01155:p2:0",
+          "1804.01155:p1:2",
+          "1804.01155:p0:3",
+          "1804.01155:p12:1",
+          "1804.01155:p15:1",
+          "1804.01155:p15:3",
+          "1804.01155:p11:3",
+          "1804.01155:p13:0",
+          "1804.01155:p12:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "dense": [
+      {
+        "system": "dense",
+        "question_id": "000549a217ea24432c0656598279dbb85378c113",
+        "paper_id": "1804.05253",
+        "question": "Do they evaluate only on English datasets?",
+        "gold_evidence_text": [
+          "As pre-processing, we removed the retweets, spam, duplicates, and tweets written in languages other than English."
+        ],
+        "gold_passage_ids": [
+          "1804.05253:p1:0"
+        ],
+        "retrieved_passage_ids": [
+          "1804.05253:p7:0",
+          "1804.05253:p6:1",
+          "1804.05253:p9:0",
+          "1804.05253:p1:1",
+          "1804.05253:p0:3",
+          "1804.05253:c3",
+          "1804.05253:c5",
+          "1804.05253:p4:2",
+          "1804.05253:p6:0",
+          "1804.05253:c2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "table",
+          "paragraph",
+          "paragraph",
+          "table"
+        ]
+      },
+      {
+        "system": "dense",
+        "question_id": "00db191facf903cef18fb1727d1cab638c277e0a",
+        "paper_id": "1906.05506",
+        "question": "What sized character n-grams do they use?",
+        "gold_evidence_text": [
+          "Moreover, to investigate the effect of only char INLINEFORM0 -MS-vec, we ignore INLINEFORM1 in Equation EQREF5 . We refer to this setting as “Remove word embeddings INLINEFORM2 ” in Table TABREF24 . Table TABREF24 shows cahr3-MS-vec and char4-MS-vec are superior to char2-MS-vec.",
+          "Table TABREF15 shows that char3-MS-vec achieved the best scores consistently.",
+          "We varied INLINEFORM0 for char INLINEFORM1 -MS-vec from 2 to 4."
+        ],
+        "gold_passage_ids": [
+          "1906.05506:p8:0",
+          "1906.05506:p8:6"
+        ],
+        "retrieved_passage_ids": [
+          "1906.05506:p3:2",
+          "1906.05506:p8:3",
+          "1906.05506:c0",
+          "1906.05506:p0:3",
+          "1906.05506:p4:1",
+          "1906.05506:p3:0",
+          "1906.05506:p0:4",
+          "1906.05506:p11:0",
+          "1906.05506:p6:1",
+          "1906.05506:p10:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "dense",
+        "question_id": "014a3aa07686ee18a86c977bf0701db082e8480b",
+        "paper_id": "1908.06493",
+        "question": "What does post-processing do to the output?",
+        "gold_evidence_text": [
+          "For the HMC subtask B, we used a simple threshold based on the results obtained for LCA. Especially, using multiple models per node could cause a different scaling.",
+          "Many classifiers can predict a score or confidence about the prediction. Turning this score into the prediction is usually performed by setting a threshold, such as 0 and 0.5, so labels which have a score assigned greater than that are assigned to the sample. This might be not the optimal threshold in the multi-label classification setup and there are many approaches to set it (BIBREF9). Although these methods concentrate in the sample or label, we have had good results with a much more general approach.",
+          "Many classifiers can predict a score or confidence about the prediction. Turning this score into the prediction is usually performed by setting a threshold, such as 0 and 0.5, so labels which have a score assigned greater than that are assigned to the sample. This might be not the optimal threshold in the multi-label classification setup and there are many approaches to set it (BIBREF9). Although these methods concentrate in the sample or label, we have had good results with a much more general approach.\n\nAs described in BIBREF1, Read and Pfahringer BIBREF10 introduce a method (referred hereinafter to as LCA) to estimate the threshold globally. Their method chooses the threshold that minimizes the difference between the label cardinality of the training set and the predicted set.",
+          "We also tested this method not for the label cardinality over all samples and labels but only labelwise."
+        ],
+        "gold_passage_ids": [
+          "1908.06493:p8:0",
+          "1908.06493:p8:2",
+          "1908.06493:p8:3"
+        ],
+        "retrieved_passage_ids": [
+          "1908.06493:p11:2",
+          "1908.06493:p14:0",
+          "1908.06493:p0:2",
+          "1908.06493:p6:0",
+          "1908.06493:p11:7",
+          "1908.06493:p11:5",
+          "1908.06493:p9:0",
+          "1908.06493:p7:0",
+          "1908.06493:p11:8",
+          "1908.06493:p1:3"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "dense",
+        "question_id": "028d0d9b7a71133e51a14a32cd09dea1e2f39f05",
+        "paper_id": "1804.01155",
+        "question": "How did they define standard language?",
+        "gold_evidence_text": [
+          "In written French, adjectives and nouns are marked as being plural by generally adding the letters s or x at the end of the word.",
+          "The basic form of negation in French includes two negative particles: ne (no) before the verb and another particle after the verb that conveys more accurate meaning: pas (not), jamais (never), personne (no one), rien (nothing), etc. Due to this double construction, the first part of the negation (ne) is optional in spoken French, but it is obligatory in standard writing.",
+          "We identified the following three linguistic markers to study across users from different socioeconomic backgrounds: Correlation with SES has been evidenced for all of them. The optional deletion of negation is typical of spoken French, whereas the omission of the mute letters marking the plural in the nominal phrase is a variable cue of French writing. The third linguistic variable is a global measure of the lexical diversity of the Twitter users."
+        ],
+        "gold_passage_ids": [
+          "1804.01155:p6:0",
+          "1804.01155:p7:0",
+          "1804.01155:p8:0"
+        ],
+        "retrieved_passage_ids": [
+          "1804.01155:p12:0",
+          "1804.01155:p15:1",
+          "1804.01155:p13:2",
+          "1804.01155:p0:3",
+          "1804.01155:p9:2",
+          "1804.01155:p13:0",
+          "1804.01155:p15:3",
+          "1804.01155:p12:1",
+          "1804.01155:p15:0",
+          "1804.01155:p3:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "dense",
+        "question_id": "065623cc1d5f5b19ec1f84d286522fc2f805c6ce",
+        "paper_id": "1706.04206",
+        "question": "What supervised machine learning models do they use?",
+        "gold_evidence_text": [
+          "ZeroR, Naïve Bayes, J48, and random forest classifiers were applied in our project."
+        ],
+        "gold_passage_ids": [
+          "1706.04206:p5:1"
+        ],
+        "retrieved_passage_ids": [
+          "1706.04206:p0:5",
+          "1706.04206:p6:0",
+          "1706.04206:p3:7",
+          "1706.04206:p6:1",
+          "1706.04206:p5:3",
+          "1706.04206:p1:1",
+          "1706.04206:p3:8",
+          "1706.04206:p2:3",
+          "1706.04206:p3:1",
+          "1706.04206:p2:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "hybrid": [
+      {
+        "system": "hybrid",
+        "question_id": "028d0d9b7a71133e51a14a32cd09dea1e2f39f05",
+        "paper_id": "1804.01155",
+        "question": "How did they define standard language?",
+        "gold_evidence_text": [
+          "In written French, adjectives and nouns are marked as being plural by generally adding the letters s or x at the end of the word.",
+          "The basic form of negation in French includes two negative particles: ne (no) before the verb and another particle after the verb that conveys more accurate meaning: pas (not), jamais (never), personne (no one), rien (nothing), etc. Due to this double construction, the first part of the negation (ne) is optional in spoken French, but it is obligatory in standard writing.",
+          "We identified the following three linguistic markers to study across users from different socioeconomic backgrounds: Correlation with SES has been evidenced for all of them. The optional deletion of negation is typical of spoken French, whereas the omission of the mute letters marking the plural in the nominal phrase is a variable cue of French writing. The third linguistic variable is a global measure of the lexical diversity of the Twitter users."
+        ],
+        "gold_passage_ids": [
+          "1804.01155:p6:0",
+          "1804.01155:p7:0",
+          "1804.01155:p8:0"
+        ],
+        "retrieved_passage_ids": [
+          "1804.01155:p15:1",
+          "1804.01155:p0:3",
+          "1804.01155:p12:0",
+          "1804.01155:p12:1",
+          "1804.01155:p15:3",
+          "1804.01155:p13:0",
+          "1804.01155:p13:2",
+          "1804.01155:p0:5",
+          "1804.01155:p2:0",
+          "1804.01155:p3:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "hybrid",
+        "question_id": "049415676f8323f4af16d349f36fbcaafd7367ae",
+        "paper_id": "2003.03728",
+        "question": "By how much do they improve on domain classification?",
+        "gold_evidence_text": [
+          "FLOAT SELECTED: Table 1. Evaluation results on various metrics (%). pseudo, neg feed, and self dist denote using derived pseudo labels, negative feedback, and self-distillation, respectively.",
+          "Table TABREF21 shows the evaluation results of the shortlister and the hypothesis reranker with the proposed approaches."
+        ],
+        "gold_passage_ids": [
+          "2003.03728:p10:0"
+        ],
+        "retrieved_passage_ids": [
+          "2003.03728:p11:0",
+          "2003.03728:p0:0",
+          "2003.03728:p0:4",
+          "2003.03728:p0:2",
+          "2003.03728:p2:0",
+          "2003.03728:p1:0",
+          "2003.03728:p0:1",
+          "2003.03728:p0:3",
+          "2003.03728:p7:0",
+          "2003.03728:p4:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "hybrid",
+        "question_id": "0ac6fbd81e2dd95b800283dc7e59ce969d45fc02",
+        "paper_id": "1708.05521",
+        "question": "what dataset was used?",
+        "gold_evidence_text": [
+          "To test our model, we experiment using the training, validation and test datasets provided for the shared task BIBREF5 , which include tweets for four emotions: joy, sadness, fear, and anger.",
+          "o test our model, we experiment using the training, validation and test datasets provided for the shared task BIBREF5 , which include tweets for four emotions: joy, sadness, fear, and anger."
+        ],
+        "gold_passage_ids": [
+          "1708.05521:p2:0"
+        ],
+        "retrieved_passage_ids": [
+          "1708.05521:p4:0",
+          "1708.05521:p2:2",
+          "1708.05521:c3",
+          "1708.05521:p3:0",
+          "1708.05521:p5:0",
+          "1708.05521:p2:7",
+          "1708.05521:p2:1",
+          "1708.05521:p2:5",
+          "1708.05521:p6:0",
+          "1708.05521:p7:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "hybrid",
+        "question_id": "0b10cfa61595b21bf3ff13b4df0fe1c17bbbf4e9",
+        "paper_id": "1908.07721",
+        "question": "How do they perform the joint training?",
+        "gold_evidence_text": [
+          "The architecture of the proposed model is demonstrated in the Fig. FIGREF18. The focused attention model is essentially a joint learning model of NER and RC based on shared parameter approach. It contains layers of shared parameter, NER downstream task and RC downstream task.",
+          "We propose a focused attention model to jointly learn NER and RC task. The model integrates BERT language model as a shared parameter layer to achieve better generalization performance."
+        ],
+        "gold_passage_ids": [
+          "1908.07721:p0:6",
+          "1908.07721:p8:0"
+        ],
+        "retrieved_passage_ids": [
+          "1908.07721:p16:1",
+          "1908.07721:p21:1",
+          "1908.07721:p12:2",
+          "1908.07721:p13:0",
+          "1908.07721:p4:1",
+          "1908.07721:p0:3",
+          "1908.07721:p21:0",
+          "1908.07721:p5:0",
+          "1908.07721:p0:2",
+          "1908.07721:p22:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "hybrid",
+        "question_id": "0b1b8e1b583242e5be9b7be73160630a0d4a96b2",
+        "paper_id": "1911.09753",
+        "question": "What image caption datasets were used in this work?",
+        "gold_evidence_text": [
+          "Experiments ::: Datasets ::: Image captioning dataset\nIn the experiments, we use Conceptual Captions BIBREF0, a large-scale captioning dataset that consists of images crawled from the Internet, with captions derived from corresponding Alt-text labels on the webpages. The training and validation splits have approximately 3.3M and 16K samples, respectively.",
+          "In the experiments, we use Conceptual Captions BIBREF0, a large-scale captioning dataset that consists of images crawled from the Internet, with captions derived from corresponding Alt-text labels on the webpages. The training and validation splits have approximately 3.3M and 16K samples, respectively."
+        ],
+        "gold_passage_ids": [
+          "1911.09753:p8:0"
+        ],
+        "retrieved_passage_ids": [
+          "1911.09753:p2:0",
+          "1911.09753:p0:1",
+          "1911.09753:p10:0",
+          "1911.09753:p9:0",
+          "1911.09753:p2:1",
+          "1911.09753:p0:2",
+          "1911.09753:c0",
+          "1911.09753:p4:2",
+          "1911.09753:p4:0",
+          "1911.09753:p5:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "rerank": [
+      {
+        "system": "rerank",
+        "question_id": "00ffe2c59a3ba18d6d2b353d6ab062a152c88526",
+        "paper_id": "1709.05453",
+        "question": "Which domain are the conversations in?",
+        "gold_evidence_text": [
+          "Our work distinguishes itself from previous research in that we consider a large heterogeneous commonsense knowledge base in an open-domain retrieval-based dialogue setting.",
+          "To the best of our knowledge, there is currently no well-established open-domain response selection benchmark dataset available, although certain Twitter datasets have been used in the response generation setting BIBREF29 , BIBREF30 . We thus evaluate our method against state-of-the-art approaches in the response selection task on Twitter dialogues."
+        ],
+        "gold_passage_ids": [
+          "1709.05453:p1:2",
+          "1709.05453:p8:0"
+        ],
+        "retrieved_passage_ids": [
+          "1709.05453:p0:1",
+          "1709.05453:p12:0",
+          "1709.05453:c3",
+          "1709.05453:p2:1",
+          "1709.05453:p6:3",
+          "1709.05453:p0:0",
+          "1709.05453:p1:0",
+          "1709.05453:p3:0",
+          "1709.05453:p0:3",
+          "1709.05453:p11:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "rerank",
+        "question_id": "014a3aa07686ee18a86c977bf0701db082e8480b",
+        "paper_id": "1908.06493",
+        "question": "What does post-processing do to the output?",
+        "gold_evidence_text": [
+          "For the HMC subtask B, we used a simple threshold based on the results obtained for LCA. Especially, using multiple models per node could cause a different scaling.",
+          "Many classifiers can predict a score or confidence about the prediction. Turning this score into the prediction is usually performed by setting a threshold, such as 0 and 0.5, so labels which have a score assigned greater than that are assigned to the sample. This might be not the optimal threshold in the multi-label classification setup and there are many approaches to set it (BIBREF9). Although these methods concentrate in the sample or label, we have had good results with a much more general approach.",
+          "Many classifiers can predict a score or confidence about the prediction. Turning this score into the prediction is usually performed by setting a threshold, such as 0 and 0.5, so labels which have a score assigned greater than that are assigned to the sample. This might be not the optimal threshold in the multi-label classification setup and there are many approaches to set it (BIBREF9). Although these methods concentrate in the sample or label, we have had good results with a much more general approach.\n\nAs described in BIBREF1, Read and Pfahringer BIBREF10 introduce a method (referred hereinafter to as LCA) to estimate the threshold globally. Their method chooses the threshold that minimizes the difference between the label cardinality of the training set and the predicted set.",
+          "We also tested this method not for the label cardinality over all samples and labels but only labelwise."
+        ],
+        "gold_passage_ids": [
+          "1908.06493:p8:0",
+          "1908.06493:p8:2",
+          "1908.06493:p8:3"
+        ],
+        "retrieved_passage_ids": [
+          "1908.06493:p11:2",
+          "1908.06493:p14:0",
+          "1908.06493:p11:5",
+          "1908.06493:p0:2",
+          "1908.06493:p12:0",
+          "1908.06493:p1:3",
+          "1908.06493:p0:0",
+          "1908.06493:p11:7",
+          "1908.06493:p13:1",
+          "1908.06493:p7:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "rerank",
+        "question_id": "049415676f8323f4af16d349f36fbcaafd7367ae",
+        "paper_id": "2003.03728",
+        "question": "By how much do they improve on domain classification?",
+        "gold_evidence_text": [
+          "FLOAT SELECTED: Table 1. Evaluation results on various metrics (%). pseudo, neg feed, and self dist denote using derived pseudo labels, negative feedback, and self-distillation, respectively.",
+          "Table TABREF21 shows the evaluation results of the shortlister and the hypothesis reranker with the proposed approaches."
+        ],
+        "gold_passage_ids": [
+          "2003.03728:p10:0"
+        ],
+        "retrieved_passage_ids": [
+          "2003.03728:p0:4",
+          "2003.03728:p11:0",
+          "2003.03728:p0:2",
+          "2003.03728:p0:0",
+          "2003.03728:p1:0",
+          "2003.03728:p3:3",
+          "2003.03728:p7:0",
+          "2003.03728:p3:2",
+          "2003.03728:p7:1",
+          "2003.03728:p0:1"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "rerank",
+        "question_id": "058b6e3fdbb607fa7dbfc688628b3e13e130c35a",
+        "paper_id": "1912.00239",
+        "question": "Does the paper list other heuristic biases in the LSTMs?",
+        "gold_evidence_text": [
+          "Interestingly, even though the case orders preferred by the LSTM correlate with those of humans, there are also subtle differences: we also find that models tend to prefer argument orders that start with dative to those that start with accusative, when the opposite is true for human grammaticality scores.",
+          "Table TABREF22 shows that indeed, both humans and machines are biased by animacy-case associations: all share a preference for animate for nominative (subject) and dative (indirect object).",
+          "Table TABREF22 shows that indeed, both humans and machines are biased by animacy-case associations: all share a preference for animate for nominative (subject) and dative (indirect object). By contrast, negative AUC values for accusative indicate that direct objects are preferred as inanimate."
+        ],
+        "gold_passage_ids": [
+          "1912.00239:p13:1",
+          "1912.00239:p14:1"
+        ],
+        "retrieved_passage_ids": [
+          "1912.00239:p17:0",
+          "1912.00239:p16:0",
+          "1912.00239:p0:0",
+          "1912.00239:p11:1",
+          "1912.00239:p0:7",
+          "1912.00239:c4",
+          "1912.00239:p1:0",
+          "1912.00239:p1:1",
+          "1912.00239:p10:1",
+          "1912.00239:p11:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "rerank",
+        "question_id": "0b10cfa61595b21bf3ff13b4df0fe1c17bbbf4e9",
+        "paper_id": "1908.07721",
+        "question": "How do they perform the joint training?",
+        "gold_evidence_text": [
+          "The architecture of the proposed model is demonstrated in the Fig. FIGREF18. The focused attention model is essentially a joint learning model of NER and RC based on shared parameter approach. It contains layers of shared parameter, NER downstream task and RC downstream task.",
+          "We propose a focused attention model to jointly learn NER and RC task. The model integrates BERT language model as a shared parameter layer to achieve better generalization performance."
+        ],
+        "gold_passage_ids": [
+          "1908.07721:p0:6",
+          "1908.07721:p8:0"
+        ],
+        "retrieved_passage_ids": [
+          "1908.07721:p4:1",
+          "1908.07721:p21:1",
+          "1908.07721:p21:0",
+          "1908.07721:p4:0",
+          "1908.07721:p0:3",
+          "1908.07721:p1:0",
+          "1908.07721:p19:0",
+          "1908.07721:p18:3",
+          "1908.07721:p16:1",
+          "1908.07721:p13:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "mmr": [
+      {
+        "system": "mmr",
+        "question_id": "000549a217ea24432c0656598279dbb85378c113",
+        "paper_id": "1804.05253",
+        "question": "Do they evaluate only on English datasets?",
+        "gold_evidence_text": [
+          "As pre-processing, we removed the retweets, spam, duplicates, and tweets written in languages other than English."
+        ],
+        "gold_passage_ids": [
+          "1804.05253:p1:0"
+        ],
+        "retrieved_passage_ids": [
+          "1804.05253:p7:0",
+          "1804.05253:p4:2",
+          "1804.05253:c5",
+          "1804.05253:p1:1",
+          "1804.05253:p6:1",
+          "1804.05253:c1",
+          "1804.05253:p0:3",
+          "1804.05253:p4:3",
+          "1804.05253:p0:0",
+          "1804.05253:p3:3"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "mmr",
+        "question_id": "00c443f8d32d6baf7c7cea8f4ca9fa749532ccfd",
+        "paper_id": "1612.00866",
+        "question": "What language is this dataset in?",
+        "gold_evidence_text": [
+          "The dataset makes use of 450 English-language news sites, which are each scraped every hour for new content."
+        ],
+        "gold_passage_ids": [
+          "1612.00866:p10:0"
+        ],
+        "retrieved_passage_ids": [
+          "1612.00866:p10:1",
+          "1612.00866:p2:0",
+          "1612.00866:p14:6",
+          "1612.00866:p0:1",
+          "1612.00866:p14:2",
+          "1612.00866:p13:0",
+          "1612.00866:p13:2",
+          "1612.00866:p5:2",
+          "1612.00866:p14:3",
+          "1612.00866:p14:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "mmr",
+        "question_id": "00db191facf903cef18fb1727d1cab638c277e0a",
+        "paper_id": "1906.05506",
+        "question": "What sized character n-grams do they use?",
+        "gold_evidence_text": [
+          "Moreover, to investigate the effect of only char INLINEFORM0 -MS-vec, we ignore INLINEFORM1 in Equation EQREF5 . We refer to this setting as “Remove word embeddings INLINEFORM2 ” in Table TABREF24 . Table TABREF24 shows cahr3-MS-vec and char4-MS-vec are superior to char2-MS-vec.",
+          "Table TABREF15 shows that char3-MS-vec achieved the best scores consistently.",
+          "We varied INLINEFORM0 for char INLINEFORM1 -MS-vec from 2 to 4."
+        ],
+        "gold_passage_ids": [
+          "1906.05506:p8:0",
+          "1906.05506:p8:6"
+        ],
+        "retrieved_passage_ids": [
+          "1906.05506:p3:2",
+          "1906.05506:p8:3",
+          "1906.05506:p12:0",
+          "1906.05506:p4:1",
+          "1906.05506:p0:3",
+          "1906.05506:p10:1",
+          "1906.05506:c0",
+          "1906.05506:p6:2",
+          "1906.05506:p8:1",
+          "1906.05506:p6:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "mmr",
+        "question_id": "014a3aa07686ee18a86c977bf0701db082e8480b",
+        "paper_id": "1908.06493",
+        "question": "What does post-processing do to the output?",
+        "gold_evidence_text": [
+          "For the HMC subtask B, we used a simple threshold based on the results obtained for LCA. Especially, using multiple models per node could cause a different scaling.",
+          "Many classifiers can predict a score or confidence about the prediction. Turning this score into the prediction is usually performed by setting a threshold, such as 0 and 0.5, so labels which have a score assigned greater than that are assigned to the sample. This might be not the optimal threshold in the multi-label classification setup and there are many approaches to set it (BIBREF9). Although these methods concentrate in the sample or label, we have had good results with a much more general approach.",
+          "Many classifiers can predict a score or confidence about the prediction. Turning this score into the prediction is usually performed by setting a threshold, such as 0 and 0.5, so labels which have a score assigned greater than that are assigned to the sample. This might be not the optimal threshold in the multi-label classification setup and there are many approaches to set it (BIBREF9). Although these methods concentrate in the sample or label, we have had good results with a much more general approach.\n\nAs described in BIBREF1, Read and Pfahringer BIBREF10 introduce a method (referred hereinafter to as LCA) to estimate the threshold globally. Their method chooses the threshold that minimizes the difference between the label cardinality of the training set and the predicted set.",
+          "We also tested this method not for the label cardinality over all samples and labels but only labelwise."
+        ],
+        "gold_passage_ids": [
+          "1908.06493:p8:0",
+          "1908.06493:p8:2",
+          "1908.06493:p8:3"
+        ],
+        "retrieved_passage_ids": [
+          "1908.06493:p11:2",
+          "1908.06493:p14:0",
+          "1908.06493:p10:0",
+          "1908.06493:p9:1",
+          "1908.06493:p9:0",
+          "1908.06493:p0:2",
+          "1908.06493:p6:0",
+          "1908.06493:p4:0",
+          "1908.06493:p1:3",
+          "1908.06493:c2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "figure"
+        ]
+      },
+      {
+        "system": "mmr",
+        "question_id": "036c400424357457e42b22df477b7c3cdc2eefe9",
+        "paper_id": "1711.11118",
+        "question": "Are all datapoints from the same website?",
+        "gold_evidence_text": [
+          "In order to support research on this task, we release the Multimodal Attribute Extraction (MAE) dataset, a large dataset containing mixed-media data for over 2.2 million commercial product items, collected from a large number of e-commerce sites using the Diffbot Product API."
+        ],
+        "gold_passage_ids": [
+          "1711.11118:p0:2"
+        ],
+        "retrieved_passage_ids": [
+          "1711.11118:p3:1",
+          "1711.11118:p0:0",
+          "1711.11118:p4:1",
+          "1711.11118:c1",
+          "1711.11118:p5:0",
+          "1711.11118:p2:0",
+          "1711.11118:p5:1",
+          "1711.11118:c4",
+          "1711.11118:p1:0",
+          "1711.11118:p3:2"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ],
+    "structure": [
+      {
+        "system": "structure",
+        "question_id": "000549a217ea24432c0656598279dbb85378c113",
+        "paper_id": "1804.05253",
+        "question": "Do they evaluate only on English datasets?",
+        "gold_evidence_text": [
+          "As pre-processing, we removed the retweets, spam, duplicates, and tweets written in languages other than English."
+        ],
+        "gold_passage_ids": [
+          "1804.05253:p1:0"
+        ],
+        "retrieved_passage_ids": [
+          "1804.05253:p7:0",
+          "1804.05253:p4:2",
+          "1804.05253:p1:1",
+          "1804.05253:p6:1",
+          "1804.05253:c5",
+          "1804.05253:p0:3",
+          "1804.05253:p4:3",
+          "1804.05253:p0:0",
+          "1804.05253:p3:3",
+          "1804.05253:p5:3"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "structure",
+        "question_id": "00c443f8d32d6baf7c7cea8f4ca9fa749532ccfd",
+        "paper_id": "1612.00866",
+        "question": "What language is this dataset in?",
+        "gold_evidence_text": [
+          "The dataset makes use of 450 English-language news sites, which are each scraped every hour for new content."
+        ],
+        "gold_passage_ids": [
+          "1612.00866:p10:0"
+        ],
+        "retrieved_passage_ids": [
+          "1612.00866:p10:1",
+          "1612.00866:p2:0",
+          "1612.00866:p14:6",
+          "1612.00866:p0:1",
+          "1612.00866:p14:2",
+          "1612.00866:p13:0",
+          "1612.00866:p5:2",
+          "1612.00866:p13:2",
+          "1612.00866:p14:0",
+          "1612.00866:p14:3"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "structure",
+        "question_id": "00db191facf903cef18fb1727d1cab638c277e0a",
+        "paper_id": "1906.05506",
+        "question": "What sized character n-grams do they use?",
+        "gold_evidence_text": [
+          "Moreover, to investigate the effect of only char INLINEFORM0 -MS-vec, we ignore INLINEFORM1 in Equation EQREF5 . We refer to this setting as “Remove word embeddings INLINEFORM2 ” in Table TABREF24 . Table TABREF24 shows cahr3-MS-vec and char4-MS-vec are superior to char2-MS-vec.",
+          "Table TABREF15 shows that char3-MS-vec achieved the best scores consistently.",
+          "We varied INLINEFORM0 for char INLINEFORM1 -MS-vec from 2 to 4."
+        ],
+        "gold_passage_ids": [
+          "1906.05506:p8:0",
+          "1906.05506:p8:6"
+        ],
+        "retrieved_passage_ids": [
+          "1906.05506:p3:2",
+          "1906.05506:p8:3",
+          "1906.05506:p12:0",
+          "1906.05506:p4:1",
+          "1906.05506:p0:3",
+          "1906.05506:p10:1",
+          "1906.05506:p6:2",
+          "1906.05506:p8:1",
+          "1906.05506:p6:0",
+          "1906.05506:p0:4"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      },
+      {
+        "system": "structure",
+        "question_id": "036c400424357457e42b22df477b7c3cdc2eefe9",
+        "paper_id": "1711.11118",
+        "question": "Are all datapoints from the same website?",
+        "gold_evidence_text": [
+          "In order to support research on this task, we release the Multimodal Attribute Extraction (MAE) dataset, a large dataset containing mixed-media data for over 2.2 million commercial product items, collected from a large number of e-commerce sites using the Diffbot Product API."
+        ],
+        "gold_passage_ids": [
+          "1711.11118:p0:2"
+        ],
+        "retrieved_passage_ids": [
+          "1711.11118:p3:1",
+          "1711.11118:p0:0",
+          "1711.11118:p4:1",
+          "1711.11118:p5:0",
+          "1711.11118:p2:0",
+          "1711.11118:c1",
+          "1711.11118:p5:1",
+          "1711.11118:p1:0",
+          "1711.11118:p3:2",
+          "1711.11118:c4"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "table"
+        ]
+      },
+      {
+        "system": "structure",
+        "question_id": "065623cc1d5f5b19ec1f84d286522fc2f805c6ce",
+        "paper_id": "1706.04206",
+        "question": "What supervised machine learning models do they use?",
+        "gold_evidence_text": [
+          "ZeroR, Naïve Bayes, J48, and random forest classifiers were applied in our project."
+        ],
+        "gold_passage_ids": [
+          "1706.04206:p5:1"
+        ],
+        "retrieved_passage_ids": [
+          "1706.04206:p0:5",
+          "1706.04206:p1:1",
+          "1706.04206:p3:7",
+          "1706.04206:p5:3",
+          "1706.04206:p6:0",
+          "1706.04206:p3:1",
+          "1706.04206:p3:8",
+          "1706.04206:p6:1",
+          "1706.04206:p5:2",
+          "1706.04206:p4:0"
+        ],
+        "retrieved_types": [
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph",
+          "paragraph"
+        ]
+      }
+    ]
+  }
+}

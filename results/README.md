@@ -6,7 +6,9 @@ Runs made before the evaluator and research protocol were frozen are exploratory
 
 A development run on the validation split may guide implementation choices. The official test split can only be run with `--allow-test`, after the protocol and code are frozen. Preserve every test output. Failure counts, confidence intervals, paired tests, and paper tables must be generated from raw files.
 
-Final study results are added only after the clean, frozen test evaluation. Dataset statistics and local verification logs are separate from retrieval metrics and carry their own timestamp, configuration hash, and Git commit.
+The single guarded frozen test run is `20261110T125049Z_test_b266b19c27`. It used protocol commit `26fbcfc14712f3c7d59e4587e88a17be74618c2d`, evaluator SHA-256 `2f34158c765cef7f8857d031d4519466ebb3d7fb5e55689a039f802c6a119864`, and test dataset SHA-256 `071f79659d4c60b50dadbcdc9a2db0e1ab29a73c2ac779e94b1aa1991187b07b`. Its `raw.json`, generated summary, pairwise comparisons, and failure taxonomy are committed. Dataset statistics and local verification logs are separate from retrieval metrics and carry their own timestamp, configuration hash, and Git commit.
+
+The run selected cross-encoder reranking as the strongest measured Recall@10 condition (0.758). The predeclared structure-aware versus MMR table/figure contrast did not reach significance; see the raw JSON for paired intervals, p-values, and complete results. The test output is final for this protocol. Future system changes require a new held-out set or a newly registered protocol.
 
 The clean protocol-code validation run is `20261110T051423Z_validation_7fc2c2d087`. Its `raw.json` has `git_worktree_dirty=false`, evaluator SHA-256 `2f34158c765cef7f8857d031d4519466ebb3d7fb5e55689a039f802c6a119864`, and is development evidence only. It is not a source for manuscript result claims.
 # Research output provenance

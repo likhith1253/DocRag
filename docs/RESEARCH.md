@@ -30,7 +30,7 @@ Source: `allenai/qasper`, dataset revision `4d9336e735cf4e9e99e8a4d738847703a435
 - Final test: official `test` split only. Do not use it for tuning, prompt edits, threshold choices, or example-driven changes. Run once after dev choices are fixed; retain all outputs.
 - Training: official `train` split is not used for fitting in this retrieval-only study.
 
-The upstream files are frozen before any result computation. If an upstream source changes, it is a new dataset version and requires a new protocol and test freeze.
+The upstream files are frozen before any result computation. If an upstream source changes, it is a new dataset version and requires a new protocol and test freeze. The held-out test was run once on 2026-11-10 UTC under evaluator SHA-256 `2f34158c765cef7f8857d031d4519466ebb3d7fb5e55689a039f802c6a119864`; its raw artifact is `results/20261110T125049Z_test_b266b19c27/raw.json`. Do not use this test result to make further system or metric choices.
 
 ## Conditions and controls
 
@@ -47,3 +47,9 @@ Use 10,000 fixed-seed paired bootstrap resamples over test questions and a 10,00
 ## Scope limits
 
 This benchmark is NLP-focused; it does not establish general performance across scientific fields. Dataset evidence annotations can be incomplete and paragraph-level. QASPER is not a test of equation parsing, multi-paper comparison, citation correctness in generated answers, human-judge agreement, or end-to-end abstention calibration. Those claims are excluded unless a separate audited dataset and protocol are completed. The project will not claim novelty from combining standard retrievers. Contribution, if supported, is a controlled analysis of generic structure-aware evidence retrieval and its failure modes under a reproducible CPU setup.
+
+## Post-study outcome (recorded after the one test run)
+
+The primary hypothesis was not supported on the frozen test set. The table/figure subset contrast for structure-aware ordering over MMR was +0.0075 Recall@10, 95% paired bootstrap CI [-0.0081, 0.0253], paired sign-randomization p=0.4153, n=220. The test does support the predeclared overall non-inferiority criterion versus MMR: the overall difference was +0.0181 (95% CI [0.0113, 0.0254], n=1,272), whose lower bound exceeds -0.02. Plain cross-encoder reranking remained stronger than MMR+structure. Full values and source are in `results/20261110T125049Z_test_b266b19c27/raw.json`; no system choices were changed after test exposure.
+
+The related-work citation to HQDR (Huang et al., Findings ACL 2026) was added in a post-run bibliographic check. It is the closest recent QASPER retrieval study but was not implemented or tested here. Its published results are not a baseline comparison in this experiment.
