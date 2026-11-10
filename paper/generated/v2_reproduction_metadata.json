@@ -12,8 +12,8 @@
   "evaluator_sha256": "e1f43fda2ea44eec80e84fc46418743595d3c2cee6b57ecd04cbe98822e91332",
   "reproduction_script_sha256": "070d828677c24c2437cd907a60167c50b498da46275771f1f9e4afd693e17b55",
   "config_hash": "c446ba806bb1",
-  "reproduction_code_commit": "ce84d1a5fde675f9614e5cb0c49f8b78a9c7c73a",
-  "reproduction_worktree_dirty": true,
+  "reproduction_code_commit": "23ac8dbaec78f4c85ccdc25a522c3eb8a1ebade5",
+  "reproduction_worktree_dirty": false,
   "evaluation_commits": [
     "ce84d1a5fde675f9614e5cb0c49f8b78a9c7c73a"
   ]
