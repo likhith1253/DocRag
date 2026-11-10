@@ -1,105 +1,75 @@
-# DocRag: evidence retrieval for research-paper QA
+# DocRag: measuring evidence completeness in multimodal document QA
 
-DocRag is a CPU-first prototype for indexing research papers and retrieving evidence for questions. This repository contains a completed, reproducible retrieval study on QASPER. Its previous regex-based acceptance benchmark is retained only as historical regression material and is not scientific evidence.
+DocRag is a CPU-first research project studying a specific reliability question: **does conventional quote-level retrieval recall overstate how often a context contains the complete evidence set needed to answer a multimodal document question?**
 
-## Research question
+The project now has two research tracks. The lead study is a fixed-candidate evidence-selection analysis on MMDocRAG, with a strict scientific-paper transfer check on SPIQA. A prior QASPER experiment remains as a separately reported negative precursor. The lead study evaluates retrieval context selection, not generated answers or raw visual perception.
 
-The primary study asks whether a simple, generic structure-aware retrieval step improves recovery of annotator-highlighted table/figure evidence on QASPER, compared with BM25, dense retrieval, reciprocal-rank fusion, cross-encoder reranking, and MMR. The full protocol and falsification criteria are in [docs/RESEARCH.md](docs/RESEARCH.md). QASPER was introduced by Dasigi et al. at NAACL 2021; the dataset release is identified by a pinned Hugging Face revision and file hashes in [data/frozen/qasper_manifest.json](data/frozen/qasper_manifest.json).
+## Research question and current findings
 
-The test split is frozen by dataset and evaluator hashes in the manifest; its run additionally required explicit opt-in and a clean worktree. It has now been scored once under the registered six-system protocol. The raw output and derived tables are committed and linked below.
+On the frozen MMDocRAG evaluation set, global BM25's mean per-question gap between evidence Recall@10 and complete evidence-set coverage was **0.345** (95% paired bootstrap CI [0.327, 0.363], 10,000 resamples; sign-randomization p=0.00009999; n=1,237 cross-modal questions). The gap was larger for cross-modal than single-modality questions by **0.305** (95% CI [0.284, 0.325], permutation p=0.00009999; n=1,237 and 763). These are quote-selection measurements, not proof that generated answers fail.
 
-## Status
+Within-modality score calibration did not reliably change cross-modal complete-evidence coverage versus global BM25 on MMDocRAG: **+0.008** (95% CI [-0.009, 0.026], paired p=0.410). The strict SPIQA test-B evidence alignment retained **73 of 228** items. On those cross-modal items, the mean gap was **0.432** (95% CI [0.378, 0.485]); equal modality quotas increased complete coverage by **0.219** (95% CI [0.123, 0.315], Holm-adjusted p=0.00050) against global BM25. Because 155 SPIQA questions did not meet the preregistered evidence-alignment rule, this transfer finding is limited and must not be generalized to the full SPIQA test set.
 
-- The CPU-locked package, typed settings, generation cache, API/UI, and core regression tests are present. The deterministic fast suite passes locally; see [docs/PLAN.md](docs/PLAN.md).
-- The QASPER retrieval study is complete. On the predeclared table/figure subset, structure-aware ordering over MMR had a Recall@10 difference of +0.0075 (95% paired bootstrap CI [-0.0081, 0.0253], p=0.4153, n=220), so the primary improvement hypothesis was not supported. Overall it improved over MMR by +0.0181 (95% CI [0.0113, 0.0254], n=1,272), but remained below cross-encoder reranking without MMR. See the [raw test run](results/20261110T125049Z_test_b266b19c27/raw.json), generated [summary table](paper/generated/main_results.tex), [pairwise tests](paper/generated/pairwise_comparisons.tex), and [failure taxonomy](results/20261110T125049Z_test_b266b19c27/failure_analysis.json).
-- The V100 generation path, external API backends, and end-to-end answer quality are **NOT VERIFIED**.
-- PDFs preserved from the previous checkout have unresolved redistribution licenses and are excluded from all study runs.
-- The repository has no source-code license. Do not redistribute the application as open source until ownership and licensing are reviewed. The QASPER dataset itself is identified as CC BY 4.0 by its pinned dataset card; the data are downloaded locally rather than committed.
-- See the [model and data card](docs/DATA_MODEL_CARD.md) and [contribution guide](CONTRIBUTING.md) for provenance, license checks, and reproduction expectations.
+All headline estimates come from committed raw runs and generated artifacts: [MMDocRAG raw results](results/20261110T142142Z_mmdocrag_test_6658f770325d/raw.json), [SPIQA raw results](results/20261110T142218Z_spiqa_test_39e8fba05c7f/raw.json), [generated tables](paper/generated/v2_results.tex), [primary comparisons](paper/generated/v2_primary.tex), and [failure counts](paper/generated/v2_failures.tex). Full protocol and limitations: [docs/RESEARCH_V2.md](docs/RESEARCH_V2.md).
 
-## Setup
+## Study design
 
-Requirements: Windows, Linux, or macOS; Python 3.12.5; `uv`. PyTorch is resolved from the CPU-only PyTorch index.
+- MMDocRAG provides fixed text-quote and image-description candidates, with official dev and held-out evaluation splits. We compare global BM25, equal modality quotas, within-modality score calibration, text-only and image-only selection, and a non-deployable gold-modality allocation reference.
+- SPIQA test-B is a separate scientific-paper transfer check. Test items are included only when every provided text evidence context maps to a passage and all visual evidence references map to released captions. Outputs report all exclusions.
+- Outcomes include complete evidence-set coverage, quote recall, evidence F1, budget curves, paired bootstrap intervals, randomization/permutation tests, and failure counts.
+- Source revisions, data licenses, exact file hashes, protocol hash, and evaluator hash are frozen in [data/frozen/multimodal_manifest.json](data/frozen/multimodal_manifest.json). Dataset files are downloaded locally and are not committed.
+
+The study builds on two recent benchmarks: [SPIQA, NeurIPS 2024](https://proceedings.neurips.cc/paper_files/paper/2024/hash/d74033a247989e8f6f3bf9e0c9629fb5-Abstract-Datasets_and_Benchmarks_Track.html) and [MMDocRAG, NeurIPS 2025](https://proceedings.neurips.cc/paper_files/paper/2025/file/1a93178950e92fd2e7b7448f7d68fd7d-Paper-Datasets_and_Benchmarks_Track.pdf).
+
+## Quick start
+
+Requirements: Python 3.12.5 and `uv`. PyTorch is locked to its CPU index.
 
 ```bash
 uv sync --locked --group dev
+uv run python scripts/download_multimodal_benchmarks.py
+uv run python scripts/multimodal_dataset_stats.py
 uv run pytest -q -m "not slow and not gpu"
-uv run ruff check settings.py llm/cache.py retrieval/query_analyzer.py retrieval/paper_matcher.py eval/qasper_study.py eval/failure_analysis.py eval/paper_table.py scripts/dataset_stats.py scripts/download_qasper.py scripts/reproduce.py scripts/smoke_generation.py scripts/verify_cuda_generation.py scripts/verify_project.py tests/test_qasper_study.py
-uv run mypy
-uv run python scripts/verify_project.py
 ```
 
-The verification command archives exact lint, type-check, fast-test, and package-build output with a configuration hash under `results/verification/`.
-
-On Windows PowerShell, use `uv.exe` and the same arguments. For the research dataset and retrieval model, network access to Hugging Face is required once.
-
-## Reproduce the retrieval study
-
-Download the pinned QASPER files and verify their hashes:
+To run development experiments on CPU:
 
 ```bash
-uv run python scripts/download_qasper.py
-uv run python scripts/dataset_stats.py
+uv run python -m eval.multimodal_selection --dataset mmdocrag --split dev
+uv run python -m eval.multimodal_selection --dataset spiqa --split dev
 ```
 
-Full validation development run:
+To regenerate every paper table and figure from the frozen, committed raw test results:
 
 ```bash
-make reproduce-dev
+uv run python scripts/reproduce_multimodal.py
 ```
 
-This runs all six retrieval conditions, then generates the failure taxonomy and manuscript table from the saved raw run. The first 25-question validation prefix remains an optional schema/performance smoke check only.
+`make reproduce` is an equivalent convenience target where GNU Make is installed. On Windows, use the `uv run` command above or `make` from a compatible shell. A new held-out run requires a clean worktree and matching frozen hashes:
 
 ```bash
-uv run python -m eval.qasper_study --split validation --systems bm25,dense,hybrid,rerank,mmr,structure --top-k 10 --candidate-k 40 --limit 25
+uv run python -m eval.multimodal_selection --dataset mmdocrag --split test --allow-heldout
+uv run python -m eval.multimodal_selection --dataset spiqa --split test --allow-heldout
 ```
-
-After validation is complete and the protocol implementation is committed, run the frozen test once:
-
-```bash
-make reproduce
-```
-
-Raw per-question rankings, metrics, configuration hash, data hash, hardware/runtime metadata, and commit are saved beneath `results/`. `make reproduce` requires network access to download the hash-verified dataset on a clean machine and CPU time for all models. It does not generate an answer-quality score: this is a retrieval-only study.
-
-## Run the application
-
-The application supports paper ingestion and retrieval through a FastAPI API and Streamlit UI. Use CPU-compatible settings by default. Model files download on first use and may require substantial RAM.
-
-```bash
-uv run uvicorn api.main:app --host 127.0.0.1 --port 9001
-uv run streamlit run ui/app.py
-```
-
-Container build and run (Docker daemon required):
-
-```bash
-docker build -t docrag-research:local .
-docker run --rm -p 9001:9001 -v docrag-data:/data docrag-research:local
-```
-
-The Dockerfile keeps Qdrant and registry state in `/data`. This container build could not be verified in the current session because the Docker Desktop Linux engine was unavailable.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  PDF[Research paper PDF] --> PARSE[PyMuPDF extraction]
-  PARSE --> CHUNK[Section-aware chunks]
-  CHUNK --> EMBED[CPU sentence embeddings]
-  EMBED --> STORE[Isolated Qdrant collection]
-  Q[Question] --> ROUTE[Paper and evidence intent routing]
-  ROUTE --> RET[Filtered retrieval and optional reranking]
-  STORE --> RET
-  RET --> GROUNDED[Evidence-grounded response prompt]
-  GROUNDED --> LLM[Transformers or Ollama backend]
-  LLM --> OUT[Answer with source metadata]
+  Q[Question] --> SCORE[BM25 over fixed candidate text]
+  T[Text quote candidates] --> SCORE
+  I[Image descriptions / figure captions] --> SCORE
+  SCORE --> SELECT[Fixed-budget selection policies]
+  SELECT --> METRIC[Quote recall and complete evidence coverage]
+  GOLD[Annotated evidence IDs] --> METRIC
+  METRIC --> RAW[Raw per-question IDs and metrics]
+  RAW --> PAPER[Generated tables and figure]
 ```
 
-## Limitations
+The document-QA application remains available through FastAPI and Streamlit, but its generation quality is not part of this paper's evidence.
 
-The primary experiment is a retrieval study on English NLP papers. It does not establish generality across sciences, correct parsing of all equations or diagrams, factual accuracy of generated answers, calibrated abstention, or human agreement. The current risk scanner checks selected numerical/equation mismatches; it is not a semantic claim verifier. Cross-paper comparison and model-generation behavior are product features, not validated research findings. See [docs/DECISIONS.md](docs/DECISIONS.md) and [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md) for current progress and unverified items.
+## Limitations and status
 
-## References
+This is a benchmark-based evidence-selection study using supplied candidate pools. Image candidates are ranked through released descriptions/captions; the work does not evaluate pixels, PDF extraction, or visual models. The SPIQA strict text alignment excludes most test items, so its transfer result has a small denominator. The method comparison does not show a reliable calibration gain on MMDocRAG. No human judgment of generated answers, answer faithfulness, citation accuracy, or abstention calibration was collected.
 
-- Dasigi, Pradeep, Kyle Lo, Iz Beltagy, Arman Cohan, Noah A. Smith, and Matt Gardner. 2021. [A Dataset of Information-Seeking Questions and Answers Anchored in Research Papers](https://aclanthology.org/2021.naacl-main.365/). NAACL-HLT, 4599–4610. DOI: 10.18653/v1/2021.naacl-main.365.
+The work is suitable as a reproducible research portfolio and a preprint draft, not a guaranteed Q1 journal result or a ready-to-submit manuscript. Journal quality and acceptance cannot be promised. See [docs/FINAL_REPORT.md](docs/FINAL_REPORT.md), [paper/STATUS.md](paper/STATUS.md), and [paper/CLAIMS_CHECKLIST.md](paper/CLAIMS_CHECKLIST.md). The owner must personally review every claim and reference before submission. The repository has no source-code license; establish ownership and licensing before redistribution.

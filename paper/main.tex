@@ -2,79 +2,126 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
 \usepackage{natbib}
-\title{Do Structural Signals Help Retrieve Annotated Evidence from Research Papers? A CPU-Reproducible Study on QASPER}
-\author{Author details to be supplied by the project owner}
+\title{When Is Retrieved Context Sufficient? Measuring Complete Evidence Coverage in Multimodal Document QA}
+\author{Author details to be supplied and verified by the project owner}
+\date{}
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Scientific question answering depends on retrieving evidence from long papers, including evidence associated with tables and figures. We evaluate whether a lightweight, generic structural ranking step adds value over controlled lexical, dense, hybrid, reranked, and diversified retrieval systems on QASPER. On the held-out test set, the predeclared table/figure hypothesis is not supported: the structural step does not show a statistically reliable gain over maximal marginal relevance (MMR). It improves overall evidence recall relative to MMR, but remains below cross-encoder reranking without MMR. All result tables are generated from the saved test run. This retrieval-only study makes no claim about answer-generation quality, citation faithfulness, equation parsing, or calibrated abstention.
+Retrieval-augmented question answering is often evaluated by whether individual gold evidence units appear near the top of a ranking. When an answer requires several evidence units, this measure can conceal whether the selected context contains the complete annotated evidence set. We quantify this mismatch under fixed quote budgets using the released candidate pools in MMDocRAG and a strict transfer subset from SPIQA test-B. On MMDocRAG, global BM25 has a mean per-question evidence-recall minus complete-set-coverage gap of 0.345 (95\% paired bootstrap CI [0.327, 0.363]; n=1,237 cross-modal questions). The gap is 0.305 larger for cross-modal than single-modality questions (95\% CI [0.284, 0.325]). A within-modality score-calibration policy does not reliably improve complete evidence coverage over global BM25. On SPIQA, only 73 of 228 test questions meet our preregistered text and figure evidence alignment rule; in that restricted subset, the mean gap is 0.432 (95\% CI [0.378, 0.485]). These results show a benchmark measurement discrepancy, not an observed answer-generation failure. Our study uses released image descriptions and captions, not raw image pixels, and evaluates evidence selection rather than end-to-end question answering.
 \end{abstract}
 
 \section{Introduction}
-Research papers are long, structured documents. A question-answering system must locate supporting passages before a generator can use them. QASPER provides question-answer pairs anchored in NLP research papers, together with evidence annotations \citep{dasigi-etal-2021-dataset}. This makes it possible to test retrieval separately from generation and judge whether retrieval changes recover annotated evidence.
+Scientific and technical documents distribute supporting information across prose, tables, figures, and multiple pages. Retrieval systems are commonly evaluated through quote- or passage-level recall. However, a question may require multiple evidence units jointly. Retrieving one or several but not all necessary units can yield a high partial-recall score even though the selected context omits part of the annotated evidence set.
 
-Our problem statement is narrow: given a question and its source paper, rank the paper's paragraphs and figure/table captions so that annotated evidence appears near the top. We test whether adding a generic structure-aware selection step to hybrid retrieval, cross-encoder reranking, and maximal marginal relevance improves Recall@10, especially when the annotated evidence or its text explicitly refers to a table or figure.
+We investigate this measurement issue under fixed context budgets. Our problem statement is: \emph{How well does standard evidence Recall@k represent complete annotated-evidence coverage, particularly when a question requires evidence from both text and visual elements?} We further compare simple modality selection policies to test whether allocating context across modalities changes complete-set coverage.
 
-The contribution is a controlled, reproducible retrieval analysis: (1) six retrieval conditions share the same source passages, candidate pool, and cutoff; (2) the structure-aware contrast is predeclared with paired uncertainty and falsification criteria; and (3) raw per-question rankings support a retrieval-specific failure taxonomy. Any reported conclusion is limited to the QASPER NLP-paper benchmark and its evidence annotations.
+We use MMDocRAG, which provides text and image-description quote pools for document QA, and SPIQA, which targets question answering over scientific papers with figure and table evidence \citep{dong-etal-2025-mmdocrag,pramanick-etal-2024-spiqa}. The two datasets are analyzed separately because their evidence units and annotation processes differ. We make three contributions: (1) a per-question evidence-sufficiency gap contrasting partial quote recall with exact full-set coverage; (2) a controlled fixed-budget comparison of global, modality-balanced, score-calibrated, modality-only, and gold-modality-allocation selection; and (3) an external scientific-paper transfer analysis with a strict, auditable evidence alignment rule.
+
+This is a retrieval-evidence study. It does not establish that a language model answers incorrectly when a quote is missing, nor does it test raw visual understanding, PDF parsing, citation faithfulness, or answer generation. A prior QASPER retrieval study remains separate and is not pooled with these results \citep{dasigi-etal-2021-dataset}.
 
 \section{Related Work}
-QASPER is an information-seeking question-answering benchmark over research papers with evidence annotations \citep{dasigi-etal-2021-dataset}. We use those annotations to measure evidence retrieval rather than end-to-end generated answers. The retrieval components represent established approaches: E5 provides dense embeddings \citep{wang-etal-2022-e5}, RRF combines rankings \citep{cormack-clarke-buttcher-2009-rrf}, cross-encoders rescore query-passage pairs \citep{nogueira-cho-2019-passage-reranking}, and MMR trades relevance against redundancy \citep{carbonell-goldstein-1998-mmr}.
+QASPER introduced information-seeking questions anchored in NLP research papers and evidence annotations \citep{dasigi-etal-2021-dataset}. SPIQA extends scientific-paper QA to questions that require reasoning over figures, tables, and associated text \citep{pramanick-etal-2024-spiqa}. MMDocRAG provides multimodal document QA examples with annotated text and image quote evidence and studies retrieval and multimodal answer generation \citep{dong-etal-2025-mmdocrag}. Our work isolates quote selection from generation and focuses on whether retrieving some evidence units is an adequate proxy for retrieving all annotated units required by a question. We do not present BM25, modality quotas, or score calibration as new retrieval algorithms.
 
-The closest recent study is HQDR, which evaluates learned hierarchical graph features and a quantized dense-sparse scoring method on QASPER and Natural Questions \citep{huang-etal-2026-structure}. HQDR reports gains over BM25, ColBERT, and dense retrievers, including variants fine-tuned on QASPER. We do not reproduce HQDR: its training procedure and system are outside this study, and its published metrics are not directly comparable with our paper-local, exact-evidence mapping and held-out test protocol. Our narrower question is whether a fixed, training-free structural reordering adds value after a strong off-the-shelf cross-encoder and MMR. We do not present the retrievers or structural heuristic as new, nor claim broad scientific-domain coverage.
+\section{Research Questions}
+\begin{itemize}
+  \item RQ1: Under a fixed quote budget, what is the gap between per-question evidence recall and exact complete-evidence-set coverage?
+  \item RQ2: Is the gap larger when gold evidence spans text and visual modalities than when it belongs to one modality?
+  \item RQ3: Do common modality-selection policies change complete evidence coverage relative to global BM25, and does the observed pattern transfer to scientific-paper questions?
+\end{itemize}
 
-\section{Method}
-For each question, retrieval is restricted to the paper associated with that question. Candidate units are the dataset's source paragraphs and figure/table captions. Gold evidence is mapped to a candidate when its normalized text occurs in that source unit. Questions with no mapped answerable evidence are reported separately and excluded from ranking metrics.
+The primary outcomes are the evidence-sufficiency gap and its difference between cross-modal and single-modality MMDocRAG questions. The preregistered development analysis did not support a benefit from score calibration, so the calibrated selector is treated as an exploratory system comparison rather than the claimed contribution. Full hypotheses, split rules, exclusions, and statistical procedures are recorded in \texttt{docs/RESEARCH\_V2.md}.
 
-The systems are BM25; dense E5-small-v2 retrieval; reciprocal-rank fusion (RRF) of BM25 and dense rankings; RRF followed by a fixed cross-encoder; that reranked candidate set reordered by MMR; and MMR followed by a generic question-type and chunk-type selection score. The candidate pool is the top 40 RRF units and the reported cutoff is 10. The exact checkpoints, revisions, software versions, and parameters are recorded in each raw result. The implementation and protocol are in the repository.
+\section{Data and Methods}
+\subsection{Datasets and splits}
+We use MMDocRAG revision \texttt{04b58dbc5c6c4955291124eed411b09114728061}; its development and evaluation files are pinned in \texttt{data/frozen/multimodal\_manifest.json}. The evaluation split contains 2,000 examples. Each item provides fixed text and image-description candidates and gold quote identifiers. We use all examples with at least one mapped gold quote; the held-out evaluation contained no items with an empty gold set.
 
-\section{Experimental Setup}
-We use the official QASPER validation split for development and the official test split for the final evaluation. The upstream dataset revision and SHA-256 hashes are frozen in the repository manifest. The test split is not used for choices or tuning. Retrieval runs on CPU. We report Recall@5 and Recall@10, mean reciprocal rank (MRR), and nDCG@10 over answerable questions with at least one mapped evidence unit. We compare structure-aware selection with MMR using paired bootstrap confidence intervals and a paired sign-randomization test. The table/figure subset is determined by the gold evidence's caption type or explicit figure/table reference. Full details and the non-inferiority margin are specified in the pre-registered protocol.
+For external scientific-paper transfer, we use SPIQA revision \texttt{1774b71511f029b82089a069d75328f25fbf0705}, test-B. Test-B contains 228 question records across 65 papers in the source release. Candidate units are the paper's released passages and figure/table captions. Figure/table evidence is mapped by candidate ID. Text evidence contexts are normalized and matched as substrings within candidate passages. If a context matches multiple passages, we use the shortest containing passage and break ties by source order. A question is retained only if all of its supplied text contexts and visual references map to candidates. The fixed adapter retained 73 items and excluded 155; no exclusions were selected based on model outcomes. This strict subset is a major limitation.
+
+MMDocRAG is used for non-commercial research under the source repository's CC BY-NC 4.0 notice. SPIQA is identified as CC BY 4.0 in its official data card. Dataset files are not included in this repository; download and SHA-256 verification are automated. The exact statistics and file hashes are produced by the scripts under \texttt{scripts/}.
+
+\subsection{Candidate scoring and selection policies}
+For each question, BM25 scores the provided candidate text against the question. Text candidates use their released quote text; visual candidates use the benchmark's provided image description or figure/table caption. Thus, image retrieval here means retrieval over text descriptions, not visual encoding of the image.
+
+All policies use identical candidate pools, BM25 scores, and quote budgets \(k\in\{5,10,15,20\}\). We compare global BM25 ranking, equal text/image quotas, within-modality robust score calibration followed by global ranking, text-only selection, image-only selection, and a gold-modality-allocation reference. For an odd equal-quota slot, we assign it to the modality with the higher best raw BM25 score. Calibration subtracts each modality's median and divides by 1.4826 times its median absolute deviation, with mean/std and unit-scale fallbacks for zero scale. The gold-modality reference uses gold modality proportions to allocate the budget but still ranks candidates by BM25 within each modality; it is non-deployable and is not a full oracle retriever. Ties follow source candidate order and then ID. Duplicate candidate IDs within a modality are coalesced; conflicting modality IDs fail the run.
+
+\subsection{Metrics}
+For each selected set, evidence recall is the fraction of a question's gold quote IDs retrieved. Complete evidence coverage is one only when every gold ID is selected. Example-level evidence F1 is also computed. Our evidence-sufficiency gap is the mean per-question difference between evidence recall and complete-set coverage. A positive gap measures the partial credit that quote recall awards to contexts missing at least one annotated evidence unit; it is not a direct measure of answer correctness.
+
+\subsection{Statistical analysis}
+We report paired question-level bootstrap intervals with 10,000 resamples and seed 20261110. Within-question differences use sign-randomization tests with 10,000 draws; cross-modal versus single-modality gaps use a stratified bootstrap and label-permutation test. The policy comparisons are secondary and Holm-adjusted within each benchmark. We report sample sizes and the SPIQA exclusions. Monte Carlo p-values have a minimum reporting resolution of 1/10,001.
 
 \section{Results}
-Table~\ref{tab:main} is generated from the frozen test run's raw JSON by \texttt{make reproduce}. It reports all retrieval conditions. The paired comparison and subgroup sample count are recorded in the same raw JSON. No answer-quality score is computed in this retrieval-only study.
+\subsection{Complete evidence coverage and quote recall}
+Table~\ref{tab:primary} reports the registered gap estimates. On the MMDocRAG cross-modal subset, at a budget of ten quotes, the mean per-question recall-minus-completeness gap is 0.345 (95\% CI [0.327, 0.363], p=0.00009999). Across all answerable MMDocRAG questions the gap is 0.229 (95\% CI [0.216, 0.242]). The cross-modal gap exceeds the single-modality gap by 0.305 (95\% CI [0.284, 0.325], p=0.00009999). The registered measurement hypothesis is supported on this benchmark: quote-level recall gives substantially more partial credit than exact evidence-set coverage, especially for cross-modal questions.
+
+On the strictly aligned SPIQA transfer subset, the gap is 0.432 (95\% CI [0.378, 0.485], p=0.00009999). This finding is limited by the exclusion of 155 of 228 test-B questions and cannot be generalized to all SPIQA items. Results across datasets are not pooled.
 
 \begin{table}[t]
 \centering
-\caption{Evidence retrieval on the frozen QASPER test split. Generated directly from raw per-question outputs.}
-\label{tab:main}
-\IfFileExists{generated/main_results.tex}{\input{generated/main_results.tex}}{\small Run \texttt{make reproduce} to generate this table from the frozen test evaluation.}
+\caption{Evidence-sufficiency gaps from held-out raw runs. Mean per-question recall minus complete-set coverage; intervals are paired bootstrap 95\% CIs.}
+\label{tab:primary}
+\scriptsize
+\input{generated/v2_primary.tex}
 \end{table}
 
-All pairwise differences are a secondary analysis; p-values are adjusted across the tested pairs with Holm's method.
+Figure~\ref{fig:gap} shows the budget curve. On MMDocRAG, when the entire fixed candidate pool is selected at the highest budget, the gap closes by construction. This saturation point should not be interpreted as a practical context-size recommendation.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.82\linewidth]{generated/v2_evidence_gap.png}
+\caption{Mean per-question quote recall minus exact complete-set coverage across budgets, global BM25, cross-modal subsets. SPIQA includes only fully aligned test-B items.}
+\label{fig:gap}
+\end{figure}
+
+\subsection{Selection policies}
+On MMDocRAG, score calibration changes cross-modal complete-set coverage by +0.008 relative to global BM25 (95\% CI [-0.009, 0.026], Holm-adjusted p=0.701), which is not a reliable gain. Equal modality quotas change coverage by -0.012 (95\% CI [-0.031, 0.006], Holm-adjusted p=0.701). On the SPIQA aligned subset, equal quotas improve coverage by +0.219 (95\% CI [0.123, 0.315], Holm-adjusted p=0.00050), while calibration changes it by +0.055 (95\% CI [-0.014, 0.123], Holm-adjusted p=0.283). Given the small, strictly selected SPIQA subset, this is a dataset-specific result that needs independent confirmation.
+
 \begin{table}[t]
 \centering
-\caption{Pairwise overall Recall@10 comparisons. Positive values favor the first system in the contrast.}
-\label{tab:pairwise}
-\IfFileExists{generated/pairwise_comparisons.tex}{\input{generated/pairwise_comparisons.tex}}{Run \texttt{make reproduce} to generate these comparisons.}
+\caption{Complete evidence coverage, quote recall, and example-level evidence F1 at each budget for all tested policies.}
+\label{tab:systems}
+\scriptsize
+\input{generated/v2_results.tex}
 \end{table}
 
-\section{Failure Analysis}
-The reproduction command generates a retrieval failure report from the test raw file. It separates unanswerable questions, answerable questions whose annotated evidence could not be mapped to candidate units, retrieval misses, partial retrieval, and complete retrieval of mapped evidence at the cutoff. Table~\ref{tab:failures} reports counts for every system.
+\begin{table}[t]
+\centering
+\caption{Paired cross-modal complete-coverage differences versus global BM25. Intervals and p-values are generated from the same per-question raw outputs; Holm adjustment is within each benchmark.}
+\label{tab:policy-tests}
+\scriptsize
+\input{generated/v2_policy_tests.tex}
+\end{table}
+
+\subsection{Failure analysis}
+At a budget of ten, global BM25 fully retrieves the annotated evidence set for 528 of 1,237 MMDocRAG cross-modal questions; 701 are partial recoveries and eight retrieve none of the gold evidence. For the aligned SPIQA subset, eight of 73 are complete, 62 are partial, and three retrieve none. IDs and missed evidence identifiers are retained in \texttt{paper/generated/v2\_failure\_examples.csv}; counts are generated from raw rankings.
 
 \begin{table}[t]
 \centering
-\caption{Retrieval failure categories at the registered cutoff. Counts are generated from raw test rankings.}
+\caption{Cross-modal global-BM25 failures at a budget of ten.}
 \label{tab:failures}
-\IfFileExists{generated/failure_analysis.tex}{\input{generated/failure_analysis.tex}}{Run \texttt{make reproduce} to generate the failure analysis.}
+\input{generated/v2_failures.tex}
 \end{table}
 
-\IfFileExists{generated/failure_examples.tex}{\input{generated/failure_examples.tex}}{}
+The principal failure mode is partial evidence recovery: at least one annotated item is selected but another is absent. In this retrieval-only setup, the evaluator cannot determine whether a missing item is redundant, whether the remaining evidence is sufficient to answer, or whether a generator would compensate from parametric memory. We therefore report it as incomplete annotated-evidence coverage and do not label it a factual answer failure.
 
-The primary table/figure hypothesis was not supported: the paired interval includes zero and the randomization test is not significant. The overall increase over MMR is statistically detectable, but MMR itself performs substantially below plain reranking on Recall@10. Structure-aware MMR therefore does not replace the stronger reranking baseline in this experiment. All conclusions are specific to this protocol and benchmark.
+\section{Discussion}
+The central empirical result is that quote-level recall and exact evidence-set coverage are not interchangeable on these benchmarks. The difference is much larger for MMDocRAG questions whose annotations span text and visual evidence than for single-modality questions. That makes complete-set reporting a useful complement to recall for tasks where evidence units are jointly required.
 
-Parser loss, generation errors, verifier misses, false refusals, and infrastructure failures are outside this experiment and are not inferred from retrieval rankings.
+The selector comparisons do not support a general claim that score calibration or equal modality quotas improve results. Calibration has no reliable effect on MMDocRAG's cross-modal subset. Equal quotas improve the small aligned SPIQA subset, but that result conflicts with the MMDocRAG estimate and requires replication. This heterogeneity argues against a single policy recommendation.
 
 \section{Limitations}
-QASPER focuses on NLP papers and does not support claims across scientific disciplines. Evidence mapping uses normalized substring matches and can fail when annotations are partial, paraphrased, or span multiple source units. The benchmark's provided structured text means this study does not evaluate PDF parsing, equation extraction, or reconstruction of visual content. The heuristic structural score is simple and does not model document hierarchy as in HQDR; HQDR was not rerun under this protocol. Retrieval results do not establish that generated answers are correct, supported, or calibrated. The project source has no license yet; redistribution requires an ownership and license review.
+First, MMDocRAG supplies a fixed candidate pool rather than a full corpus retrieval setting; results measure selection after candidate generation. Second, visual candidates are ranked through textual descriptions and captions, so image understanding is not measured. Third, the SPIQA adapter uses a strict normalized substring rule and retains only 73 of its 228 test-B questions. The resulting transfer estimate is vulnerable to selection bias and should be treated as limited evidence. Fourth, gold evidence annotations may be incomplete, redundant, or not minimal; exact set coverage can penalize a valid alternative evidence set. Fifth, the observed gap is a retrieval metric discrepancy, not proof of factual answer error, hallucination, or citation failure. Finally, no new human annotations, answer-generation evaluation, independent judge, or human-vs-judge agreement study was collected.
 
 \section{Conclusion}
-In this controlled retrieval study, lightweight structure-aware ordering did not reliably improve the predeclared table/figure evidence subset over MMR. It raised overall evidence recall relative to MMR, while plain cross-encoder reranking remained the strongest measured condition. These results do not establish a benefit for generated answers or generalize beyond the QASPER text and evidence mapping used here. A direct comparison with learned hierarchical methods such as HQDR remains future work under a separately registered protocol.
+On the evaluated fixed candidate pools, quote-level evidence recall awards partial credit substantially more often than exact full-set coverage, particularly for MMDocRAG questions with cross-modal gold evidence. Score calibration does not reliably improve coverage on that benchmark; equal modality quotas help on a small aligned SPIQA subset but need independent replication. The evidence supports reporting complete evidence coverage alongside conventional recall for multi-evidence tasks. It does not establish end-to-end QA quality or raw visual reasoning.
 
 \section{Reproducibility}
-The pinned dataset manifest, locked dependencies, CPU retrieval harness, cache, raw JSON, generated summary table, and failure report are included or regenerated with \texttt{make reproduce}. Model and dataset revisions and hashes are stored with the raw run. The V100 generation diagnostic is not part of this experiment and remains NOT VERIFIED.
+The protocol and source revisions are frozen in \texttt{docs/RESEARCH\_V2.md} and \texttt{data/frozen/multimodal\_manifest.json}. Raw test records contain IDs, rankings, scores, per-question metrics, and provenance without copying source quote text. Run \texttt{uv run python scripts/reproduce\_multimodal.py} to regenerate tables, failure analyses, and the figure from raw results. The test evaluator refuses to run with a dirty worktree or mismatched frozen hashes. All v2 retrieval experiments ran on the local CPU environment; no hosted GPU, paid API, or remote machine was used.
 
 \bibliography{../references}
 \bibliographystyle{plainnat}

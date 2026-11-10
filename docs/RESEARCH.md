@@ -1,3 +1,5 @@
+> **Historical protocol v1.** The current lead research question and primary evaluation are in [RESEARCH_V2.md](RESEARCH_V2.md). This QASPER study is retained as a separate completed negative precursor; do not pool its results with v2.
+
 # Research protocol (pre-registered before evaluation)
 
 ## Research question

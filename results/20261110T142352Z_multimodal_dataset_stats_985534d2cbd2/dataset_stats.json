@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "mmdocrag": {
+    "development": {
+      "questions": 2055,
+      "unique_documents": 147,
+      "duplicate_candidate_id_occurrences": 2,
+      "mean_candidates_text": 12.0,
+      "mean_candidates_image": 7.943552311435523,
+      "mean_gold_quotes": 2.518734793187348,
+      "evidence_modality_counts": {
+        "text_and_visual": 1210,
+        "text_only": 5,
+        "visual_only": 838
+      }
+    },
+    "test": {
+      "questions": 2000,
+      "unique_documents": 220,
+      "duplicate_candidate_id_occurrences": 0,
+      "mean_candidates_text": 11.979,
+      "mean_candidates_image": 7.8735,
+      "mean_gold_quotes": 2.9065,
+      "evidence_modality_counts": {
+        "text_and_visual": 1241,
+        "text_only": 1,
+        "visual_only": 758
+      }
+    }
+  },
+  "spiqa": {
+    "development": {
+      "papers": 200,
+      "questions": 2085,
+      "mean_visual_candidates_per_question": 13.750119904076739,
+      "mean_gold_visual_references": 1.0,
+      "question_types": {}
+    },
+    "test": {
+      "papers": 65,
+      "questions": 228,
+      "mean_visual_candidates_per_question": 14.048245614035087,
+      "mean_gold_visual_references": 1.6096491228070176,
+      "question_types": {
+        "Deep / Complex": 2,
+        "Deep / Complex question": 1,
+        "Deep question": 1,
+        "Deep/complex Question": 1,
+        "Deep/complex question": 62,
+        "Deep/complex question ": 1,
+        "Shallow": 5,
+        "Shallow Question": 3,
+        "Shallow question": 83,
+        "Shallow question ": 2,
+        "Testing": 2,
+        "Testing Question": 2,
+        "Testing question": 55,
+        "Testing question ": 7,
+        "deep/complex question": 1
+      }
+    }
+  },
+  "config_hash": "985534d2cbd2",
+  "generated_utc": "2026-11-10T14:23:52.123536+00:00",
+  "manifest_sha256": "6e5243eb843adc74cbcae343d8a9814c74218f30a239a522de17368dfee18ff5",
+  "script_sha256": "2121373b60d42a0b676ca9453aad72db3315ccabbb4ff9fab50396f5074de640",
+  "git_commit": "ce84d1a5fde675f9614e5cb0c49f8b78a9c7c73a",
+  "python": "3.12.5 (tags/v3.12.5:ff3bc82, Aug  6 2024, 20:45:27) [MSC v.1940 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26300-SP0"
+}

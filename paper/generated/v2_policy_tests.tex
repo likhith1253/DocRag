@@ -1,0 +1,16 @@
+\begin{tabular}{llrrrr}
+\toprule
+Dataset & Policy vs BM25 & n & Complete coverage Δ & 95\% CI & Holm p \\
+\midrule
+mmdocrag & balanced\_bm25 & 1237 & -0.012 & [-0.031, 0.006] & 0.7007 \\
+mmdocrag & calibrated\_bm25 & 1237 & 0.008 & [-0.009, 0.026] & 0.7007 \\
+mmdocrag & text\_only & 1237 & -0.427 & [-0.455, -0.399] & 0.0005 \\
+mmdocrag & image\_only & 1237 & -0.427 & [-0.455, -0.399] & 0.0005 \\
+mmdocrag & oracle & 1237 & 0.011 & [-0.006, 0.030] & 0.7007 \\
+spiqa & balanced\_bm25 & 73 & 0.219 & [0.123, 0.315] & 0.0005 \\
+spiqa & calibrated\_bm25 & 73 & 0.055 & [-0.014, 0.123] & 0.2827 \\
+spiqa & text\_only & 73 & -0.110 & [-0.192, -0.041] & 0.0222 \\
+spiqa & image\_only & 73 & -0.110 & [-0.192, -0.041] & 0.0222 \\
+spiqa & oracle & 73 & 0.219 & [0.123, 0.315] & 0.0005 \\
+\bottomrule
+\end{tabular}

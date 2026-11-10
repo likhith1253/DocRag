@@ -40,11 +40,14 @@ def main() -> None:
     rows_csv: list[dict[str, Any]] = []
     failure_rows: list[dict[str, Any]] = []
     failure_examples: list[dict[str, Any]] = []
+    policy_tests: list[dict[str, Any]] = []
 
     for dataset, path in input_paths.items():
         raw = json.loads(path.read_text(encoding="utf-8"))
         metric_rows, inference = summarize(raw["records"], tuple(BUDGETS))
         outputs[dataset] = {"raw": raw, "metrics": metric_rows, "inference": inference}
+        policy_tests.extend({"dataset": dataset, **row}
+                            for row in inference["exploratory_policy_comparisons"])
         for row in metric_rows:
             rows_csv.append({"dataset": dataset, **row})
         groups = {"all": raw["records"],
@@ -94,6 +97,10 @@ def main() -> None:
         writer = csv.DictWriter(stream, fieldnames=list(failure_examples[0]))
         writer.writeheader()
         writer.writerows(failure_examples)
+    with (generated / "v2_policy_tests.csv").open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(policy_tests[0]))
+        writer.writeheader()
+        writer.writerows(policy_tests)
 
     row_end = " \\\\"
     main_tex = [r"\begin{tabular}{llrrrr}", r"\toprule",
@@ -148,6 +155,17 @@ def main() -> None:
     failure_tex.extend((r"\bottomrule", r"\end{tabular}"))
     (generated / "v2_failures.tex").write_text("\n".join(failure_tex) + "\n", encoding="utf-8")
 
+    policy_tex = [r"\begin{tabular}{llrrrr}", r"\toprule",
+                  "Dataset & Policy vs BM25 & n & Complete coverage Δ & 95\\% CI & Holm p" + row_end,
+                  r"\midrule"]
+    for row in policy_tests:
+        low, high = row["bootstrap_95_ci"]
+        policy_tex.append(f"{tex_escape(row['dataset'])} & {tex_escape(row['policy'])} & {row['n']} & "
+                          f"{row['mean_complete_coverage_difference']:.3f} & [{low:.3f}, {high:.3f}] & "
+                          f"{row['holm_adjusted_p']:.4g}" + row_end)
+    policy_tex.extend((r"\bottomrule", r"\end{tabular}"))
+    (generated / "v2_policy_tests.tex").write_text("\n".join(policy_tex) + "\n", encoding="utf-8")
+
     fig, ax = plt.subplots(figsize=(7.2, 4.2))
     colors = {"mmdocrag": "#285f8f", "spiqa": "#bd5b32"}
     for dataset, values in outputs.items():
@@ -165,12 +183,17 @@ def main() -> None:
 
     commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True,
                             capture_output=True, text=True).stdout.strip()
+    worktree_dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, check=True,
+                                         capture_output=True, text=True).stdout.strip())
+    evaluation_commits = sorted({values["raw"]["git_commit"] for values in outputs.values()})
     metadata = {"schema_version": 1, "result_sources": {key: str(path.relative_to(ROOT))
                                                           for key, path in input_paths.items()},
                 "raw_sha256": input_hashes, "protocol_sha256": sha256(PROTOCOL),
                 "evaluator_sha256": manifest["evaluator_sha256"],
+                "reproduction_script_sha256": sha256(Path(__file__)),
                 "config_hash": hashlib.sha256(json.dumps(input_hashes, sort_keys=True).encode()).hexdigest()[:12],
-                "git_commit": commit}
+                "reproduction_code_commit": commit, "reproduction_worktree_dirty": worktree_dirty,
+                "evaluation_commits": evaluation_commits}
     (generated / "v2_reproduction_metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
 
 

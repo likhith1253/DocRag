@@ -4,10 +4,11 @@
 - [x] Freeze MMDocRAG and SPIQA source revisions, hashes, and license/provenance manifest before metrics.
 - [x] Implement adapters and exact gold-ID alignment checks; SPIQA test-B requires complete text/figure mapping.
 - [x] Implement BM25 global, equal-modality quotas, score calibration, modality-only policies, and a gold-modality allocation reference.
-- [ ] Complete dev analysis; commit frozen evaluator/protocol hashes before held-out evaluation.
-- [ ] Run MMDocRAG evaluation and SPIQA test-B once; save raw rankings and all derived outputs with config hashes and commit provenance.
-- [ ] Update paper, results tables, failure analysis, reproducibility guide, and final report to lead with supported v2 findings while preserving the prior QASPER result as a negative precursor.
-- [ ] Verify test suite, lint, paper build if available, repository license notices, and clean Git history; push the completed branch.
+- [x] Complete dev analysis; commit frozen evaluator/protocol hashes before held-out evaluation.
+- [x] Run MMDocRAG evaluation and SPIQA test-B once; save raw rankings and all derived outputs with config hashes and commit provenance.
+- [x] Update paper, results tables, failure analysis, reproducibility guide, and final report to lead with supported v2 findings while preserving the prior QASPER result as a negative precursor.
+- [x] Verify fast tests, lint, typecheck, locked install, wheel/sdist build, and reproducible paper artifacts. LaTeX, Docker, and V100 remain explicitly NOT VERIFIED.
+- [ ] Push the final branch and verify remote CI for the final commit.
 
 ## Phase 1 — audit and cleanup (must be a separate commit)
 - [x] Confirm checkout and create `research-overhaul` from `main`.

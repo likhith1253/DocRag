@@ -1,0 +1,54 @@
+{
+  "run": "20261110T142218Z_spiqa_test_39e8fba05c7f",
+  "config_hash": "39e8fba05c7f",
+  "n": 73,
+  "unanswerable_count": 0,
+  "excluded_unaligned_count": 155,
+  "overall_comparison": {
+    "contrast": "calibrated_bm25 - global_bm25",
+    "budget": 10,
+    "n": 73,
+    "mean_complete_coverage_difference": 0.0547945205479452,
+    "bootstrap_95_ci": [
+      -0.0136986301369863,
+      0.1232876712328767
+    ],
+    "paired_sign_randomization_p": 0.2826717328267173,
+    "seed": 20261110,
+    "bootstrap_resamples": 10000,
+    "sign_draws": 10000
+  },
+  "cross_modal_comparison": {
+    "contrast": "calibrated_bm25 - global_bm25",
+    "budget": 10,
+    "n": 73,
+    "mean_complete_coverage_difference": 0.0547945205479452,
+    "bootstrap_95_ci": [
+      -0.0136986301369863,
+      0.1232876712328767
+    ],
+    "paired_sign_randomization_p": 0.2826717328267173,
+    "seed": 20261110,
+    "bootstrap_resamples": 10000,
+    "sign_draws": 10000
+  },
+  "primary_evidence_sufficiency_gap": {
+    "policy": "global_bm25",
+    "budget": 10,
+    "n": 73,
+    "mean_example_recall_minus_complete_coverage": 0.4323657316808001,
+    "bootstrap_95_ci": [
+      0.37791721026310066,
+      0.48470890410958895
+    ],
+    "paired_sign_randomization_p_vs_zero": 9.999000099990002e-05,
+    "seed": 20261110,
+    "bootstrap_resamples": 10000,
+    "sign_draws": 10000
+  },
+  "cross_modal_vs_single_modal_gap": {
+    "status": "one or both strata are empty",
+    "n_cross_modal": 73,
+    "n_single_modal": 0
+  }
+}

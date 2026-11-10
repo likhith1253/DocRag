@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "result_sources": {
+    "mmdocrag": "results\\20261110T142142Z_mmdocrag_test_6658f770325d\\raw.json",
+    "spiqa": "results\\20261110T142218Z_spiqa_test_39e8fba05c7f\\raw.json"
+  },
+  "raw_sha256": {
+    "mmdocrag": "32c2868902331a81d3f27434521c0fda145c2ded504998ee06451f6422680691",
+    "spiqa": "569cbeedb929aca59ea87fa874031a64b95110ccb107f42acdbb933bb945ac6b"
+  },
+  "protocol_sha256": "886462ae787a7bee7567ae94c36fd838bf7afb79c54bd34c9aad968328ad0f87",
+  "evaluator_sha256": "e1f43fda2ea44eec80e84fc46418743595d3c2cee6b57ecd04cbe98822e91332",
+  "reproduction_script_sha256": "070d828677c24c2437cd907a60167c50b498da46275771f1f9e4afd693e17b55",
+  "config_hash": "c446ba806bb1",
+  "reproduction_code_commit": "ce84d1a5fde675f9614e5cb0c49f8b78a9c7c73a",
+  "reproduction_worktree_dirty": true,
+  "evaluation_commits": [
+    "ce84d1a5fde675f9614e5cb0c49f8b78a9c7c73a"
+  ]
+}
