@@ -1,6 +1,6 @@
 # DocRag: evidence retrieval for research-paper QA
 
-DocRag is an experimental system for indexing research papers and retrieving cited evidence for questions. This repository is being prepared as a reproducible CPU-first research project. Its previous regex-based acceptance benchmark is retained only as historical regression material and is not scientific evidence.
+DocRag is a CPU-first prototype for indexing research papers and retrieving evidence for questions. This repository contains a completed, reproducible retrieval study on QASPER. Its previous regex-based acceptance benchmark is retained only as historical regression material and is not scientific evidence.
 
 ## Research question
 

@@ -35,5 +35,5 @@
 - [x] Prepare reproducibility commands, hardware-specific instructions, data/model card, and exact user verification steps.
 - [x] Write README, final report, and claim-audited paper draft with verified references only.
 - [x] Run the full available CPU reproduction and record every unavailable item as NOT VERIFIED with exact commands.
-- [ ] Scan repository/history for secrets before the final authorized push.
+- [x] Scan repository history for high-confidence credential/private-key patterns before the final authorized push; no matches were found.
 

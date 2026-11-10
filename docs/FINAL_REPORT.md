@@ -53,7 +53,9 @@ QASPER (Dasigi et al., NAACL-HLT 2021) is the evidence-annotated benchmark for t
 - Removed paper-specific prompt/retrieval rules, retained paper/repository isolation, added typed central settings and environment overrides, content-addressed generation caching, CPU-first model policy, and explicit failure propagation.
 - Added pinned Python/locked dependencies, Make targets, CI configuration, scoped Ruff/mypy checks, a deterministic fast suite, Docker and Slurm instructions, QASPER downloader/manifest, retrieval harness, raw analysis, generated paper tables, and this report.
 - Verified locally: `uv sync --locked --group dev`; `uv build`; scoped Ruff and mypy; and fast tests (`131 passed, 87 deselected, 24 subtests passed`). The project verification archive is in `results/verification/` after final checks.
+- A high-confidence token/private-key scan covered 1,259 Git blobs across reachable history and found no matches. This is a pattern scan, not a general audit for every form of sensitive information.
 - A CPU Qwen2.5-0.5B generation smoke produced `READY`; this is a runtime smoke test, not answer-quality evidence.
+- The API was also started with `uv run uvicorn api.main:app --host 127.0.0.1 --port 9001`; a request to `http://127.0.0.1:9001/health` returned `status=ok` and reported the configured Qwen2.5-0.5B backend loaded on CPU. This was a local health smoke only; it does not verify document ingestion plus answer quality end to end.
 - The test was run once by `uv run python scripts/reproduce.py --split test --allow-test`; the raw rankings and derived outputs were saved without changing the evaluator or research system after test exposure.
 
 ## NOT VERIFIED
