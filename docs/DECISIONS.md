@@ -22,3 +22,9 @@
 
 - **Primary study scope:** Limit the primary claim to QASPER evidence retrieval and generic structural selection. The repository lacks audited equation/figure annotations and reliable human answer grades; end-to-end generation/claim-verification claims would not be defensible.
 - **Test freeze:** Freeze official QASPER test data by upstream revision plus local SHA-256 and byte size before inspecting any examples or computing results. Only validation may guide implementation choices.
+
+- **Retrieval-only study:** Use official QASPER paragraphs and caption records directly so the study isolates retrieval from the unresolved PDF parser and generator. The primary experimental contrast is hybrid plus reranking/MMR with versus without generic structure-aware ordering. Do not claim end-to-end QA improvement.
+- **CPU model size:** Use the pinned E5-small-v2 checkpoint in the experiment, rather than the larger production embedding model, so the retrieval study can run on CPU. Model identity and revision are recorded; this is a scope choice and not a model-size comparison.
+- **Exploratory smoke output:** The first validation results were generated before the evaluator was committed and before full provenance fields were added. Keep them as development artifacts only; do not cite them in the paper or final headline results.
+
+- **Default generator size:** Set the application default to Qwen2.5-0.5B-Instruct so the documented CPU path has a realistic memory footprint. This is an engineering default, not evidence of answer quality; generated QA remains outside the primary study.

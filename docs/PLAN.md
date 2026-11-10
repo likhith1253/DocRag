@@ -15,22 +15,22 @@
 - [x] Remove paper-name aliases and prompt/retrieval correction rules; add generic evidence patterns and maintain isolation tests.
 - [x] Add content-addressed LLM output caching keyed by model, prompt, decoding settings, and seed; make errors distinct from evidence refusals.
 - [x] Apply a conservative prompt-token budget using the configured context cap.
-- [ ] Remove paper-specific prompt/retrieval rules; retain and test repository/paper isolation.
-- [ ] Retire or update stale tests with a written reason; establish deterministic fast tests and separate slow/GPU markers. (ongoing; 84 targeted tests pass)
+- [x] Remove paper-specific prompt/retrieval rules; production core grep finds no named benchmark-paper rules, and isolation tests remain.
+- [x] Retire stale one-off tests with a written reason; classify model/storage integration tests as slow and GPU tests separately.
 - [x] Add CI lint and fast-test workflow plus scoped mypy; lint and typecheck passed.
-- [ ] Stabilize full fast-suite collection; current broad pytest invocation stalls before reporting tests. Targeted deterministic slice passes (55 tests); heavyweight storage/model cases are being marked slow.
+- [x] Establish a deterministic fast test suite: 126 passed, 87 slow/GPU deselected; collection now completes.
 
 ## Phase 3 — evaluation and research design
-- [ ] Select one retrieval-only evaluation harness and explain why legacy evaluations differed.
+- [x] Select the QASPER retrieval-only harness; legacy regex acceptance and HTTP QA scores were self-referential, disagreed on inputs/metrics, and are excluded. The duplicate HTTP harness is removed.
 - [x] Specify research question, hypotheses, outcomes, controls, and falsification criteria before test exposure.
 - [x] Verify QASPER provenance/license and freeze official splits by revision and SHA-256 before tuning.
-- [ ] Primary experiment excludes generation/judging; the application generation cache exists, but a separate judge cache is out of scope unless the scope expands.
-- [ ] Implement retrieval baselines and ablations under identical conditions; run CPU retrieval metrics.
-- [ ] Run feasible generation only on the frozen set or a predeclared subset; preserve raw outputs with run metadata.
+- [x] Narrow the primary contribution to evidence retrieval. Generation, LLM judging, and human answer grading are explicitly outside this study; application generation cache remains tested separately.
+- [ ] Implement and test BM25/dense/RRF/reranker/MMR/structure conditions with identical source paragraph units and paired inference; run full validation and then frozen test on CPU. Current saved validation runs are exploratory smoke checks only.
+- [x] Decide not to run QASPER generation or judge: primary research question is retrieval-only, and no answer-generation claim will be made.
 
 ## Phase 4 — analysis and release artifacts
 - [ ] Compute metrics, uncertainty, paired tests, and failure taxonomy from raw outputs only.
-- [ ] Prepare reproducibility scripts, hardware-specific instructions, model/data cards, and user grading template.
+- [ ] Prepare reproducibility commands, hardware-specific instructions, data/model card, and exact user verification steps. (partial)
 - [ ] Write README, final report, and claim-audited paper draft with verified references only.
 - [ ] Run the full available CPU reproduction and record every unavailable item as NOT VERIFIED with exact commands.
 - [ ] Scan repository/history for secrets before any authorized push.
