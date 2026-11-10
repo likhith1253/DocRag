@@ -32,11 +32,6 @@ from datetime import datetime, timezone
 import logging
 import threading
 
-try:
-    from eval.production_validation._stage_profiler import StageProfiler
-except Exception:
-    StageProfiler = None
-
 logger = logging.getLogger(__name__)
 
 from storage.registry import RepositoryRegistry, RepoStatus
@@ -325,20 +320,7 @@ def background_ingest_repository(
 
         log_indexing_stage(repo_id, "overall", "START")
 
-        # ----------------------------------------------------------------
-        # Stage profiler (optional — for benchmarking)
-        # ----------------------------------------------------------------
-        profiler = None
-        if StageProfiler:
-            stage_csv = os.environ.get("TTFUA_STAGE_TIMINGS_CSV")
-            if stage_csv:
-                profiler = StageProfiler(
-                    os.environ.get("TTFUA_RUN_ID", "unknown"), repo.name, stage_csv
-                )
-
         def measure(stage_name, func):
-            if profiler:
-                return profiler.measure(stage_name, func)
             return func()
 
         # ----------------------------------------------------------------

@@ -28,7 +28,7 @@ The runner exposes the requested repository at `D:\DocRag`. Branch `research-ove
 
 ## Current architecture after cleanup
 
-Paper QA remains in `ingestion/pdf_parser.py`, `ingestion/doc_chunker.py`, `ingestion/worker.py`; `retrieval/` paper routing, evidence selection, MMR, and reranking; `storage/` Qdrant and repository state; `llm/`; `agents/doc_agent.py` and `agents/orchestrator.py`; API/UI. `eval/production_benchmark.py` is the only retained legacy QA harness while the research harness is designed in a later phase.
+Paper QA remains in `ingestion/pdf_parser.py`, `ingestion/doc_chunker.py`, `ingestion/worker.py`; `retrieval/` paper routing, evidence selection, MMR, and reranking; `storage/` Qdrant and repository state; `llm/`; `agents/doc_agent.py` and `agents/orchestrator.py`; API/UI. `eval/qasper_study.py` is the sole evaluation harness; the legacy HTTP benchmark was removed after this harness was introduced.
 
 ## Prioritized plan
 
