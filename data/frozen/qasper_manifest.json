@@ -2,6 +2,8 @@
   "dataset": "allenai/qasper",
   "revision": "4d9336e735cf4e9e99e8a4d738847703a43512fa",
   "license": "CC BY 4.0 per pinned dataset card",
+  "test_protocol_commit": "d25cd332a442d80f0f44edbda2ec84a09fe0d546",
+  "test_evaluator_sha256": "2f34158c765cef7f8857d031d4519466ebb3d7fb5e55689a039f802c6a119864",
   "files": {
     "train": {
       "path": "data/downloads/qasper/train.parquet",
