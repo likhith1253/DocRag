@@ -34,6 +34,7 @@ knowledge_graph.json
 /results/20261110T011808Z_validation_0e5b52602a/
 /results/slurm-*.out
 /results/v100_diagnostics/
+/results/generation_smoke/20261110T014913Z_a1fa4209ffd9_04e01fa8b7/
 
 # Local data pending license/provenance review
 papers/

@@ -11,6 +11,9 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Bound this diagnostic independently of the application's longer default.
+os.environ["DOCRAG__GENERATION__NUM_PREDICT"] = "16"
+
 from settings import get_settings
 from llm.backend import generate
 
@@ -29,7 +32,7 @@ def main() -> None:
         "device": settings.device,
         "temperature": settings.generation.temperature,
         "seed": settings.generation.seed,
-        "num_predict": min(settings.generation.num_predict, 16),
+        "num_predict": settings.generation.num_predict,
         "prompt": prompt,
     }
     config_hash = hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()
