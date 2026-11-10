@@ -1,4 +1,13 @@
-﻿# Work plan
+# Work plan
+
+## Phase 5 — stronger multimodal evidence-selection study (active)
+- [x] Freeze MMDocRAG and SPIQA source revisions, hashes, and license/provenance manifest before metrics.
+- [x] Implement adapters and exact gold-ID alignment checks; SPIQA test-B requires complete text/figure mapping.
+- [x] Implement BM25 global, equal-modality quotas, score calibration, modality-only policies, and a gold-modality allocation reference.
+- [ ] Complete dev analysis; commit frozen evaluator/protocol hashes before held-out evaluation.
+- [ ] Run MMDocRAG evaluation and SPIQA test-B once; save raw rankings and all derived outputs with config hashes and commit provenance.
+- [ ] Update paper, results tables, failure analysis, reproducibility guide, and final report to lead with supported v2 findings while preserving the prior QASPER result as a negative precursor.
+- [ ] Verify test suite, lint, paper build if available, repository license notices, and clean Git history; push the completed branch.
 
 ## Phase 1 — audit and cleanup (must be a separate commit)
 - [x] Confirm checkout and create `research-overhaul` from `main`.

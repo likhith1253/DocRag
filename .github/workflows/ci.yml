@@ -18,7 +18,7 @@ jobs:
       - name: Install locked environment
         run: uv sync --locked --group dev
       - name: Lint
-        run: uv run ruff check settings.py llm/cache.py retrieval/query_analyzer.py retrieval/paper_matcher.py eval/qasper_study.py eval/failure_analysis.py eval/paper_table.py scripts/dataset_stats.py scripts/download_qasper.py scripts/reproduce.py scripts/smoke_generation.py scripts/verify_cuda_generation.py scripts/verify_project.py tests/test_qasper_study.py
+        run: uv run ruff check settings.py llm/cache.py retrieval/query_analyzer.py retrieval/paper_matcher.py eval/qasper_study.py eval/multimodal_selection.py eval/failure_analysis.py eval/paper_table.py scripts/dataset_stats.py scripts/download_qasper.py scripts/reproduce.py scripts/download_multimodal_benchmarks.py scripts/multimodal_dataset_stats.py scripts/reproduce_multimodal.py scripts/smoke_generation.py scripts/verify_cuda_generation.py scripts/verify_project.py tests/test_qasper_study.py tests/test_multimodal_selection.py
       - name: Type check
         run: uv run mypy
       - name: Fast tests
