@@ -7,6 +7,7 @@ __pycache__/
 # Runtime stores and local state
 qdrant_storage/
 test_qdrant_storage/
+test_repo_src/
 profile_qdrant_storage/
 kg_storage/
 metadata_storage/
@@ -28,10 +29,17 @@ knowledge_graph.json
 /eval/artifacts/
 /results/*
 !/results/README.md
+!/results/*/
+!/results/*/**
+/results/20261109T191233Z_validation_72103eaf1a/
+/results/20261110T011808Z_validation_0e5b52602a/
+/results/slurm-*.out
+/results/v100_diagnostics/
 
 # Local data pending license/provenance review
 papers/
 data/source_papers_unverified/
+/data/downloads/
 
 # Temporary text files
 *.txt
