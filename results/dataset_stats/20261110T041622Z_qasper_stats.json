@@ -1,0 +1,48 @@
+{
+  "created_utc": "2026-11-10T04:16:16.476020+00:00",
+  "git_commit": "d25cd332a442d80f0f44edbda2ec84a09fe0d546",
+  "git_worktree_dirty": true,
+  "script_sha256": "71d9cd565485bdfa8418ae774cf908a6cd686630cb7a2884c6917170ecae213e",
+  "dataset": "allenai/qasper",
+  "dataset_revision": "4d9336e735cf4e9e99e8a4d738847703a43512fa",
+  "statistics_method": "counts only; no question text, answers, or system rankings are exported",
+  "splits": {
+    "train": {
+      "source_sha256": "dca3142414789caaeaf60a90a1de3fa9a1a079c50bfcd0e053b55c1f385180ef",
+      "source_bytes": 14374549,
+      "papers": 888,
+      "questions": 2593,
+      "answerable": 2322,
+      "unanswerable": 271,
+      "answerable_with_evidence": 2244,
+      "mappable_answerable": 1909,
+      "unmappable_answerable": 413,
+      "passages": 53439,
+      "passages_by_kind": {
+        "paragraph": 46882,
+        "table": 3631,
+        "figure": 2895,
+        "caption": 31
+      }
+    },
+    "validation": {
+      "source_sha256": "111ec99b1ae1db8457dcef018302b30f6fb797cd10b1dcff26a0fa5d4b6e51e6",
+      "source_bytes": 4749126,
+      "papers": 281,
+      "questions": 1005,
+      "answerable": 945,
+      "unanswerable": 60,
+      "answerable_with_evidence": 927,
+      "mappable_answerable": 846,
+      "unmappable_answerable": 99,
+      "passages": 15195,
+      "passages_by_kind": {
+        "paragraph": 13266,
+        "table": 1136,
+        "figure": 793,
+        "caption": 0
+      }
+    }
+  },
+  "config_sha256": "ba99433be1aa3520cad4b20009f82ddd710f1594f186953e29989074f9f4f4f7"
+}
