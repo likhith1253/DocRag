@@ -1,0 +1,24 @@
+{
+  "created_utc": "2026-11-10T01:50:38.442741+00:00",
+  "git_commit": "cdd77aeb8e93d9e01606113eb0faddbb5905fdf4",
+  "git_worktree_dirty": false,
+  "config": {
+    "model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "model_revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+    "backend": "transformers",
+    "device": "cpu",
+    "temperature": 0.0,
+    "seed": 0,
+    "num_predict": 16,
+    "prompt": "Reply with the single word READY."
+  },
+  "config_sha256": "a1fa4209ffd9361cfeaaed2c30d2707bf4b8fcb60bb110def5be44833371bbfd",
+  "versions": {
+    "torch": "2.15.0+cpu",
+    "transformers": "4.57.6",
+    "sentence-transformers": "5.7.0"
+  },
+  "elapsed_seconds": 23.33261679999987,
+  "status": "completed",
+  "response": "READY"
+}
