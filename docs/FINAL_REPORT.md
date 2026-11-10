@@ -65,7 +65,7 @@ QASPER (Dasigi et al., NAACL-HLT 2021) is the evidence-annotated benchmark for t
 - **LaTeX compilation:** `latexmk` is not installed in this environment. Install a TeX distribution with `latexmk`, then run `cd paper` followed by `latexmk -pdf main.tex`. The generated tables exist, but a successful PDF build is not verified.
 - **HQDR reproduction:** The 2026 structure-aware QASPER baseline is cited and its official ACL metadata verified, but its code/training and results were not reproduced. Do not claim a direct win over it.
 - **Application answer quality, judge agreement, citation faithfulness, calibrated abstention, model-size/quantization parity, remote API behavior, and the reported Qwen2.5-3B V100 failure:** These are outside the registered retrieval study and remain unverified. The CPU generation smoke does not support these claims.
-- **Remote GitHub Actions execution:** CI workflow configuration is committed; the local checks passed, but a green remote Actions run has not been independently recorded here.
+- **Remote CI:** GitHub Actions CI completed successfully for the final pushed commit `c15ff1afb3760d0160bc5c48957e7c6b56fdfa67` ([workflow run](https://github.com/likhith1253/DocRag/actions/runs/42823841150)).
 - **Project redistribution license:** The repository contains no `LICENSE`; the owner must determine code ownership and select a license before redistribution. Preserved sample PDFs remain excluded because their terms are not established.
 
 ## Actions reserved for the project owner
