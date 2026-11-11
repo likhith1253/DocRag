@@ -14,6 +14,7 @@ Verifies:
   10. Caches enforce LRU max_size bounds without unbounded memory growth.
 """
 
+import pytest
 import os
 import sys
 import unittest
@@ -116,6 +117,7 @@ class TestPhase6Performance(unittest.TestCase):
         self.assertLessEqual(len(reranker_candidates), single_cand_limit)
 
     @patch("agents.doc_agent.generate", return_value="Repository evidence verified.")
+    @pytest.mark.models
     def test_4_repository_isolation_100_percent(self, mock_gen):
         """4. Repository isolation remains 100% intact across queries."""
         repo_a_id = "test_phase6_repo_a"
@@ -209,6 +211,7 @@ class TestPhase6Performance(unittest.TestCase):
         self.assertEqual(output, answer)
         self.assertEqual(verifier.records[0]["ungrounded_numbers"], ["128"])
 
+    @pytest.mark.models
     def test_8_cpu_execution_support(self):
         """8. Prewarming and execution work natively on CPU."""
         prewarm_cross_encoder({"reranker_device": "cpu"})

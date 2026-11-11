@@ -1,3 +1,4 @@
+import pytest
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -58,6 +59,7 @@ class TestGpuEmbeddingSelection(unittest.TestCase):
     def test_embedding_batch_size_invalid_value_falls_back_to_default(self):
         self.assertEqual(_get_embedding_batch_size({"embedding": {"batch_size": "not-a-number"}}), 32)
 
+    @pytest.mark.gpu
     def test_embedding_device_auto_resolves_by_cuda_availability(self):
         with patch("torch.cuda.is_available", return_value=True):
             with patch("torch.cuda.mem_get_info", return_value=(8 * 1024**3, 16 * 1024**3)):

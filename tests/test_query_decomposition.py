@@ -1,3 +1,4 @@
+import pytest
 import unittest
 
 from retrieval.query_analyzer import decompose_complex_question

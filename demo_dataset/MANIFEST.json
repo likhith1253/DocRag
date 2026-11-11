@@ -1,0 +1,314 @@
+{
+  "_comment": "Third-party papers. 'arxiv' entries are not stored in git; run scripts/fetch_demo_dataset.py. 'bundled' entries are not on arXiv and stay in the repository.",
+  "papers": [
+    {
+      "path": "demo_dataset/Artificial_Intelligence/A_Deep_Reinforcement_Learning_Approach_for_Ramp_Me.pdf",
+      "sha256": "264d741d7243d92f9eec7abfd9082acae091e207d7468fc53a66b870c7016ad0",
+      "size_bytes": 910612,
+      "arxiv_id": null,
+      "source": "bundled"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Asynchronous Methods for Deep Reinforcement Learning.pdf",
+      "sha256": "f56a70559364254c4d60d9b697e7345add402ae1de081075aaddc060c5cbe964",
+      "size_bytes": 2302720,
+      "arxiv_id": "1602.01783",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Attention Is All You Need.pdf",
+      "sha256": "bdfaa68d8984f0dc02beaca527b76f207d99b666d31d1da728ee0728182df697",
+      "size_bytes": 2215244,
+      "arxiv_id": "1706.03762",
+      "version": 7,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Auto-Encoding Variational Bayes.pdf",
+      "sha256": "bdcb63b79ed88f64f8ee2d43a721930d01dde5441a4dba20ecaa2342b34e017c",
+      "size_bytes": 3926758,
+      "arxiv_id": "1312.6114",
+      "version": 11,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Compliance_Generation_for_Privacy_Documents_under_.pdf",
+      "sha256": "fe49d1740550b607f5fb02b88325dc1d3a9ea4204443d7a451424fca2d111bb6",
+      "size_bytes": 150935,
+      "arxiv_id": "2012.12718",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Distilling the Knowledge in a Neural Network.pdf",
+      "sha256": "74e6689115c539db499f9d6153edecb364059926fd45402454f8210442444c5a",
+      "size_bytes": 106630,
+      "arxiv_id": "1503.02531",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/DynamicK_Recommendation_with_Personalized_Decision.pdf",
+      "sha256": "e75069f1bf98286d7b41fe27963d66e159c09733a32f59b9a26ce9d0bef06c43",
+      "size_bytes": 538965,
+      "arxiv_id": "2012.13569",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Fuzzy_Commitments_Offer_Insufficient_Protection_to.pdf",
+      "sha256": "f1e239ddbcdfe47e0bdf873c11fd4697a91a434c4f42d9246404c08fe367173b",
+      "size_bytes": 682516,
+      "arxiv_id": "2012.13293",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Generalization_in_portfoliobased_algorithm_selecti.pdf",
+      "sha256": "cf55add5c89650da6238463251bb87fb738a159959614e997ee8ffecba0b2422",
+      "size_bytes": 928885,
+      "arxiv_id": "2012.13315",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Generative Adversarial Nets.pdf",
+      "sha256": "ff5819e3a7b713c3bd3107b7de3d51fe0a347aa5d8444f0efdcf2345ef0a8b63",
+      "size_bytes": 530482,
+      "arxiv_id": "1406.2661",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/I_like_fish_especially_dolphins_Addressing_Contrad.pdf",
+      "sha256": "8028807e8c68a7e2434ab6ae7fdf303fa3af5f0fee6af4bb49efb0a331ec848a",
+      "size_bytes": 9326917,
+      "arxiv_id": "2012.13391",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Language Models are Few-Shot Learners.pdf",
+      "sha256": "97fd272f1fdfc18677462d0292f5fbf26ca86b4d1b485c2dba03269b643a0e83",
+      "size_bytes": 6768044,
+      "arxiv_id": "2005.14165",
+      "version": 4,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Modelling_Human_Routines_Conceptualising_Social_Pr.pdf",
+      "sha256": "9296fe732a0b46a593c2c4dafd1e591376eb6487ec1ce36f2d8cbbfecb945a0f",
+      "size_bytes": 728372,
+      "arxiv_id": "2012.11903",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Overview_of_FPGA_deep_learning_acceleration_based_.pdf",
+      "sha256": "9c370034ac348a3300c1bce236970981b049c4c13003d5852014b54ee1a1fec2",
+      "size_bytes": 615285,
+      "arxiv_id": null,
+      "source": "bundled"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Playing Atari with Deep Reinforcement Learning.pdf",
+      "sha256": "8db04120cace173151c77e0faa6f3eaa4207009da66b9417597dc70bfee56d9c",
+      "size_bytes": 483443,
+      "arxiv_id": "1312.5602",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Proximal Policy Optimization Algorithms.pdf",
+      "sha256": "e78feadadbdbb0b601b3c2bcc81404722cd431a489b307545f9b7bea1e8c4f5b",
+      "size_bytes": 2923532,
+      "arxiv_id": "1707.06347",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Rethink_AIbased_Power_Grid_Control_Diving_Into_Alg.pdf",
+      "sha256": "09f584e1835e7da327ccd285ef0b259d48dbc52bbb73dfb338f19be40c3b81fb",
+      "size_bytes": 1539450,
+      "arxiv_id": "2012.13026",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Skeletonbased_Approaches_based_on_Machine_Vision_A.pdf",
+      "sha256": "ca1459890cca04d973f0047d4d6a8105e75d83d6872cb8d8baedd4200bce7d97",
+      "size_bytes": 273435,
+      "arxiv_id": "2012.12447",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/Soft Actor-Critic - Off-Policy Maximum Entropy Deep Reinforcement Learning.pdf",
+      "sha256": "5c33fae017d02f7025730f05198d4a6b103402822c8bbf48cbc5d8a0474c336a",
+      "size_bytes": 4388102,
+      "arxiv_id": "1801.01290",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Artificial_Intelligence/World Models.pdf",
+      "sha256": "b0c1e30aab53efd28ddf61d661f680150918d4d03b77bae62bc52d62dbd76cce",
+      "size_bytes": 3147467,
+      "arxiv_id": "1803.10122",
+      "version": 4,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Computer_Vision/Mask R-CNN.pdf",
+      "sha256": "b595a882b763d55d933543131f32a2c4b6f41d0818d418ef46a2b66f946b67a8",
+      "size_bytes": 7723886,
+      "arxiv_id": "1703.06870",
+      "version": 3,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/A Unified Approach to Interpreting Model Predictions.pdf",
+      "sha256": "01c7aa8f7d9edcf0cd185bf02e82363f743e441fcaf05b99e6054bfb470bf8ae",
+      "size_bytes": 1014198,
+      "arxiv_id": "1705.07874",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/A_Comparative_Analysis_of_Bias_Amplification_in_Gr.pdf",
+      "sha256": "302b982aa3dbbdc1a31925888d170997c760ac50bdeed8baa0102d7bbf962465",
+      "size_bytes": 1396190,
+      "arxiv_id": null,
+      "source": "bundled"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Adam - A Method for Stochastic Optimization.pdf",
+      "sha256": "eab9c73ae2ceda884b94830bda99312254bac4806f6c9f045cbab90721ecda31",
+      "size_bytes": 584641,
+      "arxiv_id": "1412.6980",
+      "version": 9,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Batch Normalization - Accelerating Deep Network Training.pdf",
+      "sha256": "bdc69e0b568f41d8d3181cc9077a461f58fcdd1c70c9f49efe60a05ee6109655",
+      "size_bytes": 173548,
+      "arxiv_id": "1502.03167",
+      "version": 3,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Denoising Diffusion Probabilistic Models.pdf",
+      "sha256": "aee5e07a802e8dfd2a386374c94fd61d1d056cb7e1e0fec4f28e8120ff5d8505",
+      "size_bytes": 10267274,
+      "arxiv_id": "2006.11239",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Enhancing_Genetic_Algorithms_with_Graph_Neural_Net.pdf",
+      "sha256": "1092fda26f34e5d32b5c1dd409982908c330e22bb876a1f32b49f7b3b7637f46",
+      "size_bytes": 887673,
+      "arxiv_id": "2602.08619",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Graph_Neural_Network_Encoding_for_Community_Detect.pdf",
+      "sha256": "e98f5203ebb913d4ca9386ce6707e14de9c39e83394ed1ffd33e40225b193252",
+      "size_bytes": 924209,
+      "arxiv_id": "2006.03996",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Graph_Neural_Network_Training_Systems_A_Performanc.pdf",
+      "sha256": "2421f41eb68da54b5e8c4fe1a3a6ddfd4249f4901c4aad8f3455dbde355b24f7",
+      "size_bytes": 1431482,
+      "arxiv_id": "2406.00552",
+      "version": 4,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Graph_Neural_Networks_for_RFIDBased_Spatial_Geomet.pdf",
+      "sha256": "050cde2214f9902c1ebbbca82402920f872def6e56e3d7fd190ba4f5323b4884",
+      "size_bytes": 11667665,
+      "arxiv_id": "2607.10822",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Graph_neural_network_for_colliding_particles_with_.pdf",
+      "sha256": "7c7010c26b79344adacd173077f94fd797f1248c3a5d1c35ac8ccf131b4b7d8f",
+      "size_bytes": 5689593,
+      "arxiv_id": "2602.16213",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Improving Neural Networks by Preventing Co-Adaptation of Feature Detectors.pdf",
+      "sha256": "997046169952532654f9ab620d511ed4e49eb30018893b7de144fdb485030358",
+      "size_bytes": 1665256,
+      "arxiv_id": "1207.0580",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Layer Normalization.pdf",
+      "sha256": "c464f839fb8d59f7fde92f9b4caa67c2d1f2f196b88f93fb60502249df0aaef7",
+      "size_bytes": 612446,
+      "arxiv_id": "1607.06450",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/LoRA - Low-Rank Adaptation of Large Language Models.pdf",
+      "sha256": "e9a0d3128767db616085dc0f4e6e455e672e89af823e8ed1282793682787395a",
+      "size_bytes": 1609513,
+      "arxiv_id": "2106.09685",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Neural Architecture Search with Reinforcement Learning.pdf",
+      "sha256": "1a661851f7c735bcf6c080382ba58554ef0e983ca79fbe670644fee80aca7bc1",
+      "size_bytes": 733204,
+      "arxiv_id": "1611.01578",
+      "version": 2,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Optimizing_Age_of_Information_in_Vehicular_Edge_Co.pdf",
+      "sha256": "4f2191e3f0b4ee8a6b4e1823646fd73c358a8048373970e7a2380652ee6c0f81",
+      "size_bytes": 847908,
+      "arxiv_id": "2407.02342",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Proficient_Graph_Neural_Network_Design_by_Accumula.pdf",
+      "sha256": "0aa8d1fc36280aa955171f7b26d3ee216f388b570972c2fae859fd68e2a202ac",
+      "size_bytes": 2685989,
+      "arxiv_id": "2408.06717",
+      "version": 3,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Trading_Graph_Neural_Network.pdf",
+      "sha256": "d65abc8c289aa12baf0856a8976072859109f8bf8b2278622208acccc48c2028",
+      "size_bytes": 6275974,
+      "arxiv_id": "2504.07923",
+      "version": 1,
+      "source": "arxiv"
+    },
+    {
+      "path": "demo_dataset/Machine_Learning/Understanding Deep Learning Requires Rethinking Generalization.pdf",
+      "sha256": "a71f1294a021cebc6939ec977fc073b6d7b4f183950eba761ec55364d30b729f",
+      "size_bytes": 403563,
+      "arxiv_id": "1611.03530",
+      "version": 2,
+      "source": "arxiv"
+    }
+  ]
+}

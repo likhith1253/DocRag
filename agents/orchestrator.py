@@ -46,7 +46,7 @@ if hasattr(sys.stdout, "reconfigure"):
         logger.debug("Could not configure stdout encoding: %s", exc)
 
 from storage.vector_store import VectorStoreManager, _get_config
-from storage.registry import RepositoryRegistry, get_registry
+from storage.registry import RepositoryRegistry, RepoStatus, get_registry
 from retrieval.mmr_rerank import mmr_rerank
 from retrieval.cross_encoder_rerank import rerank_cross_encoder
 from retrieval.paper_matcher import (

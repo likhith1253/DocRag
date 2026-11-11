@@ -1,3 +1,4 @@
+import pytest
 import unittest
 import pytest
 from retrieval.mmr_rerank import mmr_rerank
@@ -5,6 +6,7 @@ from retrieval.mmr_rerank import mmr_rerank
 pytestmark = pytest.mark.slow
 
 class TestMMRRerank(unittest.TestCase):
+    @pytest.mark.models
     def test_mmr_rerank(self):
         chunks = [
             {"content": "apple fruit red sweet juice", "score": 0.9},

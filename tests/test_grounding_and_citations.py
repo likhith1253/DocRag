@@ -5,6 +5,7 @@ behavior can only be verified with a real model run, which this phase
 intentionally does not do) and the citation metadata builder.
 """
 
+import pytest
 import unittest
 
 from agents.doc_agent import (

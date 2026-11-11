@@ -3,10 +3,25 @@ import pytest
 from datetime import datetime, timezone
 from storage.registry import RepositoryRegistry, Repository, RepoStatus
 
+@pytest.fixture(autouse=True)
+def _fake_vector_store(monkeypatch):
+    """READY requires a non-empty collection; fake it so these tests need no models."""
+    import storage.vector_store as vs
+
+    class _FakeVS:
+        def __init__(self, *a, **k):
+            pass
+
+        def count(self):
+            return 1
+
+    monkeypatch.setattr(vs, "VectorStoreManager", _FakeVS)
+
+
 @pytest.fixture
-def registry():
+def registry(tmp_path):
     # Use a temporary file for tests
-    test_path = "./test_registry.json"
+    test_path = str(tmp_path / "test_registry.json")
     if os.path.exists(test_path):
         os.remove(test_path)
     reg = RepositoryRegistry(storage_path=test_path)

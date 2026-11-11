@@ -18,7 +18,7 @@ from sentence_transformers import SentenceTransformer
 from collections import OrderedDict
 from typing import List, Dict, Any, Tuple, Optional
 
-from settings import PROJECT_ROOT
+from settings import PROJECT_ROOT, get_settings
 
 # ---------------------------------------------------------------------------
 # Module-level singletons & Caches
